@@ -1,0 +1,2931 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CKD–Pruritus Research Portal v1.41 — Final Review Build</title>
+<link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
+<meta name="theme-color" content="#7b3f98">
+<style>
+:root{--bg:#f7f4fa;--card:#fff;--ink:#241c2f;--muted:#70677a;--line:#e2dbe8;--accent:#7b3f98;--accent2:#5f2f78;--danger:#d92d20;--ok:#087443}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+header{background:#5f2f78;color:#fff;padding:16px;position:sticky;top:0;z-index:20;box-shadow:0 2px 12px #0002}
+.head{max-width:900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand h1{font-size:18px;margin:0}.brand p{font-size:11px;color:#cbd5e1;margin:3px 0 0}
+.topbtn{background:#ffffff14;border:1px solid #ffffff35;color:#fff;border-radius:8px;padding:8px 10px}
+main{max-width:900px;margin:0 auto;padding:16px 12px 100px}
+.hero{margin:4px 0 14px}.hero h2{margin:0 0 4px;font-size:22px}.muted{color:var(--muted);font-size:13px}
+.progress-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.progress-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:9px}
+.bar{height:7px;background:#e8edf2;border-radius:10px;overflow:hidden}.fill{height:100%;background:var(--accent);width:10%;transition:.25s}
+.dots{display:flex;gap:6px;margin-top:10px}.dot{height:5px;flex:1;background:#dce3ea;border-radius:4px}.dot.active{background:var(--accent)}.dot.done{background:#80a9f8}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+.step{display:none}.step.active{display:block}
+.step-title{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+.step-title span{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.step-title h2{margin:4px 0;font-size:20px}.step-title p{margin:0;color:var(--muted);font-size:12px}
+.subsection{border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;background:#fcfbfd}.subsection h3{margin:0 0 12px;font-size:15px}.visit-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.visit-option{cursor:pointer}.visit-option input{position:absolute;opacity:0}.visit-option span{display:block;padding:18px 10px;text-align:center;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:800}.visit-option input:checked+span{background:#f1e6f6;border:2px solid var(--accent);color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.field label{font-size:13px;font-weight:700;display:block;margin-bottom:6px;text-transform:capitalize}
+.field label span{color:var(--danger)}input,select{width:100%;padding:11px;border:1px solid #cfd6df;border-radius:8px;background:#fff;font:inherit}
+input:focus,select:focus{outline:2px solid #7b3f9822;border-color:var(--accent)}small{display:block;color:var(--muted);font-size:10.5px;line-height:1.35;margin-top:5px}
+.navbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px max(12px,calc((100vw - 900px)/2));display:flex;gap:10px;z-index:30}
+.navbar button{flex:1;padding:12px;border-radius:9px;border:1px solid var(--line);font-weight:800;background:#fff}
+.navbar .next,.navbar .save{background:var(--accent);color:#fff;border-color:var(--accent)}
+.navbar .back{max-width:130px}button:disabled{opacity:.4}
+.review{display:grid;gap:10px}.review-item{padding:11px;border:1px solid var(--line);border-radius:8px;background:#fafbfc}.review-item b{display:block;font-size:12px}.review-item span{font-size:13px}
+.notice{padding:11px 13px;background:#f3eafb;border:1px solid #ddc9ea;border-radius:9px;font-size:12px;margin-bottom:14px}
+.success{text-align:center;padding:30px 10px}.success h2{color:var(--ok)}
+@media(max-width:650px){.visit-options{grid-template-columns:1fr}.visit-option span{padding:14px 10px}main{padding-left:10px;padding-right:10px}.grid{grid-template-columns:1fr}.card{padding:15px}.brand h1{font-size:16px}}
+
+.date-picker{position:relative}.date-display{width:100%;padding:11px;border:1px solid #cfd6df;border-radius:8px;background:#fff;font:inherit;text-align:left;min-height:46px}.date-display:after{content:"▾";float:right;color:var(--accent)}.calendar{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 12px 30px #0002}.calendar.open{display:block}.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.cal-head button{border:1px solid var(--line);background:#fff;border-radius:7px;width:38px;height:34px;font-size:22px}.weekdays,.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.weekdays span{text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:5px 0}.days button{border:0;background:#fff;border-radius:7px;padding:9px 0;font:inherit}.days button:hover,.days button.selected{background:#f1e6f6;color:var(--accent);font-weight:800}.days button.other{color:#b5aebb}.today-btn{width:100%;margin-top:10px;border:1px solid var(--accent);background:#f1e6f6;color:var(--accent);border-radius:8px;padding:9px;font-weight:800}
+
+.duplicate-warning{margin-top:8px;padding:12px;border:1px solid #e0a34b;border-radius:10px;background:#fff8e8;color:#5c3b08;display:flex;flex-direction:column;gap:7px}.duplicate-warning strong{font-size:14px}.duplicate-warning button{align-self:flex-start;border:1px solid #b87918;background:#fff;border-radius:8px;padding:7px 10px;font-weight:700;color:#6b4308}
+
+
+.registry-panel{position:fixed;inset:0;z-index:100;background:#f7f4faee;padding:16px;overflow:auto}
+.registry-card{max-width:820px;margin:12px auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 18px 50px #0002}
+.registry-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.registry-head h2{margin:3px 0 5px}.registry-head p{margin:0;color:var(--muted)}
+.eyebrow{font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.close-registry{border:0;background:#f3edf5;color:#4d4351;border-radius:9px;width:40px;height:40px;font-size:25px}
+.registry-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:16px 0 12px}
+.registry-tab{border:0;background:transparent;padding:10px 12px;font:inherit;font-weight:800;color:var(--muted);border-bottom:3px solid transparent}
+.registry-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.registry-tools{display:grid;grid-template-columns:1fr auto;gap:9px;margin:12px 0}
+.search-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:0 12px;background:#fff}
+.search-wrap input{width:100%;padding:12px 0;border:0;outline:0;font:inherit}
+.new-patient-btn,.save-patient{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:10px 14px;font-weight:800}
+.registry-summary{font-size:12px;color:var(--muted);margin:8px 0}
+.registry-list{display:grid;gap:10px}
+.patient-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+.patient-card .pc-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.patient-card h3{margin:0;font-size:16px}.patient-number{font-size:12px;color:var(--muted);font-weight:700}
+.patient-meta{font-size:12px;color:var(--muted);margin:6px 0 10px}
+.visit-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.visit-chip{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#f1e6f6;color:var(--accent);font-size:11px;font-weight:800}
+.patient-actions{display:flex;gap:7px;flex-wrap:wrap}
+.patient-actions button{border:1px solid #d7c5dd;background:#fff;color:var(--accent);border-radius:8px;padding:8px 10px;font-weight:800}
+.patient-actions button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.empty-registry{padding:25px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
+@media(max-width:650px){.registry-card{margin:0 auto;padding:14px}.registry-tools{grid-template-columns:1fr}.patient-card .pc-top{flex-direction:column}}
+@media(max-width:650px){.registry-card{margin:0 auto;padding:14px}.registry-tools{grid-template-columns:1fr}.patient-card .pc-top{flex-direction:column}.save-patient{margin-right:5px}}
+
+:root{--accent:#7b3f98;--accent2:#efe3f4;--line:#e2dce7;--muted:#716b76;--bg:#faf9fb;--text:#26212b}
+body{background:var(--bg);color:var(--text)}
+header{background:#fff!important;border-bottom:1px solid var(--line)!important}
+.head{max-width:980px;margin:auto;padding:12px 16px!important}
+.brand h1{font-size:18px!important;margin:0}.brand p{font-size:11px!important}
+.topbtn,.dash{background:#fff!important;color:var(--accent)!important;border:1px solid #d8c5df!important;border-radius:8px!important}
+.hero{max-width:980px;margin:auto;padding:18px 16px 8px}
+
+.dashboard{
+  max-width:980px;margin:0 auto 14px;padding:0 16px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.dashboard-card{
+  background:#f5eadc;border:1px solid #c9afd3;border-radius:12px;
+  padding:12px 10px;text-align:center;min-height:78px;
+}
+.dashboard-label{
+  color:#9b73ad;font-size:12px;font-weight:800;line-height:1.25;
+}
+.dashboard-value{
+  color:#4f315c;font-size:25px;font-weight:900;margin-top:5px;
+}
+.dashboard-followups{display:none}
+.dashboard-followups.show{display:grid}
+body.dashboard-home-mode .hero,
+body.dashboard-home-mode .progress-card,
+body.dashboard-home-mode #wizard,
+body.dashboard-home-mode .navbar{display:none!important}
+body.dashboard-home-mode main{padding-top:18px}
+.dashboard-search{max-width:980px;margin:0 auto 14px;padding:0 16px}
+.dashboard-search-box{position:relative}
+.dashboard-search-box input{width:100%;min-height:50px;padding:0 16px 0 44px;border:1px solid #c9afd3;border-radius:12px;background:#fff;font:inherit;font-size:15px;outline:none}
+.dashboard-search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #7b3f9818}
+.dashboard-search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#9b73ad;font-size:21px;pointer-events:none}
+.dashboard-search-results{margin-top:8px;display:grid;gap:7px}
+.dashboard-search-result{background:#fff;border:1px solid #ded2e3;border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dashboard-search-result .dsr-meta{min-width:0}
+.dashboard-search-result strong{display:block;font-size:14px}
+.dashboard-search-result small{color:var(--muted)}
+.dashboard-search-result button{border:0;background:var(--accent);color:#fff;border-radius:8px;padding:8px 12px;font-weight:800;white-space:nowrap}
+.dashboard-search-empty{background:#fff;border:1px dashed #d8c8df;border-radius:10px;padding:12px;color:var(--muted);font-size:13px}
+
+@media(max-width:650px){
+  .dashboard{grid-template-columns:repeat(2,1fr);padding:0 10px}
+  .dashboard-card{min-height:72px}
+}
+
+.progress-card{max-width:980px!important;margin:0 auto 12px!important;background:#fff!important;border:1px solid var(--line)!important;border-radius:10px!important}
+.card{background:#fff!important;border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:none!important}
+.step-title{border-bottom:1px solid var(--line)!important}
+.subsection{border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important}
+.field input,.field select,.field textarea{background:#fff!important;border:1px solid #d8d1dc!important;border-radius:8px!important}
+.field input:focus,.field select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px #7b3f9818!important}
+.navbar{background:#fff!important;border-top:1px solid var(--line)!important}
+.next,.save{background:var(--accent)!important;border-radius:8px!important}
+.back{border-radius:8px!important}
+
+.choice-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+.choice-row label{position:relative;cursor:pointer}
+.choice-row input{position:absolute;opacity:0;pointer-events:none}
+.choice-row span{display:inline-block;padding:7px 12px;border:1px solid #cfc7d3;border-radius:999px;background:#fff;color:#4e4652;font-size:13px;font-weight:700}
+.choice-row input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}
+.section-note{font-size:12px;color:var(--muted);margin-top:6px}
+.multi-choice{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+.multi-choice label{position:relative;cursor:pointer}
+.multi-choice input{position:absolute;opacity:0;pointer-events:none}
+.multi-choice span{display:inline-block;padding:8px 12px;border:1px solid #cfc7d3;border-radius:999px;background:#fff;color:#4e4652;font-size:13px;font-weight:700}
+.multi-choice input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}
+input[readonly]{background:#f8f5f9!important;color:#5b5360!important}
+
+
+.menu-trigger{width:42px;height:42px;border:1px solid #d8c5df;background:#fff;color:var(--accent);border-radius:9px;font-size:28px;line-height:1;font-weight:900;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.menu-trigger span{transform:translateY(-2px)}
+.side-menu-backdrop{display:none;position:fixed;inset:0;background:#0005;z-index:80}
+.side-menu{position:fixed;top:0;bottom:0;left:0;width:min(310px,86vw);background:#fff;z-index:90;box-shadow:12px 0 35px #0002;transform:translateX(-105%);transition:transform .22s ease;padding:14px;overflow:auto}
+.side-menu.open{transform:translateX(0)}
+.side-menu-backdrop.open{display:block}
+.side-menu-head{display:flex;align-items:center;justify-content:space-between;padding:5px 4px 16px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.side-menu-head strong{display:block;font-size:19px}.side-menu-head small{color:var(--muted)}
+.side-menu-head button{border:0;background:transparent;font-size:28px;color:var(--muted)}
+.menu-item{width:100%;display:flex;align-items:center;gap:12px;border:0;border-radius:10px;background:#fff;padding:13px 12px;text-align:left;font:inherit;font-weight:800;color:#302a34;margin:3px 0}
+.menu-item:hover,.menu-item:active{background:var(--accent2);color:var(--accent)}
+.menu-icon{width:25px;text-align:center;color:var(--accent);font-size:19px}
+.progress-top #pageName{font-weight:900;color:var(--accent)}
+.progress-card .progress-top{font-size:13px}
+
+.visit-date-input{width:100%;min-height:52px;padding:12px 14px!important;border:1px solid #d8d1dc!important;border-radius:8px!important;background:#fff!important;font:inherit!important;color:#26212b!important;box-sizing:border-box}
+.visit-date-input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px #7b3f9818!important;outline:0}
+
+
+.mobile-date-picker{position:relative;width:100%}
+.date-button{width:100%;min-height:52px;padding:13px 46px 13px 14px;border:1px solid #d8d1dc;border-radius:8px;background:#fff;color:#26212b;font:inherit;text-align:left;position:relative;box-sizing:border-box}
+.date-button::after{content:'▾';position:absolute;right:14px;color:var(--accent);font-size:15px}
+.mini-calendar{display:none;margin-top:8px;border:1px solid #d8d1dc;border-radius:12px;background:#fff;padding:12px;box-shadow:0 10px 25px #0002}
+.mini-calendar.open{display:block}
+.cal-title-pickers{display:flex;gap:4px;align-items:center;justify-content:center;min-width:0}.cal-title-btn{border:1px solid #ddd4e4;background:#f8f3fa;color:var(--accent);border-radius:7px;padding:7px 8px;font:inherit;font-weight:800;cursor:pointer}.cal-title-btn.year{min-width:64px}.calendar-picker-panel{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 10px}.calendar-picker-panel.open{display:grid}.calendar-picker-panel button{border:1px solid #ddd4e4;background:#fff;border-radius:8px;padding:9px 5px;font:inherit}.calendar-picker-panel button.selected{background:#f1e6f6;color:var(--accent);border-color:var(--accent);font-weight:800}.year-grid{grid-template-columns:repeat(4,1fr)}
+.mini-cal-head{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;text-align:center;margin-bottom:8px}
+.mini-cal-head button{border:0;background:#f3edf5;color:var(--accent);border-radius:8px;height:38px;font-size:25px}
+.mini-weekdays,.mini-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mini-weekdays span{text-align:center;font-size:11px;font-weight:800;color:var(--muted);padding:5px 0}
+.mini-days button{border:0;background:#fff;border-radius:8px;min-height:40px;font:inherit}
+.mini-days button:hover,.mini-days button:focus{background:#f1e6f6}
+.mini-days button.selected{background:var(--accent);color:#fff;font-weight:800}
+.mini-days button.today{outline:2px solid #c9acd3}
+.mini-days button.empty{visibility:hidden}
+.today-btn{width:100%;margin-top:8px;border:1px solid #d8c6df;background:#f7f0fa;color:var(--accent);border-radius:8px;padding:9px;font-weight:800}
+
+.page-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.page-status-item{width:100%;text-align:left;border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 11px;cursor:pointer;font:inherit;color:var(--ink);transition:.18s}
+.page-status-item:hover{border-color:#c8acd2}
+.page-status-item.current{border:2px solid var(--accent);background:#fbf6fd;padding:9px 10px}
+.page-status-name{display:flex;align-items:center;justify-content:space-between;gap:7px;font-weight:800;font-size:12px}
+.page-status-badge{white-space:nowrap;font-size:10px;font-weight:900;border-radius:999px;padding:4px 7px}
+.page-status-badge.complete{background:#e8f6ef;color:#087443}
+.page-status-badge.missed{background:#fff2f0;color:#b42318}
+.page-status-badge.empty{background:#f1edf3;color:#70677a}
+.page-status-badge.review{background:#f1e6f6;color:var(--accent)}
+.page-status-sub{margin-top:4px;color:var(--muted);font-size:10px}
+@media(max-width:650px){
+  .page-status-grid{grid-template-columns:1fr 1fr}
+  .page-status-item{min-height:62px}
+}
+
+/* v1.8 calendar: explicit Year -> Month -> Day picker */
+.mini-calendar{position:absolute;z-index:1000;top:calc(100% + 6px);left:0;width:min(340px,94vw);background:#fff;border:1px solid #d9cddd;border-radius:14px;box-shadow:0 12px 30px rgba(50,30,60,.16);padding:12px;display:none}
+.mini-calendar.open{display:block}
+.mini-cal-head{display:grid;grid-template-columns:40px 1fr 40px;gap:6px;align-items:center;margin-bottom:8px}
+.mini-cal-head button,.mini-cal-head strong{min-height:40px;border:1px solid #ded5e2;background:#fff;border-radius:9px}
+.mini-cal-head button{font-size:20px;color:var(--accent);cursor:pointer}
+.mini-cal-head strong{display:flex;align-items:center;justify-content:center;gap:5px;font-size:14px;color:#302a34;cursor:pointer}
+.calendar-switch{display:flex;gap:6px;margin-bottom:8px}
+.calendar-switch button{flex:1;border:1px solid #ded5e2;background:#faf8fb;border-radius:8px;padding:8px;font-weight:800;color:#5b5360;cursor:pointer}
+.calendar-switch button.active{background:#f0e4f5;color:var(--accent);border-color:#c9a9d2}
+.calendar-panel{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.calendar-panel button{min-height:42px;border:1px solid #ded5e2;background:#fff;border-radius:9px;color:#413a46;font-weight:700;cursor:pointer}
+.calendar-panel button:hover,.calendar-panel button.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+.calendar-panel button.current{outline:2px solid #d7b7df;outline-offset:1px}
+.mini-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:5px}
+.mini-weekdays span{text-align:center;font-size:10px;color:#817687;font-weight:800}
+.mini-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mini-days button{min-height:36px;border:1px solid #eee8f0;background:#fff;border-radius:7px;cursor:pointer}
+.mini-days button.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mini-days button.today{outline:2px solid #d7b7df;outline-offset:1px}
+.mini-days button.empty{visibility:hidden}
+.date-format-note{font-size:10px;color:var(--muted);margin-top:4px}
+.lab-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+.lab-field{margin:0}
+.lab-input{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.lab-input input{min-width:0}
+.lab-input span{height:100%;min-height:52px;display:flex;align-items:center;padding:0 14px;border:1px solid #ddd;border-left:0;border-radius:0 12px 12px 0;background:#f6f3f8;color:#4a4450;font-weight:600;white-space:nowrap}
+.lab-input input{border-radius:12px 0 0 12px}
+@media(min-width:700px){.lab-grid{grid-template-columns:1fr 1fr}}
+
+.pruritusDetails{}
+.inline-two{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;align-items:center}
+.questionnaire-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.questionnaire-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;box-shadow:0 2px 8px #00000008}
+.questionnaire-card.current{border:2px solid var(--accent);padding:13px;background:#fbf7fd}
+.qcard-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.qcard-title{font-size:17px;font-weight:900;color:var(--ink)}
+.qcard-status{font-size:11px;font-weight:900;border-radius:999px;padding:5px 8px;background:#f1edf3;color:#70677a;white-space:nowrap}
+.qcard-status.complete{background:#e8f6ef;color:#087443}
+.qcard-status.missed{background:#fff2f0;color:#b42318}
+.qcard-count{font-size:11px;color:var(--muted);margin-top:8px}
+.qcard-bar{height:7px;background:#eee8f0;border-radius:99px;overflow:hidden;margin-top:8px}.qcard-fill{height:100%;background:var(--accent);width:0%;transition:.2s}
+.qopen{width:100%;margin-top:12px;border:0;background:var(--accent);color:#fff;border-radius:9px;padding:11px;font-weight:900;font:inherit;cursor:pointer}
+.questionnaire-panel{margin-top:14px;border:1px solid #d8c9df;border-radius:14px;background:#fff;padding:14px;box-shadow:0 8px 25px #0000000c}
+.qpanel-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}.qpanel-head h3{margin:0}.qpanel-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.qclose{border:0;background:#f3edf5;color:var(--accent);width:36px;height:36px;border-radius:9px;font-size:22px;font-weight:800}
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.q-field label{display:block;font-weight:800;font-size:13px;margin-bottom:6px}.q-field input,.q-field select{width:100%;box-sizing:border-box;min-height:50px;padding:11px 12px;border:1px solid #d8d1dc;border-radius:9px;background:#fff;font:inherit}.q-field input:focus,.q-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #7b3f9818;outline:0}
+.q-submit-row{display:flex;justify-content:flex-end;margin-top:14px}.q-submit{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:11px 22px;font:inherit;font-weight:900}.q-error{display:none;margin-top:10px;padding:10px;border-radius:9px;background:#fff2f0;color:#b42318;font-size:12px}.q-error.show{display:block}.score-note{margin-top:10px;padding:9px 11px;background:#f7f0fa;border-radius:8px;color:#4f4655;font-weight:800;font-size:12px}
+.wi-scale{display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin:8px 0}.wi-scale button{min-height:44px;border:1px solid #d8d1dc;background:#fff;border-radius:8px;font-weight:900;color:#4a4350}.wi-scale button.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(max-width:650px){.questionnaire-cards{grid-template-columns:1fr 1fr;gap:8px}.q-grid{grid-template-columns:1fr}.inline-two{grid-template-columns:1fr 110px}.questionnaire-card{padding:11px}.qcard-title{font-size:15px}.wi-scale{gap:3px}.wi-scale button{min-height:38px;font-size:12px}}
+
+/* v1.21 questionnaire refinements: robust KDQOL-36 six-page pagination + bottom pager */
+#qpanel-kdqol .q-grid{display:block}
+#qpanel-kdqol .q-item{border:1px solid #ded5e3;border-radius:12px;padding:12px;margin-bottom:12px;background:#fff;box-shadow:0 2px 8px #00000008}
+#qpanel-kdqol .q-number{font-size:12px;font-weight:900;color:var(--accent);margin-bottom:5px}
+#qpanel-kdqol .q-question{font-size:14px;font-weight:800;line-height:1.45;margin-bottom:11px}
+#qpanel-kdqol .q-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#qpanel-kdqol .q-option{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:7px;min-height:58px;padding:9px 7px;border:1px solid #ddd4e2;border-radius:10px;background:#faf8fb;cursor:pointer}
+#qpanel-kdqol .q-option span{font-size:12px;font-weight:800;line-height:1.25;order:0}
+#qpanel-kdqol .q-option input{order:1;margin:0;width:19px;height:19px;accent-color:var(--accent)}
+#qpanel-kdqol .q-option:has(input:checked){border-color:var(--accent);background:#f3eaf7;box-shadow:0 0 0 1px var(--accent)}
+.kdqol-pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;padding:10px;border:1px solid #ded5e3;border-radius:10px;background:#f8f4fa}
+.kdqol-pager-info{text-align:center;flex:1;font-size:12px;font-weight:900;color:#4f4655}
+.kdqol-pager button{min-width:88px;border:0;background:var(--accent);color:#fff;border-radius:9px;padding:10px 12px;font-weight:900}
+.kdqol-pager button:disabled{opacity:.45;cursor:not-allowed}
+/* KDQOL-36 internal pagination: only the current page is visible. */
+#qpanel-kdqol .q-item.kdqol-page-hidden{display:none !important}
+#qpanel-kdqol .q-item.kdqol-page-visible{display:block !important} #qpanel-kdqol .q-item[hidden]{display:none !important}
+.kdqol-page-note{text-align:center;color:var(--muted);font-size:11px;margin:-4px 0 10px}
+@media(max-width:650px){#qpanel-kdqol .q-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}#qpanel-kdqol .q-option{padding:8px 5px;min-height:56px}#qpanel-kdqol .q-option span{font-size:11px}.kdqol-pager button{min-width:78px;padding:9px 8px}}
+
+.mars-item .q-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mars-item .q-option{min-height:72px}
+.q-mars-intro{margin:0 0 12px;color:#666}
+@media(max-width:420px){
+  .mars-item .q-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .mars-item .q-option{min-height:68px}
+}
+
+.psqi-pager-wrap{margin-top:10px}
+.psqi-page{display:none}
+.psqi-page.is-active{display:block}
+.psqi-page-title{font-weight:800;color:#6b21a8;margin:4px 0 12px}
+.psqi-item{
+  margin:0 0 18px;
+  padding:16px;
+  border:1px solid #ded5e3;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 2px 8px #00000008;
+}
+.psqi-item .q-number{
+  display:inline-block;
+  margin-bottom:7px;
+  font-size:14px;
+  font-weight:900;
+  color:var(--accent);
+}
+.psqi-item .q-question{
+  font-size:16px;
+  font-weight:800;
+  line-height:1.45;
+  margin-bottom:14px;
+}
+.psqi-item .q-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.psqi-item .q-option{
+  min-height:70px;
+  padding:10px 8px;
+  border:1px solid #ddd4e2;
+  border-radius:11px;
+  background:#faf8fb;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:7px;
+  cursor:pointer;
+}
+.psqi-item .q-option span{
+  font-size:13px;
+  font-weight:800;
+  line-height:1.3;
+}
+.psqi-item .q-option input{
+  width:19px;
+  height:19px;
+  margin:0;
+  accent-color:var(--accent);
+}
+.psqi-item .q-option:has(input:checked){
+  border-color:var(--accent);
+  background:#f3eaf7;
+  box-shadow:0 0 0 1px var(--accent);
+}
+.psqi-clean-question{
+  margin-top:4px;
+}
+
+.psqi-number,.psqi-time,.psqi-text{width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd;border-radius:12px;font-size:16px;margin-top:10px}
+.psqi-item .q-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.psqi-item .q-option{min-height:66px}
+.psqi-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:12px;border-top:1px solid #eee}
+.psqi-nav button{min-height:44px}
+.psqi-score-card{background:#faf7ff;border:1px solid #e7d8f5;border-radius:14px;padding:14px;margin:12px 0}
+.psqi-note{font-size:13px;color:#666;margin-top:10px}
+.psqi-submit-row{text-align:center;margin-top:16px}
+@media(max-width:420px){.psqi-item .q-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.psqi-item .q-option{min-height:62px;font-size:13px}}
+
+.med-review{display:flex;flex-direction:column;gap:16px}
+.med-section{background:#fff;border:1px solid #e3d9e8;border-radius:15px;padding:14px}
+.med-section-title{font-weight:800;margin-bottom:12px;color:#5d3a68}
+.med-chip-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.med-chip{border:1px solid #d8cbe0;border-radius:11px;background:#faf7fc;padding:11px 8px;min-height:48px;font-weight:700}
+.med-chip.is-selected{background:#eee0f4;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.med-selected-box{min-height:150px;border:2px dashed #cdbbd5;border-radius:13px;padding:10px;background:#fcfbfd}
+.med-selected-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.med-pill{display:inline-flex;align-items:center;gap:7px;background:#eee0f4;border:1px solid #d7c1df;border-radius:20px;padding:8px 10px;font-size:14px}
+.med-pill button{border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer}
+.med-manual-row{display:flex;align-items:center;gap:8px;margin-top:8px;border-top:1px solid #eadfeb;padding-top:8px}
+.med-manual-input{flex:1;min-width:0;box-sizing:border-box;border:0;outline:0;background:transparent;padding:10px 4px;font-size:15px}
+.med-manual-add{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:25px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 2px 7px #7b3f9830}
+.med-manual-add:active{transform:scale(.96)}
+.med-count-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 12px;border-radius:10px;background:#f7f3f8}
+.med-count-row strong{font-size:20px;color:var(--accent)}
+.med-yesno{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.med-radio{border:1px solid #ddd0e2;border-radius:11px;padding:13px;text-align:center;font-weight:700;background:#faf8fb}
+.med-radio input{margin-right:7px;accent-color:var(--accent)}
+.med-change-fields{display:grid;gap:10px;margin-top:12px}
+.med-change-fields[hidden]{display:none}
+.med-change-fields label{display:grid;gap:6px;font-weight:700;font-size:14px}
+.med-change-fields input{padding:12px;border:1px solid #d9d0dd;border-radius:10px;font-size:16px}
+@media(max-width:420px){.med-chip-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.med-chip{font-size:13px;padding:9px 6px}}
+
+/* v1.32 — Final review */
+.review{display:flex;flex-direction:column;gap:12px}
+.review-summary{font-weight:900;font-size:16px;margin-bottom:2px}
+.review-group{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}
+.review-group h3{margin:0 0 10px;color:var(--accent);font-size:16px}
+.review-missing{border:1px solid #f0b6b0;background:#fff7f6;border-radius:12px;padding:12px;margin:8px 0}
+.review-missing .review-field-title{font-weight:900;color:#b42318}
+.review-value{font-size:12px;color:var(--muted);margin-top:4px}
+.review-actions{display:flex;gap:8px;align-items:flex-start;margin-top:10px;flex-wrap:wrap}
+.review-actions button{border:0;border-radius:9px;padding:9px 13px;font-weight:900;font:inherit;cursor:pointer}
+.fix-btn{background:var(--accent);color:#fff}
+.reason-btn{background:#fff;border:1px solid #d8c7df!important;color:var(--accent)}
+.reason-wrap{display:none;margin-top:9px}
+.reason-wrap textarea{width:100%;min-height:70px;border:1px solid #d8c7df;border-radius:9px;padding:9px;font:inherit;resize:vertical}
+.reason-wrap.show{display:block}
+.review-ok{border:1px solid #b8dfca;background:#f3fbf6;color:#087443;border-radius:12px;padding:13px;font-weight:800}
+.review-notes{margin-top:14px}
+.review-nav{width:100%;display:grid;grid-template-columns:1fr 1.25fr 1.25fr 1fr 1fr;gap:8px}
+.standard-nav{display:flex;width:100%;gap:14px}
+.standard-nav button{flex:1}
+.review-nav button{min-height:58px;border-radius:12px;font:inherit;font-weight:900;cursor:pointer}
+.review-nav .draft{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.review-nav .danger-outline{background:#fff;border:1px solid #efb2ad;color:#b42318}
+.review-nav .save{background:#fff!important;border:1px solid var(--accent);color:var(--accent)!important}
+.review-nav .complete{background:var(--accent);border:0;color:#fff}
+@media(max-width:650px){
+  .review-nav{grid-template-columns:1fr 1fr}
+  .review-nav .complete{grid-column:span 2}
+}
+
+.draft-status{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff3d8;color:#775a12;font-size:12px;font-weight:900}
+.draft-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.draft-actions button{border-radius:9px;padding:9px 12px;font:inherit;font-weight:800;cursor:pointer}
+.draft-resume{background:var(--accent);color:#fff;border:0}
+.draft-delete{background:#fff;color:#b42318;border:1px solid #efb2ad}
+.backup-note{font-size:12px;color:var(--muted)}
+
+/* v1.41 final review fixes */
+body.form-entry-mode #dashboardSearch,
+body.form-entry-mode #dashboard,
+body.form-entry-mode #dashboardFollowups{display:none!important}
+.mars-item{border:1px solid #ded5e3;border-radius:14px;padding:16px;margin:0 0 16px;background:#fff;box-shadow:0 2px 8px #00000008}
+.lab-na-row{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;font-weight:800;color:#6b5d71}
+.lab-na-row input{width:18px;height:18px;accent-color:var(--accent)}
+.lab-field.is-na .lab-input{opacity:.5}.lab-field.is-na .lab-input input{background:#f2eef4!important}
+body.followup-mode .baseline-fixed{display:none!important}
+
+
+/* PWA install banner */
+#installBanner{
+  position:fixed;left:14px;right:14px;bottom:18px;z-index:9999;
+  background:#f5eadc;border:1px solid #c9afd3;border-radius:16px;
+  box-shadow:0 14px 36px rgba(0,0,0,.18);padding:14px;
+  display:none;align-items:center;gap:12px;
+}
+#installBanner.show{display:flex}
+#installBanner img{width:52px;height:52px;border-radius:12px;flex:0 0 auto}
+#installBanner .install-copy{flex:1;min-width:0}
+#installBanner .install-title{font-weight:900;color:#5c3569;margin-bottom:3px}
+#installBanner .install-sub{font-size:12px;color:#6e6672;line-height:1.35}
+#installBanner .install-actions{display:flex;gap:8px;flex-wrap:wrap}
+#installBanner button{
+  border-radius:10px;padding:9px 12px;font:inherit;font-weight:800;cursor:pointer
+}
+#installNowBtn{background:#7d3c98;color:#fff;border:0}
+#installLaterBtn{background:#fff;color:#7d3c98;border:1px solid #c9afd3}
+
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#7d3c98">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CKD Portal">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+</head>
+<body>
+
+<header>
+  <div class="head">
+    <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()">
+      <span>⋮</span>
+    </button>
+    <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Research Portal • Mobile-first</p></div>
+    <button class="topbtn" onclick="showDashboardHome()">Dashboard</button><button class="topbtn" onclick="openRegistry()">Patients</button>
+  </div>
+</header>
+
+<div id="sideMenuBackdrop" class="side-menu-backdrop" onclick="closeSideMenu()"></div>
+<aside id="sideMenu" class="side-menu" aria-hidden="true">
+  <div class="side-menu-head">
+    <div><strong>Menu</strong><small>Research Portal</small></div>
+    <button type="button" onclick="closeSideMenu()">×</button>
+  </div>
+
+  <button class="menu-item" type="button" onclick="showDashboardHome();closeSideMenu()">
+    <span class="menu-icon">⌂</span><span>Dashboard</span>
+  </button>
+  <button class="menu-item" type="button" onclick="openRegistry();closeSideMenu()">
+    <span class="menu-icon">👤</span><span>Patients</span>
+  </button>
+  <button class="menu-item" type="button" onclick="openRegistry();closeSideMenu()">
+    <span class="menu-icon">↻</span><span>Follow-ups</span>
+  </button>
+  <button class="menu-item" type="button" onclick="newPatient();closeSideMenu()">
+    <span class="menu-icon">＋</span><span>New Patient</span>
+  </button>
+  <button class="menu-item" type="button" onclick="exportPatients();closeSideMenu()">
+    <span class="menu-icon">⇩</span><span>Export Excel</span>
+  </button>
+  <button class="menu-item" type="button" onclick="showDraft();closeSideMenu()">
+    <span class="menu-icon">▣</span><span>Drafts</span>
+  </button>
+  <button class="menu-item" type="button" onclick="createFullBackup();closeSideMenu()">
+    <span class="menu-icon">⤓</span><span>Backup Data</span>
+  </button>
+  <button class="menu-item" type="button" onclick="document.getElementById('restoreBackupInput').click();closeSideMenu()">
+    <span class="menu-icon">⤒</span><span>Restore Backup</span>
+  </button>
+  <input id="restoreBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="restoreFullBackup(this.files[0]);this.value=''">
+</aside>
+
+
+
+<div id="draftPanel" class="registry-panel" style="display:none">
+  <div class="registry-card registry-full">
+    <div class="registry-head">
+      <div><div class="eyebrow">Saved locally on this device</div><h2>Drafts</h2><p>Resume an unfinished interview or delete a draft.</p></div>
+      <button type="button" class="close-registry" onclick="closeDraftPanel()">×</button>
+    </div>
+    <div class="registry-summary" id="draftSummary"></div>
+    <div id="draftList" class="registry-list"></div>
+  </div>
+</div>
+
+<div id="registryPanel" class="registry-panel" style="display:none">
+  <div class="registry-card registry-full">
+    <div class="registry-head">
+      <div>
+        <div class="eyebrow">Patient Registry</div>
+        <h2>Patients</h2>
+        <p>Open an existing patient record or start a new one.</p>
+      </div>
+      <button type="button" class="close-registry" onclick="closeRegistry()">×</button>
+    </div>
+
+    <div class="registry-tabs">
+      <button type="button" class="registry-tab active" onclick="setRegistryFilter('all',this)">All Patients</button>
+      <button type="button" class="registry-tab" onclick="setRegistryFilter('followup',this)">Follow-ups Due</button>
+    </div>
+
+    <div class="registry-tools">
+      <div class="search-wrap">
+        <span>⌕</span>
+        <input id="registrySearch" type="search" placeholder="Search patient name or number">
+      </div>
+      <button type="button" class="new-patient-btn" onclick="newPatient();closeRegistry()">＋ New Patient</button>
+    </div>
+
+    <div class="registry-summary" id="registrySummary"></div>
+    <div id="registryList" class="registry-list"></div>
+  </div>
+</div>
+
+<main>
+  <div class="hero"><h2 id="heroTitle">Patient Record</h2><div class="muted">Complete one section at a time. Your answers remain saved while moving between pages.</div></div>
+
+<div id="dashboardSearch" class="dashboard-search" aria-label="Search patients">
+  <div class="dashboard-search-box">
+    <span class="dashboard-search-icon">⌕</span>
+    <input id="dashboardPatientSearch" type="search" autocomplete="off" placeholder="Search Patient Name or Patient ID...">
+  </div>
+  <div id="dashboardSearchResults" class="dashboard-search-results"></div>
+</div>
+<div id="dashboard" class="dashboard" aria-label="Patient statistics">
+  <div class="dashboard-card">
+    <div class="dashboard-label">Total Patients</div>
+    <div class="dashboard-value" id="dashTotalPatients">0</div>
+  </div>
+  <div class="dashboard-card">
+    <div class="dashboard-label">Completed Patients</div>
+    <div class="dashboard-value" id="dashCompletedPatients">0</div>
+  </div>
+  <div class="dashboard-card">
+    <div class="dashboard-label">Draft Patients</div>
+    <div class="dashboard-value" id="dashDraftPatients">0</div>
+  </div>
+</div>
+<div id="dashboardFollowups" class="dashboard dashboard-followups" aria-label="Follow-up statistics">
+  <div class="dashboard-card">
+    <div class="dashboard-label">Follow-up 1</div>
+    <div class="dashboard-value" id="dashFollowup1">0</div>
+  </div>
+  <div class="dashboard-card">
+    <div class="dashboard-label">Follow-up 2</div>
+    <div class="dashboard-value" id="dashFollowup2">0</div>
+  </div>
+</div>
+
+  <div class="progress-card">
+    <div class="progress-top"><span id="pageName">Page 1 — Patient Profile</span><span id="counter">Page 1 of 9</span></div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div id="pageStatusGrid" class="page-status-grid" aria-label="Page status"></div>
+  </div>
+  <form id="wizard" class="card">
+    <section class="step" data-step="1">
+      <div class="step-title"><span>Page 1</span><h2>Patient &amp; Visit Information</h2><p>Confirm the patient profile, then select the visit type and visit date. For follow-up visits, the original patient information remains loaded and only the new visit information is continued.</p></div>
+
+      <div class="subsection">
+        <h3>Basic Information</h3>
+        <div class="grid">
+          <div class="field">
+            <label>Patient Name</label>
+            <input type="text" name="Patient_Name" placeholder="Enter patient name">
+            <div id="duplicateWarning" class="duplicate-warning" role="alert" aria-live="polite" style="display:none">
+              <strong>⚠️ Existing patient name detected</strong>
+              <span id="duplicateWarningText">A patient with this name already exists in this device.</span>
+              <button type="button" id="openExistingPatient" style="display:none">Open existing patient</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Patient ID</label>
+            <input type="text" name="Patient_ID" id="patientId" readonly placeholder="CKD PT 01">
+            <small>Automatically generated and permanently linked to this patient.</small>
+          </div>
+          <div class="field">
+            <label>Patient Number</label>
+            <input type="number" name="Patient_Number" inputmode="numeric" placeholder="Enter patient number">
+          </div>
+          <div class="field">
+            <label>Age</label>
+            <input type="number" name="Age" min="0" max="120" inputmode="numeric" placeholder="Enter age">
+          </div>
+          <div class="field">
+            <label>Center</label>
+            <select name="Center">
+              <option value="">Select center…</option>
+              <option>المركز العراقي لغسل الكلى</option>
+              <option>مركز مستشفى بغداد لغسل الكلى</option>
+              <option>مركز مستشفى الإمام الكاظمين لغسل الكلى</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Researcher / Interviewer Name</label>
+            <input type="text" name="Researcher_Interviewer_Name" placeholder="Enter researcher / interviewer name">
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Demographics</h3>
+        <div class="grid">
+          <div class="field">
+            <label>Sex</label>
+            <select name="Sex">
+              <option value="">Select…</option>
+              <option>Female</option>
+              <option>Male</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Marital Status</label>
+            <select name="Marital_Status">
+              <option value="">Select…</option>
+              <option>Married</option>
+              <option>Single</option>
+              <option>Divorced</option>
+              <option>Widowed</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Education Level</label>
+            <select name="Education_Level">
+              <option value="">Select…</option>
+              <option>No formal education</option>
+              <option>Primary</option>
+              <option>Secondary</option>
+              <option>College</option>
+              <option>Institute</option>
+              <option>Postgraduate</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Employment Status</label>
+            <select name="Employment_Status">
+              <option value="">Select…</option>
+              <option>Employed</option>
+              <option>Not employed</option>
+              <option>Retired</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Smoking</h3>
+        <div class="grid">
+          <div class="field">
+            <label>Smoking Status</label>
+            <select name="Smoking_Status" id="smokingStatus">
+              <option value="">Select…</option>
+              <option>Never</option>
+              <option>Former</option>
+              <option>Current</option>
+            </select>
+          </div>
+          <div class="field">
+            <label id="packsLabel">Packs / day</label>
+            <input type="number" name="Packs_Per_Day" id="packsPerDay" min="0" step="0.1" inputmode="decimal" placeholder="Enter number of packs">
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection visit-information-section">
+        <h2>Visit Information</h2><p class="muted">Select Baseline, Follow-up 1, or Follow-up 2 for this patient.</p>
+
+      <div class="notice">For follow-up visits, open the original patient record and choose <b>Follow-up 1</b> or <b>Follow-up 2</b>. The Patient Profile remains the original Baseline profile; only visit-specific information is updated for the new visit.</div>
+
+      <div class="subsection">
+        <h3>Visit Type</h3>
+        <div class="visit-options">
+          <label class="visit-option"><input type="radio" name="Visit_Type" value="Baseline"><span>Baseline</span></label>
+          <label class="visit-option"><input type="radio" name="Visit_Type" value="Follow-up 1"><span>Follow-up 1</span></label>
+          <label class="visit-option"><input type="radio" name="Visit_Type" value="Follow-up 2"><span>Follow-up 2</span></label>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Visit Date</h3>
+        <div class="grid">
+          <div class="field">
+            <label>Visit Date</label>
+            <div class="date-picker mobile-date-picker">
+              <button type="button" class="date-display-box date-button" id="dateDisplayBox" onclick="openDateCalendar()">Select date</button>
+              <input type="hidden" name="Visit_Date" id="visitDate">
+              <div class="mini-calendar" id="miniCalendar" aria-hidden="true">
+                <div class="mini-cal-head">
+                  <button type="button" onclick="changeCalendarMonth(-1)">‹</button>
+                  <div class="cal-title-pickers">
+                    <button type="button" class="cal-title-btn" id="calendarMonthTitle" onclick="openMonthPicker('visit')"></button>
+                    <button type="button" class="cal-title-btn year" id="calendarYearTitle" onclick="openYearPicker('visit')"></button>
+                  </div>
+                  <button type="button" onclick="changeCalendarMonth(1)">›</button>
+                </div>
+                <div class="calendar-picker-panel" id="visitCalendarMonthPicker"></div>
+                <div class="calendar-picker-panel year-grid" id="visitCalendarYearPicker"></div>
+                <div class="mini-weekdays">
+                  <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+                <div class="mini-days" id="calendarDays"></div>
+                <button type="button" class="today-btn" onclick="selectToday()">Today</button>
+              </div>
+            </div>
+            <small>The current date is selected automatically. Tap the date field to open the full calendar and choose another date.</small>
+          </div>
+          <div class="field">
+            <label>Visit ID</label>
+            <input type="text" name="Visit_ID" id="visitId" readonly placeholder="BL01 / FU01 / FU02">
+            <small>Automatically generated as two letters + two numbers.</small>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+<section class="step" data-step="2">
+  <div class="step-title"><span>Page 2</span><h2>CKD &amp; Hemodialysis</h2><p>Clinical and hemodialysis information. All fields are optional.</p></div>
+
+  <div class="subsection baseline-fixed">
+    <h3>Chronic Kidney Disease</h3>
+
+    <div class="field">
+      <label>CKD Diagnosis Date</label>
+      <div class="date-picker mobile-date-picker">
+        <button type="button" class="date-button" id="ckdDiagnosisDateDisplay"
+                onclick="toggleCustomCalendar('ckdDiagnosisCalendar')">Select date</button>
+        <input type="hidden" name="CKD_Diagnosis_Date" id="ckdDiagnosisDate"><div class="date-format-note">Format: DD/MM/YYYY</div>
+        <div class="mini-calendar" id="ckdDiagnosisCalendar" aria-hidden="true">
+          <div class="mini-cal-head">
+            <button type="button" onclick="changeCustomCalendarMonth('ckdDiagnosis',-1)" aria-label="Previous">‹</button>
+            <strong id="ckdDiagnosisCalendarTitle" onclick="openCalendarYearPicker('ckdDiagnosis')" title="Choose year">Select date</strong>
+            <button type="button" onclick="changeCustomCalendarMonth('ckdDiagnosis',1)" aria-label="Next">›</button>
+          </div>
+          <div class="calendar-switch">
+            <button type="button" id="ckdDiagnosisYearTab" onclick="openCalendarYearPicker('ckdDiagnosis')">Year</button>
+            <button type="button" id="ckdDiagnosisMonthTab" onclick="openCalendarMonthPicker('ckdDiagnosis')">Month</button>
+            <button type="button" id="ckdDiagnosisDayTab" onclick="openCalendarDayPicker('ckdDiagnosis')">Day</button>
+          </div>
+          <div class="calendar-panel" id="ckdDiagnosisCalendarPanel"></div>
+          <div class="mini-weekdays" id="ckdDiagnosisWeekdays" style="display:none">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="mini-days" id="ckdDiagnosisCalendarDays" style="display:none"></div>
+          <button type="button" class="today-btn" onclick="selectCustomToday('ckdDiagnosis')">Today</button>
+        </div>
+      </div>
+      <small>Select the date when CKD was diagnosed. The duration below is calculated automatically.</small>
+    </div>
+
+    <div class="field" style="margin-top:14px">
+      <label>CKD Duration (months)</label>
+      <input type="number" name="CKD_Duration_Months" id="ckdDurationMonths"
+             min="0" step="0.1" inputmode="decimal" readonly placeholder="Calculated automatically">
+      <small>Automatically calculated from CKD Diagnosis Date to the visit date. You do not need to enter it manually.</small>
+    </div>
+
+    <div class="field" style="margin-top:14px">
+      <label>CKD Cause</label>
+      <select name="CKD_Cause" id="ckdCauseSelect">
+        <option value="">Select cause...</option>
+        <option>Diabetes Mellitus</option>
+        <option>Hypertension</option>
+        <option>Glomerulonephritis</option>
+        <option>Polycystic Kidney Disease (PKD)</option>
+        <option>Interstitial Nephritis</option>
+        <option>Prolonged Urinary Tract Obstruction</option>
+        <option>Recurrent Kidney Infections (Chronic Pyelonephritis)</option>
+        <option>Chronic Use of Certain Medications</option>
+        <option>SLE</option>
+        <option>Other</option>
+      </select>
+      <small>Select one primary CKD cause.</small>
+    </div>
+
+    <div class="field" id="otherCkdCauseField" style="margin-top:14px;display:none">
+      <label>Other CKD Cause</label>
+      <input type="text" name="CKD_Cause_Other" id="otherCkdCause" placeholder="Please specify the CKD cause">
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3>Hemodialysis</h3>
+
+    <div class="field baseline-fixed">
+      <label>Hemodialysis First Session</label>
+      <div class="date-picker mobile-date-picker">
+        <button type="button" class="date-button" id="hdFirstSessionDateDisplay"
+                onclick="toggleCustomCalendar('hdFirstSessionCalendar')">Select date</button>
+        <input type="hidden" name="Hemodialysis_First_Session_Date" id="hdFirstSessionDate"><div class="date-format-note">Format: DD/MM/YYYY</div>
+        <div class="mini-calendar" id="hdFirstSessionCalendar" aria-hidden="true">
+          <div class="mini-cal-head">
+            <button type="button" onclick="changeCustomCalendarMonth('hdFirstSession',-1)" aria-label="Previous">‹</button>
+            <strong id="hdFirstSessionCalendarTitle" onclick="openCalendarYearPicker('hdFirstSession')" title="Choose year">Select date</strong>
+            <button type="button" onclick="changeCustomCalendarMonth('hdFirstSession',1)" aria-label="Next">›</button>
+          </div>
+          <div class="calendar-switch">
+            <button type="button" id="hdFirstSessionYearTab" onclick="openCalendarYearPicker('hdFirstSession')">Year</button>
+            <button type="button" id="hdFirstSessionMonthTab" onclick="openCalendarMonthPicker('hdFirstSession')">Month</button>
+            <button type="button" id="hdFirstSessionDayTab" onclick="openCalendarDayPicker('hdFirstSession')">Day</button>
+          </div>
+          <div class="calendar-panel" id="hdFirstSessionCalendarPanel"></div>
+          <div class="mini-weekdays" id="hdFirstSessionWeekdays" style="display:none">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="mini-days" id="hdFirstSessionCalendarDays" style="display:none"></div>
+          <button type="button" class="today-btn" onclick="selectCustomToday('hdFirstSession')">Today</button>
+        </div>
+      </div>
+      <small>Select the date of the patient's first hemodialysis session.</small>
+    </div>
+
+    <div class="field baseline-fixed" style="margin-top:14px">
+      <label>Hemodialysis Duration (months)</label>
+      <input type="number" name="Hemodialysis_Duration_Months" id="hdDurationMonths"
+             min="0" step="0.1" inputmode="decimal" readonly placeholder="Calculated automatically">
+      <small>Automatically calculated from the first hemodialysis session date to the visit date.</small>
+    </div>
+
+    <div class="grid" style="margin-top:14px">
+      <div class="field">
+        <label>Kt/V</label>
+        <input type="number" name="Kt_V" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 1.2">
+      </div>
+      <div class="field baseline-fixed">
+        <label>Hemodialysis Sessions / Week</label>
+        <input type="number" name="Hemodialysis_Sessions_Per_Week" min="0" step="1" inputmode="numeric" placeholder="e.g. 3">
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:14px">
+      <div class="field">
+        <label>Dry Weight (kg)</label>
+        <input type="number" name="Dry_Weight" min="0" step="0.1" inputmode="decimal" placeholder="kg">
+      </div>
+      <div class="field">
+        <label>Current Weight (kg)</label>
+        <input type="number" name="Current_Weight" min="0" step="0.1" inputmode="decimal" placeholder="kg">
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:14px">
+      <label>Missed Hemodialysis Session</label>
+      <div class="choice-row">
+        <label><input type="radio" name="Missed_Hemodialysis_Session" value="Yes"><span>Yes</span></label>
+        <label><input type="radio" name="Missed_Hemodialysis_Session" value="No"><span>No</span></label>
+      </div>
+      <div class="section-note">Select whether the patient missed a hemodialysis session.</div>
+    </div>
+
+    <div class="field" style="margin-top:14px">
+      <label>Session Shift</label>
+      <select name="Session_Shift">
+        <option value="">Select shift...</option>
+        <option>Morning</option>
+        <option>Afternoon</option>
+        <option>Night</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="notice">The two duration fields are calculated automatically in months from the selected dates. CKD Cause is a single dropdown; selecting Other opens a field for the unspecified cause.</div>
+</section>
+</section><section class="step" data-step="3">
+  <div class="step-title"><span>Page 3</span><h2>Lab Data</h2><p>Enter the most recent laboratory results. All fields are optional.</p></div>
+
+  <div class="subsection">
+    <h3>Laboratory Data</h3>
+
+    <div class="field">
+      <label>Last Lab Date</label>
+      <div class="date-picker mobile-date-picker">
+        <button type="button" class="date-button" id="labDateDisplay"
+                onclick="openLabDateCalendar()">Select date</button>
+        <input type="hidden" name="Last_Lab_Date" id="labDate">
+        <div class="date-format-note">Format: DD/MM/YYYY</div>
+        <div class="mini-calendar" id="labDateCalendar" aria-hidden="true">
+          <div class="mini-cal-head">
+            <button type="button" onclick="changeCustomCalendarMonth('labDate',-1)" aria-label="Previous">‹</button>
+            <strong id="labDateCalendarTitle" onclick="openCalendarYearPicker('labDate')" title="Choose year">Select date</strong>
+            <button type="button" onclick="changeCustomCalendarMonth('labDate',1)" aria-label="Next">›</button>
+          </div>
+          <div class="calendar-switch">
+            <button type="button" id="labDateYearTab" onclick="openCalendarYearPicker('labDate')">Year</button>
+            <button type="button" id="labDateMonthTab" onclick="openCalendarMonthPicker('labDate')">Month</button>
+            <button type="button" id="labDateDayTab" onclick="openCalendarDayPicker('labDate')">Day</button>
+          </div>
+          <div class="calendar-panel" id="labDateCalendarPanel"></div>
+          <div class="mini-weekdays" id="labDateWeekdays" style="display:none">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="mini-days" id="labDateCalendarDays" style="display:none"></div>
+          <button type="button" class="today-btn" onclick="selectCustomToday('labDate')">Today</button>
+        </div>
+      </div>
+      <small>Select the date of the latest available laboratory results.</small>
+    </div>
+
+    <div class="lab-grid">
+      <div class="field lab-field"><label>Hb</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Hb" placeholder="Enter value"><span>g/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Hb_NA" onchange="toggleLabNA('Hb',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Albumin</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Albumin" placeholder="Enter value"><span>g/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Albumin_NA" onchange="toggleLabNA('Albumin',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Urea</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Urea" placeholder="Enter value"><span>mg/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Urea_NA" onchange="toggleLabNA('Urea',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Post urea</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Post_Urea" placeholder="Enter value"><span>mg/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Post_Urea_NA" onchange="toggleLabNA('Post_Urea',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Serum Creatinine</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Serum_Creatinine" placeholder="Enter value"><span>mg/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Serum_Creatinine_NA" onchange="toggleLabNA('Serum_Creatinine',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Sodium</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Sodium" placeholder="Enter value"><span>mmol/L</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Sodium_NA" onchange="toggleLabNA('Sodium',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Potassium</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Potassium" placeholder="Enter value"><span>mmol/L</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Potassium_NA" onchange="toggleLabNA('Potassium',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Phosphate</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Phosphate" placeholder="Enter value"><span>mg/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Phosphate_NA" onchange="toggleLabNA('Phosphate',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Calcium</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Calcium" placeholder="Enter value"><span>mg/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Calcium_NA" onchange="toggleLabNA('Calcium',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>PTH</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="PTH" placeholder="Enter value"><span>pg/mL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="PTH_NA" onchange="toggleLabNA('PTH',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Vit D3</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Vit_D3" placeholder="Enter value"><span>ng/mL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Vit_D3_NA" onchange="toggleLabNA('Vit_D3',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Ferritin</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Ferritin" placeholder="Enter value"><span>ng/mL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Ferritin_NA" onchange="toggleLabNA('Ferritin',this.checked)"> Not Available</label></div>
+      <div class="field lab-field"><label>Iron</label><div class="lab-input"><input type="number" step="any" inputmode="decimal" name="Iron" placeholder="Enter value"><span>µg/dL</span></div><label class="lab-na-row"><input type="checkbox" data-status-ignore="true" name="Iron_NA" onchange="toggleLabNA('Iron',this.checked)"> Not Available</label></div>
+    </div>
+  </div>
+</section><section class="step" data-step="4">
+  <div class="step-title"><span>Page 4</span><h2>Pruritus</h2><p>Clinical information about itching and separate herbal remedy use.</p></div>
+
+  <div class="subsection">
+    <h3>Pruritus</h3>
+    <div class="field">
+      <label>Did the patient experience itching during the past month?</label>
+      <div class="choice-row">
+        <label><input type="radio" name="Pruritus_Past_4_Weeks" value="Yes"><span>Yes</span></label>
+        <label><input type="radio" name="Pruritus_Past_4_Weeks" value="No"><span>No</span></label>
+      </div>
+    </div>
+    <div id="pruritusDetails" style="display:none;margin-top:14px">
+      <div class="grid">
+        <div class="field"><label>Pruritus Pattern / Type</label><select name="Pruritus_Pattern"><option value="">Select...</option><option>Continuous</option><option>Intermittent</option></select></div>
+        <div class="field"><label>Pruritus Duration</label><div class="inline-two"><input type="number" min="0" step="any" name="Pruritus_Duration_Value" placeholder="e.g. 6"><select name="Pruritus_Duration_Unit"><option value="">Unit</option><option>Day</option><option>Month</option><option>Year</option></select></div></div>
+        <div class="field"><label>Does itching increase only at night?</label><div class="choice-row"><label><input type="radio" name="Worse_At_Night" value="Yes"><span>Yes</span></label><label><input type="radio" name="Worse_At_Night" value="No"><span>No</span></label></div></div>
+        <div class="field"><label>Does the patient take treatment for itching?</label>
+          <div class="choice-row">
+            <label><input type="radio" name="Pruritus_Treatment_Use" value="Yes"><span>Yes</span></label>
+            <label><input type="radio" name="Pruritus_Treatment_Use" value="No"><span>No</span></label>
+          </div>
+        </div>
+        <div id="pruritusTreatmentDetails" style="display:none;grid-column:1/-1">
+          <div class="grid">
+            <div class="field"><label>Treatment Name</label><input type="text" name="Treatment_Name" placeholder="Enter treatment name"></div>
+            <div class="field"><label>Dose</label><input type="text" name="Dose" placeholder="e.g. 10 mg"></div>
+            <div class="field"><label>How many times per day?</label><input type="number" min="0" step="1" name="Pruritus_Treatment_Frequency" placeholder="e.g. 2"></div>
+            <div class="field"><label>Treatment Duration</label><div class="inline-two"><input type="number" min="0" step="any" name="Pruritus_Treatment_Duration_Value" placeholder="e.g. 2"><select name="Pruritus_Treatment_Duration_Unit"><option value="">Unit</option><option>Day</option><option>Month</option><option>Year</option></select></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection" style="margin-top:16px">
+    <h3>Herbal Use</h3>
+    <div class="field">
+      <label>Has the patient used any herbal remedy?</label>
+      <div class="choice-row">
+        <label><input type="radio" name="Herbal_Use" value="Yes"><span>Yes</span></label>
+        <label><input type="radio" name="Herbal_Use" value="No"><span>No</span></label>
+      </div>
+    </div>
+    <div id="herbalDetails" style="display:none;margin-top:14px">
+      <div class="grid">
+        <div class="field"><label>Herb Name</label><input type="text" name="Herbal_Name" placeholder="Enter herb name"></div>
+        <div class="field"><label>Reason for Use</label><input type="text" name="Herbal_Reason" placeholder="Enter reason"></div>
+        <div class="field"><label>Duration of Use</label><div class="inline-two"><input type="number" min="0" step="any" name="Herbal_Duration_Value" placeholder="e.g. 3"><select name="Herbal_Duration_Unit"><option value="">Unit</option><option>Day</option><option>Month</option><option>Year</option></select></div></div>
+        <div class="field"><label>Time of Use</label><input type="time" name="Herbal_Time"></div>
+        <div class="field"><label>How many times per day?</label><input type="number" min="0" step="1" name="Herbal_Frequency" placeholder="e.g. 2"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="step" data-step="5">
+  <div class="step-title"><span>Page 5</span><h2>Questionnaires</h2><p>Open each questionnaire, complete all required answers, then press Submit.</p></div>
+  <div class="questionnaire-cards" id="questionnaireCards"></div>
+  <div id="questionnairePanels">
+    <div class="questionnaire-panel" id="qpanel-wi" data-qkey="wi" style="display:none">
+      <div class="qpanel-head"><div><h3>WI-NRS</h3><p>Worst itching intensity during the past 24 hours.</p></div><button type="button" class="qclose" onclick="closeQuestionnaire('wi')">×</button></div>
+      <div class="field"><label>Worst itching intensity in the past 24 hours <span>*</span></label><div class="wi-scale" id="wiScale"><button type="button" data-value="0" onclick="selectWiNrs(0)">0</button><button type="button" data-value="1" onclick="selectWiNrs(1)">1</button><button type="button" data-value="2" onclick="selectWiNrs(2)">2</button><button type="button" data-value="3" onclick="selectWiNrs(3)">3</button><button type="button" data-value="4" onclick="selectWiNrs(4)">4</button><button type="button" data-value="5" onclick="selectWiNrs(5)">5</button><button type="button" data-value="6" onclick="selectWiNrs(6)">6</button><button type="button" data-value="7" onclick="selectWiNrs(7)">7</button><button type="button" data-value="8" onclick="selectWiNrs(8)">8</button><button type="button" data-value="9" onclick="selectWiNrs(9)">9</button><button type="button" data-value="10" onclick="selectWiNrs(10)">10</button></div><input type="hidden" name="WI_NRS" id="wiNrsInput"><small>0 = No itching &nbsp; • &nbsp; 10 = Worst imaginable itching</small></div>
+      <input type="hidden" name="WI_NRS_Category" id="wiNrsCategory"><input type="hidden" name="Severe_Pruritus" id="severePruritus">
+      <div class="q-submit-row"><button type="button" class="q-submit" onclick="submitQuestionnaire('wi')">Submit</button></div><div class="q-error" id="qerror-wi"></div>
+    </div>
+    <div class="questionnaire-panel" id="qpanel-mars" data-qkey="mars" style="display:none">
+      <div class="qpanel-head"><div><h3>MARS-5</h3><p>Medication adherence questionnaire.</p></div><button type="button" class="qclose" onclick="closeQuestionnaire('mars')">×</button></div>
+      <div class="q-grid">
+<div class="q-mars-intro">
+  <p><b>Medication Adherence Report Scale (MARS-5)</b></p>
+  <p>Please select one response for each statement.</p>
+</div>
+
+<div class="q-item mars-item">
+  <div class="q-number">1.</div>
+  <div class="q-question">I forget to take my drugs</div>
+  <div class="q-options" role="radiogroup" aria-label="MARS-Q1">
+    <label class="q-option"><input type="radio" name="MARS_Q1" value="1"><span>Always</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q1" value="2"><span>Often</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q1" value="3"><span>Sometimes</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q1" value="4"><span>Rarely</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q1" value="5"><span>Never</span></label>
+  </div>
+</div>
+
+<div class="q-item mars-item">
+  <div class="q-number">2.</div>
+  <div class="q-question">I alter the dose of my drugs</div>
+  <div class="q-options" role="radiogroup" aria-label="MARS-Q2">
+    <label class="q-option"><input type="radio" name="MARS_Q2" value="1"><span>Always</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q2" value="2"><span>Often</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q2" value="3"><span>Sometimes</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q2" value="4"><span>Rarely</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q2" value="5"><span>Never</span></label>
+  </div>
+</div>
+
+<div class="q-item mars-item">
+  <div class="q-number">3.</div>
+  <div class="q-question">I stop taking my drugs for a while</div>
+  <div class="q-options" role="radiogroup" aria-label="MARS-Q3">
+    <label class="q-option"><input type="radio" name="MARS_Q3" value="1"><span>Always</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q3" value="2"><span>Often</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q3" value="3"><span>Sometimes</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q3" value="4"><span>Rarely</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q3" value="5"><span>Never</span></label>
+  </div>
+</div>
+
+<div class="q-item mars-item">
+  <div class="q-number">4.</div>
+  <div class="q-question">I decide to skip a dose of my drugs</div>
+  <div class="q-options" role="radiogroup" aria-label="MARS-Q4">
+    <label class="q-option"><input type="radio" name="MARS_Q4" value="1"><span>Always</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q4" value="2"><span>Often</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q4" value="3"><span>Sometimes</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q4" value="4"><span>Rarely</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q4" value="5"><span>Never</span></label>
+  </div>
+</div>
+
+<div class="q-item mars-item">
+  <div class="q-number">5.</div>
+  <div class="q-question">I take less drugs than instructed</div>
+  <div class="q-options" role="radiogroup" aria-label="MARS-Q5">
+    <label class="q-option"><input type="radio" name="MARS_Q5" value="1"><span>Always</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q5" value="2"><span>Often</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q5" value="3"><span>Sometimes</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q5" value="4"><span>Rarely</span></label>
+    <label class="q-option"><input type="radio" name="MARS_Q5" value="5"><span>Never</span></label>
+  </div>
+</div>
+</div><div class="score-note" id="marsScore">MARS-5 total: —</div>
+      <div class="q-submit-row"><button type="button" class="q-submit" onclick="submitQuestionnaire('mars')">Submit</button></div><div class="q-error" id="qerror-mars"></div>
+    </div>
+    <div class="questionnaire-panel" id="qpanel-psqi" data-qkey="psqi" style="display:none">
+      <div class="qpanel-head"><div><h3>PSQI</h3><p>Pittsburgh Sleep Quality Index. Required questions are marked with *.</p></div><button type="button" class="qclose" onclick="closeQuestionnaire('psqi')">×</button></div>
+      <div class="q-grid"><div class="psqi-pager-wrap" id="psqiPager">
+<div class="psqi-page" data-psqi-page="1">
+  <div class="psqi-page-title">Page 1 of 5</div>
+  <div class="q-item psqi-item"><div class="q-number">1.</div><div class="q-question">During the past month, how would you rate your sleep quality overall?</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q6" value="0"><span>Very good</span></label><label class="q-option"><input type="radio" name="PSQI_Q6" value="1"><span>Fairly good</span></label><label class="q-option"><input type="radio" name="PSQI_Q6" value="2"><span>Fairly bad</span></label><label class="q-option"><input type="radio" name="PSQI_Q6" value="3"><span>Very bad</span></label></div></div>
+  <div class="q-item psqi-item">
+    <div class="q-number">2.</div>
+    <div class="q-question">During the past month, how long (in minutes) has it usually taken you to fall asleep each night?</div>
+    <input class="psqi-number" type="number" min="0" step="1" name="PSQI_Q2" inputmode="numeric" placeholder="Minutes">
+  </div>
+  <div class="q-item psqi-item">
+    <div class="q-number">3.</div>
+    <div class="q-question">During the past month, what time have you usually gone to bed?</div>
+    <input class="psqi-time" type="time" name="PSQI_Q1">
+  </div>
+  <div class="q-item psqi-item">
+    <div class="q-number">4.</div>
+    <div class="q-question">During the past month, what time have you usually gotten up in the morning?</div>
+    <input class="psqi-time" type="time" name="PSQI_Q3">
+  </div>
+  <div class="q-item psqi-item">
+    <div class="q-number">5.</div>
+    <div class="q-question">During the past month, how many hours of actual sleep did you get at night? (This may be different than the number of hours you spend in bed.)</div>
+    <input class="psqi-number" type="number" min="0" max="24" step="0.1" name="PSQI_Q4" inputmode="decimal" placeholder="Hours">
+  </div>
+</div>
+<div class="psqi-page" data-psqi-page="2"><div class="psqi-page-title">Page 2 of 5</div><div class="q-item psqi-item"><div class="q-number">5a.</div><div class="q-question">Cannot get to sleep within 30 minutes</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5a" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5a" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5a" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5a" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5b.</div><div class="q-question">Wake up in the middle of the night or early morning</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5b" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5b" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5b" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5b" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5c.</div><div class="q-question">Have to get up to use the bathroom</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5c" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5c" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5c" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5c" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5d.</div><div class="q-question">Cannot breathe comfortably</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5d" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5d" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5d" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5d" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5e.</div><div class="q-question">Cough or snore loudly</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5e" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5e" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5e" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5e" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5f.</div><div class="q-question">Feel too cold</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5f" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5f" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5f" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5f" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5g.</div><div class="q-question">Feel too hot</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5g" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5g" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5g" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5g" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5h.</div><div class="q-question">Have bad dreams</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5h" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5h" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5h" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5h" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5i.</div><div class="q-question">Have pain</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5i" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5i" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5i" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5i" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">5j.</div><div class="q-question">Other reason(s)</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q5j" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q5j" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5j" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q5j" value="3"><span>Three or more times a week</span></label></div></div><input class="psqi-text" type="text" name="PSQI_Q5j_text" placeholder="If other, please specify (optional)"></div><div class="psqi-page" data-psqi-page="3"><div class="psqi-page-title">Page 3 of 5</div><div class="q-item psqi-item"><div class="q-number">6.</div><div class="q-question">During the past month, how often have you taken medicine (prescribed or over the counter) to help you sleep?</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q7" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q7" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q7" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q7" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">7.</div><div class="q-question">During the past month, how often have you had trouble staying awake while driving, eating meals, or engaging in social activity?</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q8" value="0"><span>Not during the past month</span></label><label class="q-option"><input type="radio" name="PSQI_Q8" value="1"><span>Less than once a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q8" value="2"><span>Once or twice a week</span></label><label class="q-option"><input type="radio" name="PSQI_Q8" value="3"><span>Three or more times a week</span></label></div></div><div class="q-item psqi-item"><div class="q-number">8.</div><div class="q-question">During the past month, how much of a problem has it been for you to keep up enough enthusiasm to get things done?</div><div class="q-options" role="radiogroup"><label class="q-option"><input type="radio" name="PSQI_Q9" value="0"><span>No problem at all</span></label><label class="q-option"><input type="radio" name="PSQI_Q9" value="1"><span>Only a very slight problem</span></label><label class="q-option"><input type="radio" name="PSQI_Q9" value="2"><span>Somewhat of a problem</span></label><label class="q-option"><input type="radio" name="PSQI_Q9" value="3"><span>A very big problem</span></label></div></div></div><div class="psqi-page" data-psqi-page="4">
+  <div class="psqi-page-title">Page 4 of 5</div>
+
+  <div class="q-item psqi-item psqi-clean-question">
+    <div class="q-number">9.</div>
+    <div class="q-question">Do you have a bed partner or roommate?</div>
+    <div class="q-options" role="radiogroup" aria-label="Bed partner or roommate">
+      <label class="q-option">
+        <input type="radio" name="PSQI_Q10" value="0">
+        <span>No bed partner or roommate</span>
+      </label>
+      <label class="q-option">
+        <input type="radio" name="PSQI_Q10" value="1">
+        <span>Partner/roommate in another room</span>
+      </label>
+      <label class="q-option">
+        <input type="radio" name="PSQI_Q10" value="2">
+        <span>Partner/roommate in same room, but not same bed</span>
+      </label>
+      <label class="q-option">
+        <input type="radio" name="PSQI_Q10" value="3">
+        <span>Partner in same bed</span>
+      </label>
+    </div>
+    <div class="psqi-note">This question is recorded for research information only and is not included in the PSQI score.</div>
+  </div>
+</div>
+
+<div class="psqi-page" data-psqi-page="5">
+  <div class="psqi-page-title">Page 5 of 5 — Review & Submit</div>
+  <div class="psqi-score-card">
+    <h3>PSQI scoring</h3>
+    <p>After all required scored items are answered, the seven PSQI component scores and Global PSQI score will be calculated automatically.</p>
+    <div id="psqiScorePreview">Score will appear here after all required answers are complete.</div>
+  </div>
+  <div class="psqi-submit-row">
+    <button type="button" class="primary-btn" id="psqiSubmitBtn">Submit PSQI</button>
+  </div>
+</div>
+
+<div class="psqi-nav">
+  <button type="button" class="secondary-btn" id="psqiBackBtn">← Back</button>
+  <span id="psqiPageIndicator">Page 1 of 5</span>
+  <button type="button" class="primary-btn" id="psqiNextBtn">Next →</button>
+</div>
+</div>
+<input type="hidden" name="PSQI_C1" id="PSQI_C1">
+<input type="hidden" name="PSQI_C2" id="PSQI_C2">
+<input type="hidden" name="PSQI_C3" id="PSQI_C3">
+<input type="hidden" name="PSQI_C4" id="PSQI_C4">
+<input type="hidden" name="PSQI_C5" id="PSQI_C5">
+<input type="hidden" name="PSQI_C6" id="PSQI_C6">
+<input type="hidden" name="PSQI_C7" id="PSQI_C7">
+<input type="hidden" name="PSQI_Global" id="PSQI_Global">
+<input type="hidden" name="PSQI_Sleep_Category" id="PSQI_Sleep_Category">
+</div>
+      <div class="q-submit-row"><button type="button" class="q-submit" onclick="submitQuestionnaire('psqi')">Submit</button></div><div class="q-error" id="qerror-psqi"></div>
+    </div>
+    <div class="questionnaire-panel" id="qpanel-kdqol" data-qkey="kdqol" style="display:none">
+      <div class="qpanel-head"><div><h3>KDQOL-36</h3><p>Kidney Disease Quality of Life questionnaire (36 items). Complete all items, then Submit.</p></div><button type="button" class="qclose" onclick="closeQuestionnaire('kdqol')">×</button></div>
+      <div class="q-grid"><div class="q-item" data-q="1"><div class="q-number">1.</div><div class="q-question">In general, would you say your health is:</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q1"><label class="q-option"><input type="radio" name="KDQOL_Q1" value="1"><span>Excellent</span></label><label class="q-option"><input type="radio" name="KDQOL_Q1" value="2"><span>Very good</span></label><label class="q-option"><input type="radio" name="KDQOL_Q1" value="3"><span>Good</span></label><label class="q-option"><input type="radio" name="KDQOL_Q1" value="4"><span>Fair</span></label><label class="q-option"><input type="radio" name="KDQOL_Q1" value="5"><span>Poor</span></label></div></div><div class="q-item" data-q="2"><div class="q-number">2.</div><div class="q-question">Moderate activities, such as moving a table, pushing a vacuum cleaner, bowling, or playing golf.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q2"><label class="q-option"><input type="radio" name="KDQOL_Q2" value="1"><span>Yes, limited a lot</span></label><label class="q-option"><input type="radio" name="KDQOL_Q2" value="2"><span>Yes, limited a little</span></label><label class="q-option"><input type="radio" name="KDQOL_Q2" value="3"><span>No, not limited at all</span></label></div></div><div class="q-item" data-q="3"><div class="q-number">3.</div><div class="q-question">Climbing several flights of stairs.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q3"><label class="q-option"><input type="radio" name="KDQOL_Q3" value="1"><span>Yes, limited a lot</span></label><label class="q-option"><input type="radio" name="KDQOL_Q3" value="2"><span>Yes, limited a little</span></label><label class="q-option"><input type="radio" name="KDQOL_Q3" value="3"><span>No, not limited at all</span></label></div></div><div class="q-item" data-q="4"><div class="q-number">4.</div><div class="q-question">Accomplished less than you would like as a result of your physical health.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q4"><label class="q-option"><input type="radio" name="KDQOL_Q4" value="1"><span>Yes</span></label><label class="q-option"><input type="radio" name="KDQOL_Q4" value="2"><span>No</span></label></div></div><div class="q-item" data-q="5"><div class="q-number">5.</div><div class="q-question">Were limited in the kind of work or other activities as a result of your physical health.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q5"><label class="q-option"><input type="radio" name="KDQOL_Q5" value="1"><span>Yes</span></label><label class="q-option"><input type="radio" name="KDQOL_Q5" value="2"><span>No</span></label></div></div><div class="q-item" data-q="6"><div class="q-number">6.</div><div class="q-question">Accomplished less than you would like as a result of any emotional problems (such as feeling depressed or anxious).</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q6"><label class="q-option"><input type="radio" name="KDQOL_Q6" value="1"><span>Yes</span></label><label class="q-option"><input type="radio" name="KDQOL_Q6" value="2"><span>No</span></label></div></div><div class="q-item" data-q="7"><div class="q-number">7.</div><div class="q-question">Didn't do work or other activities as carefully as usual as a result of any emotional problems.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q7"><label class="q-option"><input type="radio" name="KDQOL_Q7" value="1"><span>Yes</span></label><label class="q-option"><input type="radio" name="KDQOL_Q7" value="2"><span>No</span></label></div></div><div class="q-item" data-q="8"><div class="q-number">8.</div><div class="q-question">During the past 4 weeks, how much did pain interfere with your normal work (including both work outside the home and housework)?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q8"><label class="q-option"><input type="radio" name="KDQOL_Q8" value="1"><span>Not at all</span></label><label class="q-option"><input type="radio" name="KDQOL_Q8" value="2"><span>A little bit</span></label><label class="q-option"><input type="radio" name="KDQOL_Q8" value="3"><span>Moderately</span></label><label class="q-option"><input type="radio" name="KDQOL_Q8" value="4"><span>Quite a bit</span></label><label class="q-option"><input type="radio" name="KDQOL_Q8" value="5"><span>Extremely</span></label></div></div><div class="q-item" data-q="9"><div class="q-number">9.</div><div class="q-question">Have you felt calm and peaceful during the past 4 weeks?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q9"><label class="q-option"><input type="radio" name="KDQOL_Q9" value="1"><span>All of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q9" value="2"><span>Most of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q9" value="3"><span>A good bit of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q9" value="4"><span>Some of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q9" value="5"><span>A little of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q9" value="6"><span>None of the time</span></label></div></div><div class="q-item" data-q="10"><div class="q-number">10.</div><div class="q-question">Did you have a lot of energy during the past 4 weeks?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q10"><label class="q-option"><input type="radio" name="KDQOL_Q10" value="1"><span>All of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q10" value="2"><span>Most of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q10" value="3"><span>A good bit of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q10" value="4"><span>Some of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q10" value="5"><span>A little of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q10" value="6"><span>None of the time</span></label></div></div><div class="q-item" data-q="11"><div class="q-number">11.</div><div class="q-question">Have you felt downhearted and blue during the past 4 weeks?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q11"><label class="q-option"><input type="radio" name="KDQOL_Q11" value="1"><span>All of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q11" value="2"><span>Most of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q11" value="3"><span>A good bit of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q11" value="4"><span>Some of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q11" value="5"><span>A little of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q11" value="6"><span>None of the time</span></label></div></div><div class="q-item" data-q="12"><div class="q-number">12.</div><div class="q-question">During the past 4 weeks, how much of the time has your physical health or emotional problems interfered with your social activities (like visiting with friends, relatives, etc.)?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q12"><label class="q-option"><input type="radio" name="KDQOL_Q12" value="1"><span>All of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q12" value="2"><span>Most of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q12" value="3"><span>Some of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q12" value="4"><span>A little of the time</span></label><label class="q-option"><input type="radio" name="KDQOL_Q12" value="5"><span>None of the time</span></label></div></div><div class="q-item" data-q="13"><div class="q-number">13.</div><div class="q-question">My kidney disease interferes too much with my life.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q13"><label class="q-option"><input type="radio" name="KDQOL_Q13" value="1"><span>Definitely true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q13" value="2"><span>Mostly true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q13" value="3"><span>Don't know</span></label><label class="q-option"><input type="radio" name="KDQOL_Q13" value="4"><span>Mostly false</span></label><label class="q-option"><input type="radio" name="KDQOL_Q13" value="5"><span>Definitely false</span></label></div></div><div class="q-item" data-q="14"><div class="q-number">14.</div><div class="q-question">Too much of my time is spent dealing with my kidney disease.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q14"><label class="q-option"><input type="radio" name="KDQOL_Q14" value="1"><span>Definitely true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q14" value="2"><span>Mostly true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q14" value="3"><span>Don't know</span></label><label class="q-option"><input type="radio" name="KDQOL_Q14" value="4"><span>Mostly false</span></label><label class="q-option"><input type="radio" name="KDQOL_Q14" value="5"><span>Definitely false</span></label></div></div><div class="q-item" data-q="15"><div class="q-number">15.</div><div class="q-question">I feel frustrated dealing with my kidney disease.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q15"><label class="q-option"><input type="radio" name="KDQOL_Q15" value="1"><span>Definitely true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q15" value="2"><span>Mostly true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q15" value="3"><span>Don't know</span></label><label class="q-option"><input type="radio" name="KDQOL_Q15" value="4"><span>Mostly false</span></label><label class="q-option"><input type="radio" name="KDQOL_Q15" value="5"><span>Definitely false</span></label></div></div><div class="q-item" data-q="16"><div class="q-number">16.</div><div class="q-question">I feel like a burden on my family.</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q16"><label class="q-option"><input type="radio" name="KDQOL_Q16" value="1"><span>Definitely true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q16" value="2"><span>Mostly true</span></label><label class="q-option"><input type="radio" name="KDQOL_Q16" value="3"><span>Don't know</span></label><label class="q-option"><input type="radio" name="KDQOL_Q16" value="4"><span>Mostly false</span></label><label class="q-option"><input type="radio" name="KDQOL_Q16" value="5"><span>Definitely false</span></label></div></div><div class="q-item" data-q="17"><div class="q-number">17.</div><div class="q-question">Soreness in your muscles?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q17"><label class="q-option"><input type="radio" name="KDQOL_Q17" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q17" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q17" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q17" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q17" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="18"><div class="q-number">18.</div><div class="q-question">Chest pain?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q18"><label class="q-option"><input type="radio" name="KDQOL_Q18" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q18" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q18" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q18" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q18" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="19"><div class="q-number">19.</div><div class="q-question">Cramps?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q19"><label class="q-option"><input type="radio" name="KDQOL_Q19" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q19" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q19" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q19" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q19" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="20"><div class="q-number">20.</div><div class="q-question">Itchy skin?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q20"><label class="q-option"><input type="radio" name="KDQOL_Q20" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q20" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q20" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q20" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q20" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="21"><div class="q-number">21.</div><div class="q-question">Dry skin?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q21"><label class="q-option"><input type="radio" name="KDQOL_Q21" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q21" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q21" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q21" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q21" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="22"><div class="q-number">22.</div><div class="q-question">Shortness of breath?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q22"><label class="q-option"><input type="radio" name="KDQOL_Q22" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q22" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q22" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q22" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q22" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="23"><div class="q-number">23.</div><div class="q-question">Faintness or dizziness?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q23"><label class="q-option"><input type="radio" name="KDQOL_Q23" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q23" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q23" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q23" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q23" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="24"><div class="q-number">24.</div><div class="q-question">Lack of appetite?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q24"><label class="q-option"><input type="radio" name="KDQOL_Q24" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q24" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q24" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q24" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q24" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="25"><div class="q-number">25.</div><div class="q-question">Washed out or drained?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q25"><label class="q-option"><input type="radio" name="KDQOL_Q25" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q25" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q25" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q25" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q25" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="26"><div class="q-number">26.</div><div class="q-question">Numbness in hands or feet?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q26"><label class="q-option"><input type="radio" name="KDQOL_Q26" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q26" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q26" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q26" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q26" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="27"><div class="q-number">27.</div><div class="q-question">Nausea or upset stomach?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q27"><label class="q-option"><input type="radio" name="KDQOL_Q27" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q27" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q27" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q27" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q27" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="28"><div class="q-number">28.</div><div class="q-question">(Hemodialysis patient only) Problems with your access site?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q28"><label class="q-option"><input type="radio" name="KDQOL_Q28" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q28" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q28" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q28" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q28" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="29"><div class="q-number">29.</div><div class="q-question">Fluid restriction?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q29"><label class="q-option"><input type="radio" name="KDQOL_Q29" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q29" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q29" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q29" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q29" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="30"><div class="q-number">30.</div><div class="q-question">Dietary restriction?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q30"><label class="q-option"><input type="radio" name="KDQOL_Q30" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q30" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q30" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q30" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q30" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="31"><div class="q-number">31.</div><div class="q-question">Your ability to work around the house?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q31"><label class="q-option"><input type="radio" name="KDQOL_Q31" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q31" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q31" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q31" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q31" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="32"><div class="q-number">32.</div><div class="q-question">Your ability to travel?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q32"><label class="q-option"><input type="radio" name="KDQOL_Q32" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q32" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q32" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q32" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q32" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="33"><div class="q-number">33.</div><div class="q-question">Being dependent on doctors and other medical staff?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q33"><label class="q-option"><input type="radio" name="KDQOL_Q33" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q33" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q33" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q33" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q33" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="34"><div class="q-number">34.</div><div class="q-question">Stress or worries caused by kidney disease?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q34"><label class="q-option"><input type="radio" name="KDQOL_Q34" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q34" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q34" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q34" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q34" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="35"><div class="q-number">35.</div><div class="q-question">Your sex life?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q35"><label class="q-option"><input type="radio" name="KDQOL_Q35" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q35" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q35" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q35" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q35" value="5"><span>Extremely bothered</span></label></div></div><div class="q-item" data-q="36"><div class="q-number">36.</div><div class="q-question">Your personal appearance?</div><div class="q-options" role="radiogroup" aria-label="KDQOL_Q36"><label class="q-option"><input type="radio" name="KDQOL_Q36" value="1"><span>Not at all bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q36" value="2"><span>Somewhat bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q36" value="3"><span>Moderately bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q36" value="4"><span>Very much bothered</span></label><label class="q-option"><input type="radio" name="KDQOL_Q36" value="5"><span>Extremely bothered</span></label></div></div>
+<div class="kdqol-page-note" id="kdqolPageNote">Questions 1–3</div>
+<div class="kdqol-pager" id="kdqolPager">
+  <button type="button" id="kdqolPrev">← Back</button>
+  <div class="kdqol-pager-info" id="kdqolPagerInfo">Page 1 of 6 • 0/3 answered</div>
+  <button type="button" id="kdqolNext">Next →</button>
+</div>
+<div class="score-note" id="kdqolScore">
+  Scores will be calculated automatically when the questionnaire is complete and included in the export.
+</div>
+<input type="hidden" name="KDQOL_PCS" id="kdqolPCS">
+<input type="hidden" name="KDQOL_MCS" id="kdqolMCS">
+<input type="hidden" name="KDQOL_Burden" id="kdqolBurden">
+<input type="hidden" name="KDQOL_Symptoms" id="kdqolSymptoms">
+<input type="hidden" name="KDQOL_Effects" id="kdqolEffects">
+<input type="hidden" name="KDQOL_KSS" id="kdqolKSS">
+</div>
+      <div class="q-submit-row"><button type="button" class="q-submit" onclick="submitQuestionnaire('kdqol')">Submit</button></div><div class="q-error" id="qerror-kdqol"></div>
+    </div>
+  </div>
+</section>
+<section class="step" data-step="6">
+  <div class="step-title"><span>Page 6</span><h2>Medication Review</h2><p>Select, add, and review the patient's current medications.</p></div>
+
+  <div class="med-review">
+    <div class="med-section">
+      <div class="med-section-title">Select current medications</div>
+      <div class="med-chip-list" id="medChipList">
+        <button type="button" class="med-chip" data-med="Amlodipine">Amlodipine</button>
+        <button type="button" class="med-chip" data-med="Bisoprolol">Bisoprolol</button>
+        <button type="button" class="med-chip" data-med="Carvedilol">Carvedilol</button>
+        <button type="button" class="med-chip" data-med="Aspirin">Aspirin</button>
+        <button type="button" class="med-chip" data-med="Atorvastatin">Atorvastatin</button>
+        <button type="button" class="med-chip" data-med="Sevelamer">Sevelamer</button>
+        <button type="button" class="med-chip" data-med="Calcium Carbonate">Calcium Carbonate</button>
+        <button type="button" class="med-chip" data-med="Calcitriol">Calcitriol</button>
+        <button type="button" class="med-chip" data-med="Cinacalcet">Cinacalcet</button>
+        <button type="button" class="med-chip" data-med="Pregabalin">Pregabalin</button>
+        <button type="button" class="med-chip" data-med="Antihistamine">Antihistamine</button>
+        <button type="button" class="med-chip" data-med="Erythropoietin">Erythropoietin</button>
+        <button type="button" class="med-chip" data-med="Iron sucrose">Iron sucrose</button>
+        <button type="button" class="med-chip" data-med="Vitamin D3 / Cholecalciferol">Vitamin D3 / Cholecalciferol</button>
+        <button type="button" class="med-chip" data-med="Vitamin B12">Vitamin B12</button>
+        <button type="button" class="med-chip" data-med="Folic acid">Folic acid</button>
+        <button type="button" class="med-chip" data-med="B complex">B complex</button>
+        <button type="button" class="med-chip" data-med="Alfacalcidol">Alfacalcidol</button>
+        <button type="button" class="med-chip" data-med="Darbepoetin alfa">Darbepoetin alfa</button>
+      </div>
+    </div>
+
+    <div class="med-section">
+      <div class="med-section-title">Current Medications</div>
+      <div class="med-selected-box" id="medSelectedBox">
+        <div id="medSelectedList" class="med-selected-list"></div>
+        <div class="med-manual-row">
+          <input id="medManualInput" class="med-manual-input" type="text" placeholder="Type a medication">
+          <button type="button" id="medManualAdd" class="med-manual-add" aria-label="Add medication">✓</button>
+        </div>
+      </div>
+      <input type="hidden" name="Current_Medications" id="currentMedicationsValue">
+      <input type="hidden" name="Selected_Common_Medications" id="selectedCommonMedicationsValue">
+      <div class="med-count-row"><span>Total number of current medications</span><strong id="medCount">0</strong></div>
+      <input type="hidden" name="Total_Current_Medications" id="totalCurrentMedications">
+    </div>
+
+    <div class="med-section">
+      <div class="med-section-title">Was any medication changed during the past 3 months?</div>
+      <div class="med-yesno">
+        <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="No"><span>No</span></label>
+        <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="Yes"><span>Yes</span></label>
+      </div>
+      <div id="medChangeFields" class="med-change-fields" hidden>
+        <label>Medication changed<input type="text" name="MED_CHANGED_NAME" id="medChangedName" placeholder="Medication name"></label>
+        <label>Dose<input type="text" name="MED_CHANGED_DOSE" id="medChangedDose" placeholder="Dose"></label>
+        <label>Reason for change<input type="text" name="MED_CHANGED_REASON" id="medChangedReason" placeholder="Reason for change"></label>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="step" data-step="7">
+      <div class="step-title"><span>Page 7</span><h2>Review Patient Record</h2><p>Review all previous sections before saving. Missing fields are shown in red.</p></div>
+      <div class="notice">Review any missing information. Use <b>Fix</b> to return directly to the original page, or enter a <b>Reason</b> when the information is intentionally unavailable.</div>
+      <div id="review" class="review"></div>
+      <div class="subsection review-notes">
+        <h3>Patient Notes</h3>
+        <div class="field">
+          <label for="Patient_Notes">Notes</label>
+          <textarea id="Patient_Notes" name="Patient_Notes" rows="5" placeholder="Write any note relevant to this patient..."></textarea>
+        </div>
+      </div>
+    </section>
+  </form>
+</main>
+<div class="navbar" id="wizardNavbar">
+  <div id="standardNav" class="standard-nav">
+    <button class="back" id="back" type="button">← Back</button>
+    <button class="next" id="next" type="button">Next →</button>
+  </div>
+  <div id="reviewNav" class="review-nav" style="display:none">
+    <button class="back" id="reviewBack" type="button">← Back</button>
+    <button class="draft" id="saveDraftBtn" type="button">Save a draft</button>
+    <button class="danger-outline" id="deleteInterviewBtn" type="button">Delete interview</button>
+    <button class="save" id="saveReviewBtn" type="button">Save</button>
+    <button class="complete" id="completeBtn" type="button">Complete ✓</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+const TOTAL=7;
+let current=1;
+const form=document.getElementById('wizard');
+const steps=[...document.querySelectorAll('.step')];
+const values={};
+const labels=["PT. & Visit Information","CKD & HD","Lab Data","Pruritus","Questionnaires","Medication"];
+function persist(){
+  const fd=new FormData(form);
+  fd.forEach((v,k)=>{ values[k]=v; });
+  calculateClinicalDurations();
+  localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+}
+function restore(){
+  const old=JSON.parse(localStorage.getItem('ckd_wizard_draft')||'{}');
+  Object.assign(values,old);
+  Object.entries(values).forEach(([k,v])=>{
+    const el=form.elements[k];
+    if(el && !(el instanceof RadioNodeList)) el.value=v;
+
+  });
+  if(!values.Visit_Date){
+    const el=document.getElementById('visitDate');
+    if(el)el.value=todayISO();
+  }
+}
+function validateStep(){ return true; }
+
+const REVIEW_REASON_KEY='ckd_review_reasons_v135';
+
+function getReviewReasons(){
+  try{return JSON.parse(localStorage.getItem(REVIEW_REASON_KEY)||'{}')}catch(e){return {}}
+}
+function setReviewReasons(obj){
+  localStorage.setItem(REVIEW_REASON_KEY,JSON.stringify(obj||{}));
+}
+function reviewFieldLabel(el){
+  const field=el.closest('.field');
+  const label=field?.querySelector('label');
+  return (label?.textContent||el.name||'Field').replace(/\s*\*+\s*$/,'').trim();
+}
+function reviewMissingFields(){
+  const missing=[];
+  for(let i=0;i<TOTAL-1;i++){
+    if(i===4){
+      // Questionnaire page: report incomplete questionnaire(s) as a unit.
+      if(typeof questionnaireTitles!=='undefined'){
+        Object.keys(questionnaireTitles).forEach(key=>{
+          const prog=qProgress(key);
+          if(!questionnaireState[key] || prog.missing.length){
+            missing.push({
+              type:'questionnaire', step:i+1, key,
+              label:questionnaireTitles[key],
+              detail:prog.missing.length ? `${prog.missing.length} unanswered item(s)` : 'Not submitted',
+              reasonKey:`questionnaire:${key}`
+            });
+          }
+        });
+      }
+      continue;
+    }
+    const section=steps[i];
+    if(!section)continue;
+    updateOtherCkdCause();
+    const controls=[...section.querySelectorAll('input[name],select[name],textarea[name]')]
+      .filter(el=>!el.disabled && el.type!=='hidden' && el.dataset.statusIgnore!=='true' &&
+        !(el.closest('#pruritusDetails,#herbalDetails') && el.closest('#pruritusDetails,#herbalDetails').style.display==='none'));
+    const groups=new Map();
+    controls.forEach(el=>{
+      if(!groups.has(el.name))groups.set(el.name,[]);
+      groups.get(el.name).push(el);
+    });
+    groups.forEach((group,name)=>{
+      const filled=group.some(el=>{
+        if(el.type==='radio'||el.type==='checkbox')return el.checked;
+        return String(el.value??'').trim()!=='';
+      });
+      if(!filled){
+        const el=group[0];
+        missing.push({
+          type:'field', step:i+1, name, label:reviewFieldLabel(el),
+          reasonKey:`field:${name}`
+        });
+      }
+    });
+  }
+  return missing;
+}
+
+function openReviewTarget(item){
+  persist();
+  if(item.type==='questionnaire'){
+    current=item.step;
+    render();
+    setTimeout(()=>openQuestionnaire(item.key),80);
+  }else{
+    current=item.step;
+    render();
+    setTimeout(()=>{
+      const el=form.elements[item.name];
+      if(el && typeof el.focus==='function'){
+        el.scrollIntoView({behavior:'smooth',block:'center'});
+        el.focus();
+      }
+    },80);
+  }
+}
+
+function renderReview(){
+  const box=document.getElementById('review');
+  if(!box)return;
+  const missing=reviewMissingFields();
+  const reasons=getReviewReasons();
+  let out=`<div class="review-summary">${missing.length ? `⚠️ ${missing.length} item(s) need attention` : '✓ All previous fields are complete'}</div>`;
+  if(!missing.length){
+    out+=`<div class="review-ok">No missing fields were detected. You can save or complete this patient record.</div>`;
+  }else{
+    const groups={};
+    missing.forEach(x=>{
+      const title=x.type==='questionnaire'?'Questionnaires':(labels[x.step-1]||`Page ${x.step}`);
+      (groups[title] ||= []).push(x);
+    });
+    Object.entries(groups).forEach(([title,items])=>{
+      out+=`<div class="review-group"><h3>${escapeHtml(title)}</h3>`;
+      items.forEach((item,idx)=>{
+        const key=item.reasonKey;
+        const reason=String(reasons[key]||'').replaceAll('<','&lt;');
+        const rid='reason_'+btoa(unescape(encodeURIComponent(key))).replace(/[^a-zA-Z0-9]/g,'').slice(0,24)+'_'+idx;
+        out+=`<div class="review-missing">
+          <div class="review-field-title">⚠ ${escapeHtml(item.label)}</div>
+          ${item.detail?`<div class="review-value">${escapeHtml(item.detail)}</div>`:''}
+          <div class="review-actions">
+            <button type="button" class="fix-btn" onclick='openReviewTarget(${JSON.stringify(item).replace(/</g,"\\\\u003c")})'>Fix</button>
+            <button type="button" class="reason-btn" onclick="toggleReviewReason('${rid}')">Reason</button>
+          </div>
+          <div class="reason-wrap" id="${rid}">
+            <textarea data-review-reason="${escapeHtml(key)}" placeholder="Write the reason why this information is missing...">${reason}</textarea>
+          </div>
+        </div>`;
+      });
+      out+='</div>';
+    });
+  }
+  box.innerHTML=out;
+  box.querySelectorAll('textarea[data-review-reason]').forEach(t=>{
+    t.addEventListener('input',()=>{
+      const r=getReviewReasons(); r[t.dataset.reviewReason]=t.value; setReviewReasons(r);
+      values['Review_Reason_'+t.dataset.reviewReason]=t.value;
+      persist();
+    });
+  });
+}
+function toggleReviewReason(id){
+  const el=document.getElementById(id);
+  if(el)el.classList.toggle('show');
+}
+
+function review(){ renderReview(); }
+
+
+
+const customCalendars = {
+  ckdDiagnosis: {month:new Date().getMonth(), year:new Date().getFullYear()},
+  hdFirstSession: {month:new Date().getMonth(), year:new Date().getFullYear()},
+  labDate: {month:new Date().getMonth(), year:new Date().getFullYear()}
+};
+
+function calendarDateName(key){
+  if(key==='ckdDiagnosis') return 'CKD_Diagnosis_Date';
+  if(key==='hdFirstSession') return 'Hemodialysis_First_Session_Date';
+  return 'Last_Lab_Date';
+}
+function calendarIds(key){
+  const p=key==='ckdDiagnosis'?'ckdDiagnosis':(key==='hdFirstSession'?'hdFirstSession':'labDate');
+  return {
+    cal:p+'Calendar',
+    title:p+'CalendarTitle',
+    panel:p+'CalendarPanel',
+    days:p+'CalendarDays',
+    weekdays:p+'Weekdays',
+    display:p+'DateDisplay',
+    input:key==='labDate'?'labDate':p+'Date'
+  };
+}
+function formatDateHuman(iso){
+  if(!iso) return 'Select date';
+  const m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return 'Select date';
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+function toggleCustomCalendar(id){
+  document.querySelectorAll('.mini-calendar.open').forEach(x=>x.classList.remove('open'));
+  const cal=document.getElementById(id);
+  if(!cal)return;
+  cal.classList.add('open');
+  const key=id==='ckdDiagnosisCalendar'?'ckdDiagnosis':(id==='hdFirstSessionCalendar'?'hdFirstSession':'labDate');
+  renderCalendarHeader(key);
+  openCalendarDayPicker(key);
+}
+function renderCalendarHeader(key){
+  const ids=calendarIds(key), cfg=customCalendars[key];
+  const title=document.getElementById(ids.title);
+  if(title){
+    title.textContent=new Date(cfg.year,cfg.month,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  }
+}
+function setTab(key,active){
+  ['Year','Month','Day'].forEach(t=>{
+    const b=document.getElementById(key+t+'Tab');
+    if(b)b.classList.toggle('active',t===active);
+  });
+}
+function openCalendarYearPicker(key){
+  const ids=calendarIds(key), cfg=customCalendars[key], panel=document.getElementById(ids.panel);
+  if(!panel)return;
+  setTab(key,'Year');
+  document.getElementById(ids.days).style.display='none';
+  document.getElementById(ids.weekdays).style.display='none';
+  panel.style.display='grid';
+  let out='';
+  const currentYear=new Date().getFullYear();
+  for(let y=currentYear-30;y<=currentYear+5;y++){
+    const cls=y===cfg.year?'selected':'';
+    out+=`<button type="button" class="${cls}" onclick="selectCalendarYear('${key}',${y})">${y}</button>`;
+  }
+  panel.innerHTML=out;
+}
+function selectCalendarYear(key,year){
+  customCalendars[key].year=year;
+  openCalendarMonthPicker(key);
+}
+function openCalendarMonthPicker(key){
+  const ids=calendarIds(key), cfg=customCalendars[key], panel=document.getElementById(ids.panel);
+  if(!panel)return;
+  setTab(key,'Month');
+  document.getElementById(ids.days).style.display='none';
+  document.getElementById(ids.weekdays).style.display='none';
+  panel.style.display='grid';
+  let out='';
+  for(let m=0;m<12;m++){
+    const name=new Date(cfg.year,m,1).toLocaleDateString(undefined,{month:'long'});
+    const cls=m===cfg.month?'selected':'';
+    out+=`<button type="button" class="${cls}" onclick="selectCalendarMonth('${key}',${m})">${name}</button>`;
+  }
+  panel.innerHTML=out;
+}
+function selectCalendarMonth(key,month){
+  customCalendars[key].month=month;
+  openCalendarDayPicker(key);
+}
+function openCalendarDayPicker(key){
+  const ids=calendarIds(key), cfg=customCalendars[key], panel=document.getElementById(ids.panel);
+  const days=document.getElementById(ids.days), weekdays=document.getElementById(ids.weekdays);
+  if(!panel||!days)return;
+  setTab(key,'Day');
+  panel.style.display='none';
+  weekdays.style.display='grid';
+  days.style.display='grid';
+  renderCalendarHeader(key);
+  const selected=values[calendarDateName(key)]||'';
+  const today=todayISO();
+  const first=new Date(cfg.year,cfg.month,1);
+  const last=new Date(cfg.year,cfg.month+1,0);
+  let out='';
+  for(let i=0;i<first.getDay();i++) out+='<button type="button" class="empty" tabindex="-1"></button>';
+  for(let d=1;d<=last.getDate();d++){
+    const iso=`${cfg.year}-${String(cfg.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls=(iso===selected?'selected ':'')+(iso===today?'today':'');
+    out+=`<button type="button" class="${cls}" onclick="selectCustomDate('${key}','${iso}')">${d}</button>`;
+  }
+  days.innerHTML=out;
+}
+function changeCustomCalendarMonth(key,delta){
+  const cfg=customCalendars[key];
+  cfg.month+=delta;
+  if(cfg.month<0){cfg.month=11;cfg.year--}
+  if(cfg.month>11){cfg.month=0;cfg.year++}
+  openCalendarDayPicker(key);
+}
+function selectCustomDate(key,iso){
+  const name=calendarDateName(key), ids=calendarIds(key);
+  values[name]=iso;
+  const input=document.getElementById(ids.input);
+  const display=document.getElementById(ids.display);
+  if(input)input.value=iso;
+  if(display)display.textContent=formatDateHuman(iso);
+  document.getElementById(ids.cal)?.classList.remove('open');
+  calculateClinicalDurations();
+  persist();
+  renderPageStatus();
+}
+function selectCustomToday(key){selectCustomDate(key,todayISO());}
+function monthsBetween(startISO,endISO){
+  if(!startISO||!endISO)return '';
+  const start=new Date(startISO+'T00:00:00'), end=new Date(endISO+'T00:00:00');
+  if(Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||end<start)return '';
+  let total=(end.getFullYear()-start.getFullYear())*12+(end.getMonth()-start.getMonth());
+  if(end.getDate()<start.getDate())total--;
+  return String(Math.max(0,total));
+}
+function getVisitDateForDuration(){
+  // Always prefer the actual Visit Date field on the page.
+  // This avoids stale values during date-picker interaction.
+  return document.getElementById('visitDate')?.value || values.Visit_Date || todayISO();
+}
+function calculateClinicalDurations(){
+  const visit=getVisitDateForDuration();
+
+  // Read directly from the date-picker hidden inputs so the calculation
+  // updates immediately after a date is selected, before any save/persist.
+  const ckdDate=document.getElementById('ckdDiagnosisDate')?.value || values.CKD_Diagnosis_Date || '';
+  const hdDate=document.getElementById('hdFirstSessionDate')?.value || values.Hemodialysis_First_Session_Date || '';
+
+  const ckd=monthsBetween(ckdDate,visit);
+  const hd=monthsBetween(hdDate,visit);
+
+  const ckdEl=document.getElementById('ckdDurationMonths');
+  const hdEl=document.getElementById('hdDurationMonths');
+
+  if(ckdEl) ckdEl.value=ckd;
+  if(hdEl) hdEl.value=hd;
+
+  values.Visit_Date=visit;
+  values.CKD_Diagnosis_Date=ckdDate;
+  values.Hemodialysis_First_Session_Date=hdDate;
+  values.CKD_Duration_Months=ckd;
+  values.Hemodialysis_Duration_Months=hd;
+}
+function restoreClinicalDateDisplays(){
+  const mappings=[
+    ['CKD_Diagnosis_Date','ckdDiagnosisDate','ckdDiagnosisDateDisplay','ckdDiagnosis'],
+    ['Hemodialysis_First_Session_Date','hdFirstSessionDate','hdFirstSessionDateDisplay','hdFirstSession'],
+    ['Last_Lab_Date','labDate','labDateDisplay','labDate']
+  ];
+  mappings.forEach(([name,inputId,displayId,key])=>{
+    const iso=values[name]||'', input=document.getElementById(inputId), display=document.getElementById(displayId);
+    if(input)input.value=iso;
+    if(display)display.textContent=formatDateHuman(iso);
+    if(iso){
+      const d=new Date(iso+'T00:00:00');
+      if(!Number.isNaN(d.getTime())){
+        customCalendars[key].month=d.getMonth();
+        customCalendars[key].year=d.getFullYear();
+      }
+    }
+  });
+  calculateClinicalDurations();
+}
+
+function getPageStatus(stepIndex){
+  if(stepIndex===TOTAL-1){
+    const incomplete=[];
+    for(let i=0;i<TOTAL-1;i++){
+      const st=getPageStatus(i);
+      if(st.missed>0) incomplete.push(st.missed);
+    }
+    return incomplete.length
+      ? {kind:'review',badge:`${incomplete.length} pages`,sub:'Need review'}
+      : {kind:'complete',badge:'✓ Complete',sub:'Ready to save'};
+  }
+
+  if(stepIndex===5 && typeof questionnaireTitles!=='undefined'){
+    const keys=Object.keys(questionnaireTitles);
+    const done=keys.filter(k=>questionnaireState[k]&&qProgress(k).missing.length===0).length;
+    if(done===keys.length)return {kind:'complete',badge:'✓ Complete',sub:`${keys.length} questionnaires complete`};
+    const answered=keys.filter(k=>qProgress(k).answered>0).length;
+    const missing=keys.length-done;
+    return answered?{kind:'missed',badge:`${missing} incomplete`,sub:`${done} / ${keys.length} submitted`}:{kind:'empty',badge:`${keys.length} pending`,sub:`0 / ${keys.length} submitted`};
+  }
+
+  const section=steps[stepIndex];
+  if(!section)return {kind:'empty',badge:'—',sub:'No fields'};
+
+  // The conditional CKD_Cause_Other field is counted only when "Other" is selected.
+  // This prevents the hidden field from creating a false missed count.
+  updateOtherCkdCause();
+
+  const controls=[...section.querySelectorAll('input[name],select[name],textarea[name]')]
+    .filter(el=>!el.disabled && el.type!=='hidden' && el.dataset.statusIgnore!=='true' && !(el.closest('#pruritusDetails,#herbalDetails') && el.closest('#pruritusDetails,#herbalDetails').style.display==='none'));
+  const groups=new Map();
+
+  controls.forEach(el=>{
+    const name=el.name;
+    if(!name)return;
+    if(!groups.has(name)) groups.set(name,[]);
+    groups.get(name).push(el);
+  });
+
+  let total=0, filled=0;
+  groups.forEach((group,name)=>{
+    total++;
+    if(group.some(el=>{
+      if(el.type==='radio' || el.type==='checkbox') return el.checked;
+      return String(el.value??'').trim()!=='';
+    })) filled++;
+  });
+
+  const missed=Math.max(0,total-filled);
+  if(total===0)return {kind:'empty',badge:'—',sub:'No fields'};
+  if(missed===0)return {kind:'complete',badge:'✓ Complete',sub:`${total} fields filled`};
+  if(filled===0)return {kind:'empty',badge:`${missed} missed`,sub:`0 / ${total} filled`};
+  return {kind:'missed',badge:`${missed} missed`,sub:`${filled} / ${total} filled`};
+}
+
+
+function updateOtherCkdCause(){
+  const select=document.getElementById('ckdCauseSelect');
+  const other=document.getElementById('otherCkdCause');
+  const wrap=document.getElementById('otherCkdCauseWrap');
+  if(!select)return;
+  const isOther=select.value==='Other';
+  if(wrap)wrap.style.display=isOther?'block':'none';
+  if(other){
+    other.disabled=!isOther;
+    if(!isOther)other.value='';
+  }
+}
+
+function renderPageStatus(){
+  const box=document.getElementById('pageStatusGrid');
+  if(!box)return;
+  box.innerHTML='';
+
+  for(let i=0;i<TOTAL;i++){
+    const st=getPageStatus(i);
+    const name=i<TOTAL-1?labels[i]:'Review & Save';
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='page-status-item'+(i===current-1?' current':'');
+    btn.innerHTML=`
+      <div class="page-status-name">
+        <span>${name}</span>
+        <span class="page-status-badge ${st.kind}">${st.badge}</span>
+      </div>
+      <div class="page-status-sub">${st.sub}</div>
+    `;
+    btn.onclick=()=>{
+      persist();
+      current=i+1;
+      render();
+    };
+    box.appendChild(btn);
+  }
+}
+
+function showDashboardHome(){
+  document.body.classList.add('dashboard-home-mode');
+  document.body.classList.remove('form-entry-mode','followup-mode');
+  const h=document.getElementById('heroTitle');
+  if(h)h.textContent='Patient Record';
+  updateDashboard();
+  renderDashboardSearch();
+}
+function showFormView(){
+  document.body.classList.remove('dashboard-home-mode');
+  document.body.classList.add('form-entry-mode');
+}
+
+function render(){
+  steps.forEach((s,i)=>s.classList.toggle('active',i===current-1));
+  const pct=((current-1)/(TOTAL-1))*100;
+  document.getElementById('fill').style.width=Math.max(8,pct)+'%';
+  document.getElementById('counter').textContent='Page '+current+' of '+TOTAL;
+  document.getElementById('pageName').textContent='Page '+current+' — '+(current<=labels.length?labels[current-1]:'Review & Save');
+  const standardNav=document.getElementById('standardNav');
+  const reviewNav=document.getElementById('reviewNav');
+  if(current===TOTAL){
+    standardNav.style.display='none';
+    reviewNav.style.display='grid';
+    persist();
+    review();
+    const notes=document.getElementById('Patient_Notes');
+    if(notes) notes.value=values.Patient_Notes||'';
+  }else{
+    standardNav.style.display='flex';
+    reviewNav.style.display='none';
+    document.getElementById('back').disabled=current===1;
+    document.getElementById('next').textContent='Next →';
+    document.getElementById('next').className='next';
+  }
+  renderPageStatus();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.querySelectorAll('input,select,textarea').forEach(el=>{
+  el.addEventListener('input',()=>{
+    if(el.name==='Patient_Name'||el.name==='Patient_Number') ensurePatientId();
+    if(el.id==='otherCkdCause') values.CKD_Cause_Other=el.value;
+    if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=false; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
+    persist();calculateClinicalDurations();renderPageStatus();
+  });
+  el.addEventListener('change',()=>{
+    if(el.id==='ckdCauseSelect') updateOtherCkdCause();
+    if(el.id==='otherCkdCause') values.CKD_Cause_Other=el.value;
+    if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=false; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
+    persist();calculateClinicalDurations();renderPageStatus();
+  });
+});
+document.getElementById('next').onclick=()=>{
+  if(current===6){
+    const incomplete=Object.keys(questionnaireTitles).filter(k=>!questionnaireState[k]||qProgress(k).missing.length);
+    if(incomplete.length){ alert('Please submit all questionnaires before moving to the next page.'); return; }
+  }
+  if(current<=labels.length){ persist(); if(current===1) registerCurrentPatient(); }
+  persist();
+  if(current<TOTAL){current++;render();}
+};
+document.getElementById('back').onclick=()=>{persist();if(current>1){current--;render();}};
+document.getElementById('reviewBack').onclick=()=>{persist();if(current>1){current--;render();}};
+document.getElementById('saveDraftBtn').onclick=()=>{
+  persist();
+  savePatientRecord('Draft');
+  alert('Draft saved successfully.');
+};
+document.getElementById('deleteInterviewBtn').onclick=()=>{
+  if(!confirm('Delete this interview and its saved draft? This cannot be undone.')) return;
+  localStorage.removeItem('ckd_wizard_draft');
+  localStorage.removeItem(REVIEW_REASON_KEY);
+  location.reload();
+};
+document.getElementById('saveReviewBtn').onclick=()=>{
+  persist();
+  savePatientRecord();
+};
+document.getElementById('completeBtn').onclick=()=>{
+  persist();
+  const missing=reviewMissingFields();
+  if(missing.length){
+    const proceed=confirm(`There are ${missing.length} missing item(s). You can Fix them or enter a Reason.\n\nDo you want to save as incomplete and mark the interview Complete anyway?`);
+    if(!proceed)return;
+  }
+  values.Interview_Status='Complete';
+  values.Completed_At=new Date().toISOString();
+  persist();
+  savePatientRecord('Complete');
+  localStorage.removeItem('ckd_wizard_draft');
+  setTimeout(()=>{
+    document.querySelector('main').innerHTML='<div class="card success"><h2>✓ Interview Completed</h2><p class="muted">The patient interview has been saved successfully.</p><button onclick="location.reload()">Add Another Patient</button></div>';
+    document.querySelector('.navbar').style.display='none';
+  },50);
+};
+function goHome(){if(confirm('Leave this form? Your draft remains saved in this browser.'))location.reload();}
+restore();
+if(!document.querySelector('input[name="Visit_Type"]:checked')){
+  const baseline=document.querySelector('input[name="Visit_Type"][value="Baseline"]');
+  if(baseline)baseline.checked=true;
+}
+restoreClinicalDateDisplays();
+ensurePatientId();
+updateVisitId();
+updateOtherCkdCause();
+const REGISTRY_KEY='ckd_pruritus_patient_registry_v2';
+updateDashboard();
+render();
+showDashboardHome();
+function normalizeText(v){return (v||'').trim().toLowerCase().replace(/\s+/g,' ');}
+function getRegistry(){try{return JSON.parse(localStorage.getItem(REGISTRY_KEY)||'[]')}catch(e){return []}}
+function setRegistry(list){localStorage.setItem(REGISTRY_KEY,JSON.stringify(list))}
+function patientKey(name,number){const n=normalizeText(name),p=(number||'').trim();return p?'num:'+p:(n?'name:'+n:'');}
+
+function nextPatientId(){
+  const list=getRegistry();
+  const used=list.map(p=>String(p.patientId||'')).filter(Boolean);
+  let n=1;
+  while(used.includes(`CKD PT ${String(n).padStart(2,'0')}`)) n++;
+  return `CKD PT ${String(n).padStart(2,'0')}`;
+}
+function setPatientId(id){
+  const el=document.getElementById('patientId');
+  if(el) el.value=id||'';
+  if(id) values.Patient_ID=id;
+}
+function ensurePatientId(){
+  const name=(document.querySelector('[name="Patient_Name"]')?.value||'').trim();
+  const number=(document.querySelector('[name="Patient_Number"]')?.value||'').trim();
+  if(!name && !number){ setPatientId(''); return; }
+  const existingId=(document.querySelector('[name="Patient_ID"]')?.value||values.Patient_ID||'').trim();
+  if(existingId){ setPatientId(existingId); return; }
+  const key=patientKey(name,number);
+  const existing=getRegistry().find(p=>p.key===key);
+  setPatientId(existing?.patientId || nextPatientId());
+}
+function updateFollowupDashboard(){
+  const wrap=document.getElementById('dashboardFollowups');
+  if(!wrap)return;
+  const list=getRegistry();
+  const fu1=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 1').length,0);
+  const fu2=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 2').length,0);
+  wrap.classList.toggle('show', fu1>0 || fu2>0);
+}
+function updateDashboard(){
+  const list=getRegistry();
+  const total=list.length;
+  const completed=list.filter(p=>p.status==='Complete' || (p.visits||[]).some(v=>v.status==='Complete')).length;
+  const drafts=list.filter(p=>p.status==='Draft').length;
+  const fu1=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 1').length,0);
+  const fu2=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 2').length,0);
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=String(val)};
+  set('dashTotalPatients',total);
+  set('dashCompletedPatients',completed);
+  set('dashDraftPatients',drafts);
+  set('dashFollowup1',fu1);
+  set('dashFollowup2',fu2);
+  updateFollowupDashboard();
+}
+
+function currentPatientSnapshot(){
+  const data={};
+  document.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
+    if(['Visit_Type','Visit_Date','Visit_ID'].includes(el.name))return;
+    if(el.type==='radio'){if(el.checked)data[el.name]=el.value}else data[el.name]=el.value;
+  });
+  return data;
+}
+function registerCurrentPatient(statusOverride){
+  ensurePatientId();
+  const data=currentPatientSnapshot();
+  const name=(data.Patient_Name||'').trim(), number=(data.Patient_Number||'').trim();
+  if(!name&&!number)return null;
+  const key=patientKey(name,number), list=getRegistry();
+  let p=list.find(x=>x.key===key || (data.Patient_ID && x.patientId===data.Patient_ID));
+  if(!p){
+    p={
+      key,
+      id:'P'+String(Date.now()).slice(-6),
+      patientId:data.Patient_ID||nextPatientId(),
+      name,number,profile:data,visits:[],
+      status:statusOverride||'Draft',
+      createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    };
+  }else{
+    p.patientId=p.patientId||data.Patient_ID||nextPatientId();
+    p.profile={...p.profile,...data,Patient_ID:p.patientId};
+    p.name=name||p.name;p.number=number||p.number;
+    if(statusOverride)p.status=statusOverride;
+    p.updatedAt=new Date().toISOString();
+  }
+  setPatientId(p.patientId);
+  setRegistry(list.includes(p)?list:[p,...list]);
+  updateDashboard();
+  return p;
+}
+function savePatientRecord(statusOverride){
+  const p=registerCurrentPatient(statusOverride||values.Interview_Status||'Draft');
+  if(!p){alert('Please enter at least a Patient Name or Patient Number before saving.');return}
+  const list=getRegistry(), idx=list.findIndex(x=>x.id===p.id);
+  const type=document.querySelector('input[name="Visit_Type"]:checked')?.value||'';
+  const date=document.getElementById('visitDate')?.value||todayISO();
+  const visitId=document.getElementById('visitId')?.value||'';
+  const status=statusOverride||values.Interview_Status||'Draft';
+  if(type||visitId){
+    const visitData={...currentPatientSnapshot(),Visit_Type:type,Visit_Date:date,Visit_ID:visitId};
+    const v={type,date,visitId,status,data:visitData,updatedAt:new Date().toISOString()};
+    const vi=p.visits.findIndex(x=>x.visitId===visitId);
+    if(vi>=0)p.visits[vi]={...p.visits[vi],...v};else p.visits.push(v);
+  }
+  p.status=status;
+  p.updatedAt=new Date().toISOString();
+  list[idx]=p;setRegistry(list);updateDashboard();
+  if(status!=='Draft') alert('Patient record saved.');
+}
+
+let registryFilter='all';
+
+function openRegistry(){
+  document.getElementById('registryPanel').style.display='block';
+  renderRegistry();
+}
+function closeRegistry(){document.getElementById('registryPanel').style.display='none'}
+function setRegistryFilter(filter,btn){
+  registryFilter=filter;
+  document.querySelectorAll('.registry-tab').forEach(x=>x.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderRegistry();
+}
+function escapeHtml(v){
+  return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function patientVisits(p){return p.visits||[]}
+function hasFollowUp(p){
+  return patientVisits(p).some(v=>v.type==='Follow-up 1' || v.type==='Follow-up 2');
+}
+function renderRegistry(){
+  const q=normalizeText(document.getElementById('registrySearch')?.value);
+  let list=getRegistry();
+  if(registryFilter==='followup') list=list.filter(p=>!patientVisits(p).some(v=>v.type==='Follow-up 2'));
+  list=list.filter(p=>!q || normalizeText(p.name||p.profile?.Patient_Name).includes(q) || normalizeText(p.patientId||p.profile?.Patient_ID).includes(q) || (p.number||p.profile?.Patient_Number||'').toLowerCase().includes(q));
+  document.getElementById('registrySummary').textContent=
+    `${list.length} patient${list.length===1?'':'s'} shown`;
+
+  const box=document.getElementById('registryList');
+  if(!list.length){
+    box.innerHTML='<div class="empty-registry">No patients found.<br><small>Try another search or create a new patient.</small></div>';
+    return;
+  }
+  box.innerHTML=list.map(p=>{
+    const visits=patientVisits(p);
+    const chips=visits.length
+      ? visits.map(v=>`<span class="visit-chip">${escapeHtml(v.type||v.visitId)}${v.date?' · '+escapeHtml(v.date):''}</span>`).join('')
+      : '<span class="visit-chip">No visit saved</span>';
+    const next=visits.some(v=>v.type==='Follow-up 1')?'Follow-up 2':'Follow-up 1';
+    return `<div class="patient-card">
+      <div class="pc-top">
+        <div><h3>${escapeHtml(p.name||'Unnamed patient')}</h3><div class="patient-number">${escapeHtml(p.patientId||p.profile?.Patient_ID||'CKD PT —')} · Patient No. ${escapeHtml(p.number||'—')}</div></div>
+        <div class="patient-number">${escapeHtml(p.profile?.Center||'')}</div>
+      </div>
+      <div class="visit-chips">${chips}</div>
+      <div class="patient-actions">
+        <button type="button" class="primary" onclick="openPatient('${p.id}')">Open Patient</button>
+        <button type="button" onclick="startFollowUp('${p.id}','${next}')">＋ ${next}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderDashboardSearch(){
+  const input=document.getElementById('dashboardPatientSearch');
+  const box=document.getElementById('dashboardSearchResults');
+  if(!input||!box)return;
+  const q=normalizeText(input.value);
+  if(!q){box.innerHTML='';return;}
+  const list=getRegistry().filter(p=>{
+    const id=normalizeText(p.patientId||p.profile?.Patient_ID||'');
+    const name=normalizeText(p.name||p.profile?.Patient_Name||'');
+    const number=normalizeText(p.number||p.profile?.Patient_Number||'');
+    return name.includes(q)||id.includes(q)||number.includes(q);
+  });
+  if(!list.length){box.innerHTML='<div class="dashboard-search-empty">No patient found.</div>';return;}
+  box.innerHTML=list.slice(0,8).map(p=>{
+    const id=escapeHtml(p.patientId||p.profile?.Patient_ID||'');
+    const name=escapeHtml(p.name||p.profile?.Patient_Name||'Unnamed patient');
+    const number=escapeHtml(p.number||p.profile?.Patient_Number||'');
+    return `<div class="dashboard-search-result"><div class="dsr-meta"><strong>${name}</strong><small>${id}${number?' · Patient No. '+number:''}</small></div><button type="button" onclick="openPatient('${p.id}')">Open</button></div>`;
+  }).join('');
+}
+document.getElementById('dashboardPatientSearch')?.addEventListener('input',renderDashboardSearch);
+document.getElementById('registrySearch')?.addEventListener('input',renderRegistry);
+window.addEventListener('storage',()=>{updateDashboard();renderDashboardSearch();});
+
+function openPatient(id){
+  const p=getRegistry().find(x=>x.id===id); if(!p)return;
+  showFormView();
+  Object.entries(p.profile||{}).forEach(([name,value])=>{
+    const els=document.querySelectorAll(`[name="${CSS.escape(name)}"]`);
+    els.forEach(el=>{
+      if(el.type==='radio') el.checked=(el.value===value);
+      else el.value=value;
+    });
+  });
+  setPatientId(p.patientId||p.profile?.Patient_ID||'');
+  closeRegistry();
+  current=1;
+  updateFollowupDashboard();
+  render();
+  checkDuplicatePatient?.();
+}
+
+function startFollowUp(id,type){
+  const p=getRegistry().find(x=>x.id===id);
+  if(!p)return;
+  showFormView();
+  document.body.classList.add('followup-mode');
+  closeRegistry();
+
+  Object.entries(p.profile||{}).forEach(([name,value])=>{
+    document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
+      if(el.type==='radio') el.checked=(el.value===value);
+      else el.value=value;
+    });
+  });
+
+  const radio=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===type);
+  if(radio) radio.checked=true;
+
+  setPatientId(p.patientId||p.profile?.Patient_ID||'');
+  updateVisitId();
+  updateFollowupDashboard();
+  setDefaultVisitDate();
+  current=1;
+  render();
+  alert('The original patient profile is loaded. Confirm the patient information, then continue with the selected follow-up visit.');
+}
+
+
+let calendarCursor=new Date();
+
+function todayISO(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function formatVisitDate(iso){
+  if(!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return 'Select date';
+  const [y,m,d]=iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function syncVisitDateDisplay(){
+  const input=document.getElementById('visitDate'), box=document.getElementById('dateDisplayBox');
+  if(input && box) box.textContent=formatVisitDate(input.value);
+}
+function setDefaultVisitDate(){
+  const el=document.getElementById('visitDate');
+  if(!el)return;
+  if(!el.value)el.value=todayISO();
+  syncVisitDateDisplay();
+  calculateClinicalDurations();
+}
+
+function updateVisitId(){
+  const type=document.querySelector('input[name="Visit_Type"]:checked')?.value||'';
+  const el=document.getElementById('visitId');
+  if(!el)return;
+  const ids={
+    'Baseline':'BL01',
+    'Follow-up 1':'FU01',
+    'Follow-up 2':'FU02'
+  };
+  el.value=ids[type]||'';
+}
+
+function openMonthPicker(type){
+  if(type!=='visit')return;
+  const panel=document.getElementById('visitCalendarMonthPicker');
+  const yearPanel=document.getElementById('visitCalendarYearPicker');
+  if(!panel)return;
+  if(yearPanel)yearPanel.style.display='none';
+  panel.style.display='grid';
+  const y=calendarCursor.getFullYear(), currentMonth=calendarCursor.getMonth();
+  let out='';
+  for(let m=0;m<12;m++){
+    const name=new Date(y,m,1).toLocaleDateString('en-US',{month:'long'});
+    out+=`<button type="button" class="${m===currentMonth?'selected':''}" onclick="selectVisitMonth(${m})">${name}</button>`;
+  }
+  panel.innerHTML=out;
+}
+function selectVisitMonth(month){
+  calendarCursor.setMonth(month);
+  const panel=document.getElementById('visitCalendarMonthPicker');
+  if(panel)panel.style.display='none';
+  renderCalendar();
+}
+function openYearPicker(type){
+  if(type!=='visit')return;
+  const panel=document.getElementById('visitCalendarYearPicker');
+  const monthPanel=document.getElementById('visitCalendarMonthPicker');
+  if(!panel)return;
+  if(monthPanel)monthPanel.style.display='none';
+  panel.style.display='grid';
+  const selected=calendarCursor.getFullYear(), now=new Date().getFullYear();
+  let out='';
+  for(let y=now-40;y<=now+5;y++){
+    out+=`<button type="button" class="${y===selected?'selected':''}" onclick="selectVisitYear(${y})">${y}</button>`;
+  }
+  panel.innerHTML=out;
+}
+function selectVisitYear(year){
+  calendarCursor.setFullYear(year);
+  const panel=document.getElementById('visitCalendarYearPicker');
+  if(panel)panel.style.display='none';
+  renderCalendar();
+}
+
+function openDateCalendar(){
+  const value=document.getElementById('visitDate')?.value||todayISO();
+  const [y,m,d]=value.split('-').map(Number);
+  calendarCursor=new Date(y,m-1,d);
+  const cal=document.getElementById('miniCalendar');
+  const mp=document.getElementById('visitCalendarMonthPicker');
+  const yp=document.getElementById('visitCalendarYearPicker');
+  if(mp)mp.style.display='none';
+  if(yp)yp.style.display='none';
+  renderCalendar();
+  cal?.classList.add('open');
+}
+function closeDateCalendar(){
+  document.getElementById('miniCalendar')?.classList.remove('open');
+}
+function changeCalendarMonth(delta){
+  calendarCursor.setMonth(calendarCursor.getMonth()+delta);
+  renderCalendar();
+}
+function renderCalendar(){
+  const box=document.getElementById('miniCalendar'), days=document.getElementById('calendarDays'), title=document.getElementById('calendarMonthTitle');
+  if(!box||!days||!title)return;
+  const y=calendarCursor.getFullYear(), m=calendarCursor.getMonth();
+  title.textContent=new Date(y,m,1).toLocaleDateString('en-US',{month:'long'});
+  const yearTitle=document.getElementById('calendarYearTitle');
+  if(yearTitle) yearTitle.textContent=String(y);
+  const first=new Date(y,m,1).getDay();
+  const count=new Date(y,m+1,0).getDate();
+  const selected=document.getElementById('visitDate')?.value||'';
+  const today=todayISO();
+  let html='';
+  for(let i=0;i<first;i++) html+='<button type="button" class="empty" tabindex="-1"></button>';
+  for(let d=1;d<=count;d++){
+    const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls=(iso===selected?' selected':'')+(iso===today?' today':'');
+    html+=`<button type="button" class="${cls}" onclick="selectCalendarDate('${iso}')">${d}</button>`;
+  }
+  days.innerHTML=html;
+}
+function selectCalendarDate(iso){
+  const el=document.getElementById('visitDate');
+  if(el)el.value=iso;
+  syncVisitDateDisplay();
+  calculateClinicalDurations();
+  persist();
+  closeDateCalendar();
+}
+function selectToday(){
+  selectCalendarDate(todayISO());
+}
+setDefaultVisitDate();
+updateVisitId();
+
+document.querySelectorAll('input[name="Visit_Type"]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    updateVisitId();
+    updateFollowupDashboard();
+    ensurePatientId();
+    persist();
+  });
+});
+document.getElementById('visitDate')?.addEventListener('change',()=>{
+  syncVisitDateDisplay();
+  calculateClinicalDurations();
+  persist();
+  renderPageStatus();
+});
+setDefaultVisitDate();
+updateVisitId();
+
+function newPatient(){
+  showFormView();
+  document.body.classList.remove('followup-mode');
+  registryFilter='all';
+  document.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
+    if(el.type==='radio'||el.type==='checkbox')el.checked=false;else if(el.name!=='Visit_Date')el.value='';
+  });
+  const baseline=document.querySelector('input[name="Visit_Type"][value="Baseline"]');
+  if(baseline)baseline.checked=true;
+  if(document.getElementById('visitDate')){document.getElementById('visitDate').value=todayISO();syncVisitDateDisplay();}
+  updateVisitId();
+  setPatientId('');
+  updateFollowupDashboard();
+  closeRegistry();current=1;render();checkDuplicatePatient?.();
+}
+const smoking=document.getElementById('smokingStatus');
+const packs=document.getElementById('packsPerDay');
+const packsLabel=document.getElementById('packsLabel');
+function updateSmoking(){
+  if(!smoking||!packs)return;
+  if(smoking.value==='Never'){
+    packs.value=''; packs.disabled=true; packs.placeholder='Not applicable'; packsLabel.textContent='Packs / day';
+  } else {
+    packs.disabled=false;
+    packs.placeholder='Enter number of packs';
+    packsLabel.textContent=smoking.value==='Former'?'Previous packs / day':'Packs / day';
+  }
+}
+smoking?.addEventListener('change',updateSmoking);
+updateSmoking();
+updateVisitId();
+ensurePatientId();
+updateDashboard();
+
+
+document.getElementById('ckdCauseSelect')?.addEventListener('change',()=>{ updateOtherCkdCause(); persist(); });
+updateOtherCkdCause();
+
+
+function toggleSideMenu(){
+  document.getElementById('sideMenu').classList.toggle('open');
+  document.getElementById('sideMenuBackdrop').classList.toggle('open');
+  document.getElementById('sideMenu').setAttribute('aria-hidden',
+    String(!document.getElementById('sideMenu').classList.contains('open')));
+}
+function closeSideMenu(){
+  document.getElementById('sideMenu').classList.remove('open');
+  document.getElementById('sideMenuBackdrop').classList.remove('open');
+  document.getElementById('sideMenu').setAttribute('aria-hidden','true');
+}
+function showDraft(){
+  closeRegistry();
+  const panel=document.getElementById('draftPanel');
+  panel.style.display='block';
+  renderDrafts();
+}
+function closeDraftPanel(){document.getElementById('draftPanel').style.display='none'}
+function getDraftPatients(){return getRegistry().filter(p=>p.status==='Draft')}
+function renderDrafts(){
+  const list=getDraftPatients();
+  const box=document.getElementById('draftList');
+  const sum=document.getElementById('draftSummary');
+  sum.textContent=`${list.length} draft${list.length===1?'':'s'} saved on this device`;
+  if(!list.length){box.innerHTML='<div class="empty-registry">No drafts found.</div>';return;}
+  box.innerHTML=list.map(p=>{
+    const latest=(p.visits||[]).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0]||{};
+    return `<div class="patient-card">
+      <div class="pc-top"><div><h3>${escapeHtml(p.name||'Unnamed patient')}</h3><div class="patient-number">${escapeHtml(p.patientId||p.profile?.Patient_ID||'')} ${p.number?'· Patient No. '+escapeHtml(p.number):''}</div></div><span class="draft-status">Draft</span></div>
+      <div class="visit-chips"><span class="visit-chip">${escapeHtml(latest.type||'Interview')} ${latest.date?'· '+escapeHtml(latest.date):''}</span></div>
+      <div class="draft-actions"><button class="draft-resume" type="button" onclick="resumeDraft('${p.id}')">Resume</button><button class="draft-delete" type="button" onclick="deleteDraft('${p.id}')">Delete</button></div>
+    </div>`;
+  }).join('');
+}
+function resumeDraft(id){
+  const p=getRegistry().find(x=>x.id===id);if(!p)return;
+  closeDraftPanel();showFormView();
+  Object.entries(p.profile||{}).forEach(([name,value])=>{
+    document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{if(el.type==='radio')el.checked=(el.value===value);else el.value=value;});
+  });
+  setPatientId(p.patientId||p.profile?.Patient_ID||'');
+  const latest=(p.visits||[]).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0];
+  if(latest){
+    const r=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===latest.type);if(r)r.checked=true;
+    if(document.getElementById('visitDate')&&latest.date)document.getElementById('visitDate').value=latest.date;
+    if(document.getElementById('visitId')&&latest.visitId)document.getElementById('visitId').value=latest.visitId;
+    syncVisitDateDisplay();
+  }
+  current=1;render();updateFollowupDashboard();
+}
+function deleteDraft(id){
+  const p=getRegistry().find(x=>x.id===id);if(!p)return;
+  if(!confirm(`Delete draft for ${p.name||p.patientId||'this patient'}? This cannot be undone.`))return;
+  const list=getRegistry().filter(x=>x.id!==id);setRegistry(list);
+  localStorage.removeItem('ckd_wizard_draft');
+  updateDashboard();renderDrafts();
+}
+function backupPayload(){
+  const data={};
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ckd_'))data[k]=localStorage.getItem(k);}
+  return {app:'CKD–Pruritus Research Portal',backupVersion:1,createdAt:new Date().toISOString(),data};
+}
+function createFullBackup(){
+  const payload=backupPayload();
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`CKD_Pruritus_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  alert('Full backup created. Keep this JSON file in a safe location. It can be restored on another phone.');
+}
+async function restoreFullBackup(file){
+  if(!file)return;
+  try{
+    const text=await file.text();const payload=JSON.parse(text);
+    if(payload.app!=='CKD–Pruritus Research Portal'||!payload.data)throw new Error('Invalid backup');
+    if(!confirm('Restore this backup? Current CKD Portal data on this device will be replaced by the backup.'))return;
+    const remove=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ckd_'))remove.push(k)}
+    remove.forEach(k=>localStorage.removeItem(k));
+    Object.entries(payload.data).forEach(([k,v])=>localStorage.setItem(k,v));
+    alert('Backup restored successfully. The portal will reload now.');location.reload();
+  }catch(e){alert('This file is not a valid CKD–Pruritus Portal backup.');}
+}
+async function exportPatients(){
+  const patients=getRegistry();
+  if(!patients.length){alert('There are no saved patient records to export yet.');return;}
+  if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
+  const patient=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
+  const visit=['Visit_Type','Visit_Date','Visit_ID'];
+  const ckd=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
+  const lab=['Last_Lab_Date','Hb','Hb_Status','Albumin','Albumin_Status','Urea','Urea_Status','Post_Urea','Post_Urea_Status','Serum_Creatinine','Serum_Creatinine_Status','Sodium','Sodium_Status','Potassium','Potassium_Status','Phosphate','Phosphate_Status','Calcium','Calcium_Status','PTH','PTH_Status','Vit_D3','Vit_D3_Status','Ferritin','Ferritin_Status','Iron','Iron_Status'];
+  const pru=['Pruritus_Past_4_Weeks','Pruritus_Pattern','Pruritus_Duration_Value','Pruritus_Duration_Unit','Worse_At_Night','Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit','Herbal_Use','Herbal_Name','Herbal_Reason','Herbal_Duration_Value','Herbal_Duration_Unit','Herbal_Time','Herbal_Frequency'];
+  const med=['Current_Medications','Selected_Common_Medications','Total_Current_Medications','MED_CHANGED_3M','MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'];
+  const wi=['WI_NRS','WI_NRS_Category','Severe_Pruritus'];
+  const mars=['MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5','MARS_Total'];
+  const psqi=['PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j','PSQI_Q5j_text','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9','PSQI_Q10','PSQI_C1','PSQI_C2','PSQI_C3','PSQI_C4','PSQI_C5','PSQI_C6','PSQI_C7','PSQI_Global','PSQI_Sleep_Category'];
+  const kd=[...Array.from({length:36},(_,i)=>`KDQOL_Q${i+1}`),'KDQOL_PCS','KDQOL_MCS','KDQOL_Burden','KDQOL_Symptoms','KDQOL_Effects','KDQOL_KSS'];
+  const quest=[...wi,...mars,...psqi,...kd], review=['Patient_Notes'], code=['Patient_ID',...visit];
+  function scores(d){const x={...d};const m=[1,2,3,4,5].map(n=>Number(x[`MARS_Q${n}`]));if(m.every(v=>v>=1&&v<=5))x.MARS_Total=m.reduce((a,b)=>a+b,0);return x;}
+  const records=[];
+  patients.forEach((p,pi)=>{
+    const profile={...(p.profile||{}),Patient_ID:p.patientId||(p.profile||{}).Patient_ID||'',Patient_Name:p.name||(p.profile||{}).Patient_Name||'',Patient_Number:p.number||(p.profile||{}).Patient_Number||''};
+    const visits=(p.visits&&p.visits.length)?p.visits:[{type:profile.Visit_Type||'Baseline',date:profile.Visit_Date||'',visitId:profile.Visit_ID||'',status:p.status||'',data:profile}];
+    visits.forEach(v=>records.push({patientIndex:pi,data:scores({...profile,...(v.data||{}),Patient_ID:profile.Patient_ID,Visit_Type:v.type||'',Visit_Date:v.date||'',Visit_ID:v.visitId||'',Record_Status:v.status||p.status||''})}));
+  });
+  const wb=new ExcelJS.Workbook(); wb.creator='CKD–Pruritus Research Portal'; wb.created=new Date();
+  function sheet(name,fields,rows,alt=false){
+    const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:1}]});
+    ws.columns=fields.map(f=>({header:f.replaceAll('_',' '),key:f,width:Math.min(34,Math.max(12,f.length+2))}));
+    ws.getRow(1).height=26;ws.getRow(1).eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF9B73AD'}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true}});
+    rows.forEach(r=>{const row=ws.addRow(fields.map(f=>r.data[f]??''));row.alignment={vertical:'top',wrapText:true};if(alt){const color=r.patientIndex%2===0?'FFDCEAF7':'FFFFFFFF';row.eachCell(c=>c.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}})}});
+    if(fields.length)ws.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,ws.rowCount),column:fields.length}};
+    return ws;
+  }
+  const reg=patients.map((p,i)=>({patientIndex:i,data:{Patient_ID:p.patientId||(p.profile||{}).Patient_ID||'',Patient_Name:p.name||(p.profile||{}).Patient_Name||'',Patient_Number:p.number||(p.profile||{}).Patient_Number||'',Status:p.status||'',Created_At:p.createdAt||'',Updated_At:p.updatedAt||''}}));
+  sheet('Patient Registry',['Patient_ID','Patient_Name','Patient_Number','Status','Created_At','Updated_At'],reg);
+  const coded=[...new Set([...code,...patient.filter(x=>!['Patient_ID','Patient_Name','Patient_Number'].includes(x)),...ckd,...lab,...pru,...quest,...med,...review,'Record_Status'])];
+  sheet('Master Data',coded,records); sheet('Baseline',coded,records.filter(r=>r.data.Visit_Type==='Baseline')); sheet('Follow-up 1',coded,records.filter(r=>r.data.Visit_Type==='Follow-up 1')); sheet('Follow-up 2',coded,records.filter(r=>r.data.Visit_Type==='Follow-up 2'));
+  sheet('Patient & Visit',[...patient,...visit,'Record_Status'],records); sheet('CKD & HD',[...code,...ckd],records); sheet('Lab Data',[...code,...lab],records,true); sheet('Pruritus',[...code,...pru],records); sheet('Questionnaires',[...code,...quest],records); sheet('Medication',[...code,...med],records); sheet('Final Review',[...code,...review,'Record_Status'],records);
+  const all=[...new Set([...patient,...visit,...ckd,...lab,...pru,...quest,...med,...review,'Record_Status'])]; sheet('All Data',all,records);
+  const buf=await wb.xlsx.writeBuffer();const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`CKD_Pruritus_Research_Export_${new Date().toISOString().slice(0,10)}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);alert('Excel workbook created successfully with multiple sheets.');
+}
+</script>
+
+<script>
+const questionnaireState={wi:false,mars:false,psqi:false,kdqol:false};
+const questionnaireOpen={wi:false,mars:false,psqi:false,kdqol:false};
+const questionnaireRequired={wi:['WI_NRS'],mars:['MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5'],psqi:['PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9','PSQI_Q10'],kdqol:Array.from({length:36},(_,i)=>`KDQOL_Q${i+1}`)};
+const questionnaireTitles={wi:'WI-NRS',mars:'MARS-5',psqi:'PSQI',kdqol:'KDQOL-36'};
+function qAnswered(name){const el=form.elements[name]; if(!el)return false; if(el instanceof RadioNodeList)return [...el].some(x=>String(x.value||'').trim()!==''&&x.checked); return String(el.value??'').trim()!=='';}
+function qProgress(key){const req=questionnaireRequired[key];const answered=req.filter(qAnswered).length;return {answered,total:req.length,percent:Math.round(answered/req.length*100),missing:req.filter(n=>!qAnswered(n))};}
+function openQuestionnaire(key){
+  Object.keys(questionnaireOpen).forEach(k=>questionnaireOpen[k]=false);
+  questionnaireOpen[key]=true;
+  document.querySelectorAll('.questionnaire-panel').forEach(p=>p.style.display='none');
+  const p=document.getElementById('qpanel-'+key);
+  if(p){
+    p.style.display='block';
+    if(key==='kdqol') initKDQOLPager(true);
+    p.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  renderQuestionnaireCards();
+}
+function closeQuestionnaire(key){
+  questionnaireOpen[key]=false;
+  const p=document.getElementById('qpanel-'+key);
+  if(p)p.style.display='none';
+  if(key==='kdqol') resetKDQOLPager();
+  renderQuestionnaireCards();
+}
+function submitQuestionnaire(key){
+  const pr=qProgress(key);
+  const err=document.getElementById('qerror-'+key);
+  if(pr.missing.length){
+    questionnaireState[key]=false;
+    const names=pr.missing.map(n=>n.replaceAll('_',' '));
+    if(err){err.classList.add('show');err.innerHTML=`<b>Please complete the missing answers.</b><br>${names.join(' • ')}`;}
+    alert(`${questionnaireTitles[key]} is incomplete.\n\n${pr.missing.length} required answer(s) are missing.`);
+    renderQuestionnaireCards();
+    const first=form.elements[pr.missing[0]];
+    if(first&&typeof first.focus==='function')first.focus();
+    return;
+  }
+  questionnaireState[key]=true;
+  if(err){err.classList.remove('show');err.innerHTML='';}
+  if(key==='mars')calculateMarsTotal();
+  if(key==='kdqol')calculateKDQOL36();
+  persist();
+  renderQuestionnaireCards();
+  closeQuestionnaire(key);
+  alert(`${questionnaireTitles[key]} submitted successfully.`);
+}
+function renderQuestionnaireCards(){const box=document.getElementById('questionnaireCards');if(!box)return;box.innerHTML='';Object.keys(questionnaireTitles).forEach(key=>{const p=qProgress(key);const done=questionnaireState[key]&&p.missing.length===0;const card=document.createElement('div');card.className='questionnaire-card'+(questionnaireOpen[key]?' current':'');card.innerHTML=`<div class="qcard-top"><div class="qcard-title">${questionnaireTitles[key]}</div><div class="qcard-status ${done?'complete':(p.answered?'missed':'')}">${done?'✓ Complete':(p.answered?'In progress':'Not completed')}</div></div><div class="qcard-count">${p.answered} of ${p.total} required answered</div><div class="qcard-bar"><div class="qcard-fill" style="width:${p.percent}%"></div></div><button type="button" class="qopen" onclick="openQuestionnaire('${key}')">${done?'Review':'Open / Resume'}</button>`;box.appendChild(card);});}
+
+const kdqolPages=[[1,3],[4,8],[9,12],[13,16],[17,28],[29,36]];
+let kdqolPage=1;
+function resetKDQOLPager(){kdqolPage=1;}
+function kdqolPageAnswered(start,end){let answered=0;for(let i=start;i<=end;i++)if(qAnswered(`KDQOL_Q${i}`))answered++;return answered;}
+function initKDQOLPager(reset=false){
+  const panel=document.getElementById('qpanel-kdqol'); if(!panel)return;
+  if(reset)kdqolPage=1;
+  const grid=panel.querySelector('.q-grid'); if(!grid)return;
+  const pager=panel.querySelector('#kdqolPager');
+  const prev=panel.querySelector('#kdqolPrev');
+  const next=panel.querySelector('#kdqolNext');
+  if(!pager||!prev||!next)return;
+  prev.onclick=()=>{if(kdqolPage>1){kdqolPage--;renderKDQOLPager();}};
+  next.onclick=()=>{if(kdqolPage<kdqolPages.length){kdqolPage++;renderKDQOLPager();}};
+  renderKDQOLPager();
+}
+function renderKDQOLPager(){
+  const panel=document.getElementById('qpanel-kdqol'); if(!panel)return;
+  const grid=panel.querySelector('.q-grid'); if(!grid)return;
+  kdqolPage=Math.max(1,Math.min(kdqolPage,kdqolPages.length));
+  const [start,end]=kdqolPages[kdqolPage-1];
+  grid.querySelectorAll('.q-item[data-q]').forEach(item=>{
+    const q=Number(item.dataset.q);
+    const visible=q>=start&&q<=end;
+    item.hidden=!visible;
+    item.classList.toggle('kdqol-page-visible',visible);
+    item.classList.toggle('kdqol-page-hidden',!visible);
+  });
+  const answered=kdqolPageAnswered(start,end), total=end-start+1;
+  const info=panel.querySelector('#kdqolPagerInfo');
+  const note=panel.querySelector('#kdqolPageNote');
+  const prev=panel.querySelector('#kdqolPrev');
+  const next=panel.querySelector('#kdqolNext');
+  if(info)info.textContent=`Page ${kdqolPage} of ${kdqolPages.length} • ${answered}/${total} answered`;
+  if(note)note.textContent=`Questions ${start}–${end}`;
+  if(prev)prev.disabled=kdqolPage===1;
+  if(next){next.disabled=false;next.textContent=kdqolPage===kdqolPages.length?'Finish →':'Next →';}
+  const score=panel.querySelector('#kdqolScore');
+  const submit=panel.querySelector('.q-submit-row');
+  if(score)score.style.display=kdqolPage===kdqolPages.length?'block':'none';
+  if(submit)submit.style.display=kdqolPage===kdqolPages.length?'flex':'none';
+}
+function selectWiNrs(v){const input=document.getElementById('wiNrsInput');if(!input)return;input.value=String(v);document.querySelectorAll('#wiScale button').forEach(b=>b.classList.toggle('selected',Number(b.dataset.value)===v));const cat=v===0?'No pruritus':v<=3?'Mild':v<=6?'Moderate':'Severe';document.getElementById('wiNrsCategory').value=cat;document.getElementById('severePruritus').value=v>=7?'Yes':'No';questionnaireState.wi=false;persist();renderQuestionnaireCards();}
+function calculateMarsTotal(){const vals=['MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5'].map(n=>Number(form.elements[n]?.value||0));if(vals.every(v=>v>0)){const total=vals.reduce((a,b)=>a+b,0);const el=document.getElementById('marsScore');if(el)el.textContent=`MARS-5 total: ${total} / 25`;const out=form.elements['MARS_Total'];if(out)out.value=total;values.MARS_Total=String(total);}}
+function updateConditionalSections(){const pr=[...form.querySelectorAll('[name="Pruritus_Past_4_Weeks"]')].find(x=>x.checked)?.value;const hu=[...form.querySelectorAll('[name="Herbal_Use"]')].find(x=>x.checked)?.value;const pt=[...form.querySelectorAll('[name="Pruritus_Treatment_Use"]')].find(x=>x.checked)?.value;const pd=document.getElementById('pruritusDetails'),hd=document.getElementById('herbalDetails'),td=document.getElementById('pruritusTreatmentDetails');if(pd)pd.style.display=pr==='Yes'?'block':'none';if(hd)hd.style.display=hu==='Yes'?'block':'none';if(td)td.style.display=pt==='Yes'?'block':'none';}
+document.addEventListener('DOMContentLoaded',()=>{renderQuestionnaireCards();initKDQOLPager(true);updateConditionalSections();document.querySelectorAll('[name="Pruritus_Past_4_Weeks"],[name="Herbal_Use"],[name="Pruritus_Treatment_Use"]').forEach(x=>x.addEventListener('change',()=>{updateConditionalSections();persist();renderPageStatus();}));});
+</script>
+
+<script>
+(function(){
+  const state={year:new Date().getFullYear(),month:new Date().getMonth()};
+  const isoRe=/^(\d{4})-(\d{2})-(\d{2})$/;
+
+  function ids(){
+    return {
+      cal:document.getElementById('labDateCalendar'),
+      panel:document.getElementById('labDateCalendarPanel'),
+      days:document.getElementById('labDateCalendarDays'),
+      weekdays:document.getElementById('labDateWeekdays'),
+      title:document.getElementById('labDateCalendarTitle'),
+      input:document.getElementById('labDate'),
+      display:document.getElementById('labDateDisplay')
+    };
+  }
+
+  window.openLabDateCalendar=function(){
+    const x=ids(); if(!x.cal)return;
+    const existing=x.input?.value||'';
+    const m=existing.match(isoRe);
+    if(m){state.year=+m[1];state.month=+m[2]-1;}
+    document.querySelectorAll('.mini-calendar.open').forEach(c=>c.classList.remove('open'));
+    x.cal.classList.add('open');
+    renderDays();
+  };
+
+  window.changeLabDateMonth=function(delta){
+    state.month+=delta;
+    if(state.month<0){state.month=11;state.year--;}
+    if(state.month>11){state.month=0;state.year++;}
+    renderDays();
+  };
+
+  window.openLabDateYearPicker=function(){
+    const x=ids(); if(!x.panel)return;
+    x.days.style.display='none'; x.weekdays.style.display='none'; x.panel.style.display='grid';
+    let out='';
+    const now=new Date().getFullYear();
+    for(let y=now-40;y<=now+5;y++){
+      out+=`<button type="button" class="${y===state.year?'selected':''}" onclick="selectLabDateYear(${y})">${y}</button>`;
+    }
+    x.panel.innerHTML=out;
+  };
+
+  window.selectLabDateYear=function(y){
+    state.year=y;
+    openLabDateMonthPicker();
+  };
+
+  window.openLabDateMonthPicker=function(){
+    const x=ids(); if(!x.panel)return;
+    x.days.style.display='none'; x.weekdays.style.display='none'; x.panel.style.display='grid';
+    let out='';
+    for(let m=0;m<12;m++){
+      const name=new Date(state.year,m,1).toLocaleDateString(undefined,{month:'long'});
+      out+=`<button type="button" class="${m===state.month?'selected':''}" onclick="selectLabDateMonth(${m})">${name}</button>`;
+    }
+    x.panel.innerHTML=out;
+  };
+
+  window.selectLabDateMonth=function(m){
+    state.month=m;
+    renderDays();
+  };
+
+  window.openLabDateDayPicker=function(){renderDays();};
+
+  function renderDays(){
+    const x=ids(); if(!x.cal||!x.days||!x.weekdays)return;
+    x.cal.classList.add('open');
+    x.panel.style.display='none';
+    x.weekdays.style.display='grid';
+    x.days.style.display='grid';
+    x.title.textContent=new Date(state.year,state.month,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+    const selected=x.input.value||'';
+    const first=new Date(state.year,state.month,1);
+    const last=new Date(state.year,state.month+1,0);
+    let out='';
+    for(let i=0;i<first.getDay();i++) out+='<button type="button" class="empty" tabindex="-1"></button>';
+    for(let d=1;d<=last.getDate();d++){
+      const iso=`${state.year}-${String(state.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const cls=iso===selected?'selected':'';
+      out+=`<button type="button" class="${cls}" onclick="selectLabDate('${iso}')">${d}</button>`;
+    }
+    x.days.innerHTML=out;
+  }
+
+  window.selectLabDate=function(iso){
+    const x=ids(); if(!x.input||!x.display)return;
+    x.input.value=iso;
+    const m=iso.match(isoRe);
+    x.display.textContent=m?`${m[3]}/${m[2]}/${m[1]}`:'Select date';
+    // Keep the main form state synchronized for export/drafts/status.
+    if(typeof values==='object') values.Last_Lab_Date=iso;
+    x.cal.classList.remove('open');
+    if(typeof persist==='function') persist();
+    if(typeof renderPageStatus==='function') renderPageStatus();
+  };
+
+  window.selectLabDateToday=function(){
+    const d=new Date();
+    selectLabDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  };
+
+  // Rewire the three Lab Date navigation buttons to this dedicated picker.
+  document.addEventListener('DOMContentLoaded',function(){
+    const title=document.getElementById('labDateCalendarTitle');
+    const year=document.getElementById('labDateYearTab');
+    const month=document.getElementById('labDateMonthTab');
+    const day=document.getElementById('labDateDayTab');
+    const prev=document.querySelector('#labDateCalendar .mini-cal-head button:first-child');
+    const next=document.querySelector('#labDateCalendar .mini-cal-head button:last-child');
+    if(title)title.onclick=openLabDateYearPicker;
+    if(year)year.onclick=openLabDateYearPicker;
+    if(month)month.onclick=openLabDateMonthPicker;
+    if(day)day.onclick=openLabDateDayPicker;
+    if(prev)prev.onclick=()=>changeLabDateMonth(-1);
+    if(next)next.onclick=()=>changeLabDateMonth(1);
+
+    const today=document.querySelector('#labDateCalendar .today-btn');
+    if(today)today.onclick=selectLabDateToday;
+
+    const input=document.getElementById('labDate');
+    const display=document.getElementById('labDateDisplay');
+    const m=(input?.value||'').match(isoRe);
+    if(m && display) display.textContent=`${m[3]}/${m[2]}/${m[1]}`;
+  });
+})();
+</script>
+
+
+<script>
+function kdqolValue(n){
+  const el=form.elements['KDQOL_Q'+n];
+  if(!el)return null;
+  const checked=[...form.querySelectorAll('[name="KDQOL_Q'+n+'"]')].find(x=>x.checked);
+  return checked ? Number(checked.value) : null;
+}
+function kdqolLinear100(nums){
+  if(!nums.length || nums.some(v=>v==null)) return null;
+  const mean=nums.reduce((a,b)=>a+b,0)/nums.length;
+  return Math.round((100-(mean-1)*25)*100)/100;
+}
+function calculateKDQOL36(){
+  const vals=Array.from({length:36},(_,i)=>kdqolValue(i+1));
+  if(vals.some(v=>v==null)) return null;
+
+  // Kidney-targeted scales: 0-100, higher = better HRQOL.
+  const burden=kdqolLinear100(vals.slice(12,16));     // Q13-16
+  const symptoms=kdqolLinear100(vals.slice(16,28));   // Q17-28
+  const effects=kdqolLinear100(vals.slice(28,36));     // Q29-36
+  const kss=Math.round(((burden+symptoms+effects)/3)*100)/100;
+
+  // SF-12 version 1 PCS/MCS scoring weights.
+  const pcsW=[
+    [0,-1.31872,-3.0296,-5.56461,-8.37399],
+    [-7.23216,-3.45555,0],
+    [-6.24397,-2.73557,0],
+    [-4.61617,0],
+    [-5.51747,0],
+    [3.04365,0],
+    [2.32091,0],
+    [0,-3.80130,-6.50522,-8.38063,-11.25544],
+    [0,0.66514,1.36689,2.37241,2.90426,3.46638],
+    [0,-0.42251,-1.14387,-1.61850,-2.02168,-2.44706],
+    [4.61446,3.41593,2.34247,1.28044,0.41188,0],
+    [-0.33682,-0.94342,-0.18043,0.11038,0]
+  ];
+  const mcsW=[
+    [0,-0.06064,0.03482,-0.16891,-1.71175],
+    [3.93115,1.86840,0],
+    [2.68282,1.43103,0],
+    [1.44060,0],
+    [1.66968,0],
+    [-6.82672,0],
+    [-5.69921,0],
+    [0,0.90384,1.49384,1.76691,1.48619],
+    [0,-1.94949,-4.09842,-6.31121,-7.92717,-10.19085],
+    [0,-0.92057,-1.65178,-3.29805,-4.88962,-6.02409],
+    [-16.15395,-10.77911,-8.09914,-4.59055,-1.95934,0],
+    [-6.29724,-8.26066,-5.63286,-3.13896,0]
+  ];
+
+  let pcs=56.57706, mcs=60.75781;
+  vals.slice(0,12).forEach((v,i)=>{
+    pcs+=pcsW[i][v-1]??0;
+    mcs+=mcsW[i][v-1]??0;
+  });
+  pcs=Math.round(pcs*100)/100;
+  mcs=Math.round(mcs*100)/100;
+
+  const out={
+    PCS:pcs,MCS:mcs,Burden:burden,Symptoms:symptoms,Effects:effects,KSS:kss
+  };
+  const map={
+    KDQOL_PCS:pcs,KDQOL_MCS:mcs,KDQOL_Burden:burden,
+    KDQOL_Symptoms:symptoms,KDQOL_Effects:effects,KDQOL_KSS:kss
+  };
+  Object.entries(map).forEach(([name,val])=>{
+    const el=form.elements[name];
+    if(el)el.value=val;
+    values[name]=String(val);
+  });
+  const box=document.getElementById('kdqolScore');
+  if(box)box.innerHTML=`<b>KDQOL-36 scores calculated:</b> PCS ${pcs} · MCS ${mcs} · Burden ${burden} · Symptoms/Problems ${symptoms} · Effects ${effects} · KSS ${kss}`;
+  return out;
+}
+</script>
+
+
+<script>
+(function(){
+  const pages=[...document.querySelectorAll('#psqiPager .psqi-page')];
+  if(!pages.length)return;
+  let page=0;
+  const next=document.getElementById('psqiNextBtn'), back=document.getElementById('psqiBackBtn'), ind=document.getElementById('psqiPageIndicator');
+  const requiredNames=[
+    'PSQI_Q6','PSQI_Q2','PSQI_Q1','PSQI_Q3','PSQI_Q4',
+    'PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j',
+    'PSQI_Q7','PSQI_Q8','PSQI_Q9','PSQI_Q10'
+  ];
+  function selected(name){
+    const x=document.querySelector('input[name="'+name+'"]:checked');
+    return x ? Number(x.value) : null;
+  }
+  function val(name){
+    const x=document.querySelector('[name="'+name+'"]');
+    return x ? x.value : '';
+  }
+  function show(){
+    pages.forEach((p,i)=>p.classList.toggle('is-active',i===page));
+    ind.textContent='Page '+(page+1)+' of '+pages.length;
+    back.style.visibility=page===0?'hidden':'visible';
+    next.style.display=page===pages.length-1?'none':'inline-flex';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function pageMissing(){
+    const miss=[];
+    const groups={
+      0:['PSQI_Q6','PSQI_Q2','PSQI_Q1','PSQI_Q3','PSQI_Q4'],
+      1:['PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j'],
+      2:['PSQI_Q7','PSQI_Q8','PSQI_Q9'],
+      3:['PSQI_Q10']
+    };
+    (groups[page]||[]).forEach(n=>{
+      if(document.querySelector('input[name="'+n+'"]')?.type==='radio'){
+        if(selected(n)===null)miss.push(n);
+      }else if(!val(n).trim())miss.push(n);
+    });
+    return miss;
+  }
+  next.addEventListener('click',()=>{
+    const miss=pageMissing();
+    if(miss.length){alert('Please complete '+miss.length+' unanswered item(s) on this page before continuing.');return;}
+    if(page<pages.length-1){page++;show();}
+  });
+  back.addEventListener('click',()=>{if(page>0){page--;show();}});
+  function component2(){
+    const q2=Number(val('PSQI_Q2'));
+    const a=selected('PSQI_Q5a');
+    if(!Number.isFinite(q2)||a===null)return null;
+    const lat=q2<=15?0:q2<=30?1:q2<=60?2:3;
+    const add=a;
+    const aScore=add===0?0:add<=2?1:add<=4?2:3;
+    return Math.min(3,lat+aScore);
+  }
+  function component4(){
+    const bed=val('PSQI_Q1'), wake=val('PSQI_Q3'), sleep=Number(val('PSQI_Q4'));
+    if(!bed||!wake||!Number.isFinite(sleep))return null;
+    const [bh,bm]=bed.split(':').map(Number), [wh,wm]=wake.split(':').map(Number);
+    let bedMin=bh*60+bm, wakeMin=wh*60+wm;
+    if(wakeMin<=bedMin)wakeMin+=1440;
+    const inBed=wakeMin-bedMin;
+    if(inBed<=0)return null;
+    const eff=(sleep/inBed)*100;
+    return eff>=85?0:eff>=75?1:eff>=65?2:3;
+  }
+  function calculate(){
+    const c1=selected('PSQI_Q6');
+    const c2=component2();
+    const q4=Number(val('PSQI_Q4'));
+    const c3=Number.isFinite(q4)?(q4>=7?0:q4>=6?1:q4>=5?2:3):null;
+    const c4=component4();
+    const ds=['PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j'];
+    const dsum=ds.reduce((s,n)=>{const v=selected(n);return s+(v===null?0:v)},0);
+    const c5=dsum===0?0:dsum<=9?1:dsum<=18?2:3;
+    const c6=selected('PSQI_Q7');
+    const q8=selected('PSQI_Q8'),q9=selected('PSQI_Q9');
+    const d=q8===null||q9===null?null:q8+q9;
+    const c7=d===null?null:(d===0?0:d<=2?1:d<=4?2:3);
+    const cs=[c1,c2,c3,c4,c5,c6,c7];
+    if(cs.some(x=>x===null))return null;
+    const global=cs.reduce((a,b)=>a+b,0);
+    const out={c1,c2,c3,c4,c5,c6,c7,global};
+    const map={PSQI_C1:c1,PSQI_C2:c2,PSQI_C3:c3,PSQI_C4:c4,PSQI_C5:c5,PSQI_C6:c6,PSQI_C7:c7,PSQI_Global:global,PSQI_Sleep_Category:global<=5?'Good Sleep Quality':'Poor Sleep Quality'};
+    Object.entries(map).forEach(([n,v])=>{const el=document.querySelector('[name="'+n+'"]');if(el)el.value=v;});
+    const box=document.getElementById('psqiScorePreview');
+    if(box)box.innerHTML='<b>PSQI Global Score: '+global+'/21</b><br>Components: '+cs.join(' · ')+'<br><small>Lower scores indicate better sleep quality.</small>';
+    return out;
+  }
+  document.getElementById('psqiSubmitBtn').addEventListener('click',()=>{
+    const missing=[];
+    requiredNames.forEach(n=>{
+      const el=document.querySelector('input[name="'+n+'"]');
+      if(!el)return;
+      if(el.type==='radio'){if(selected(n)===null)missing.push(n);}
+      else if(!el.value.trim())missing.push(n);
+    });
+    if(missing.length){alert('Please complete '+missing.length+' required PSQI item(s) before submitting.');return;}
+    const result=calculate();
+    if(!result){alert('PSQI could not be scored. Please review your answers.');return;}
+    if(typeof values!=='undefined'){
+      Object.entries(result).forEach(([k,v])=>values['PSQI_'+k.toUpperCase()]=String(v));
+      values.PSQI_Global=String(result.global);
+      values.PSQI_Sleep_Category=result.global<=5?'Good Sleep Quality':'Poor Sleep Quality';
+      ['PSQI_C1','PSQI_C2','PSQI_C3','PSQI_C4','PSQI_C5','PSQI_C6','PSQI_C7'].forEach(n=>{const el=document.querySelector('[name="'+n+'"]');if(el)values[n]=el.value;});
+    }
+    if(typeof persist==='function')persist();
+    if(typeof renderQuestionnaireCards==='function')renderQuestionnaireCards();
+    alert('PSQI submitted successfully.');
+    // Close the questionnaire modal/panel using the existing project close handler when available.
+    const closeBtn=document.querySelector('[data-close-questionnaire], .questionnaire-close, .modal-close');
+    if(closeBtn)closeBtn.click();
+    else if(typeof closeQuestionnaire==='function')closeQuestionnaire();
+  });
+  show();
+})();
+</script>
+
+<script>
+(function(){
+  const root=document.querySelector('[data-step="6"]');
+  if(!root)return;
+  const selected=new Set();
+  const list=document.getElementById('medSelectedList');
+  const count=document.getElementById('medCount');
+  const manual=document.getElementById('medManualInput');
+  const current=document.getElementById('currentMedicationsValue');
+  const common=document.getElementById('selectedCommonMedicationsValue');
+  const total=document.getElementById('totalCurrentMedications');
+  const chips=[...root.querySelectorAll('.med-chip')];
+  function sync(){
+    list.innerHTML='';
+    [...selected].forEach(name=>{
+      const pill=document.createElement('span'); pill.className='med-pill'; pill.textContent=name;
+      const x=document.createElement('button'); x.type='button'; x.textContent='×';
+      x.onclick=()=>{selected.delete(name);sync();};
+      pill.appendChild(x); list.appendChild(pill);
+    });
+    const arr=[...selected];
+    count.textContent=arr.length;
+    current.value=arr.join(', ');
+    common.value=chips.filter(c=>selected.has(c.dataset.med)).map(c=>c.dataset.med).join(', ');
+    total.value=arr.length;
+    chips.forEach(c=>c.classList.toggle('is-selected',selected.has(c.dataset.med)));
+  }
+  function add(name){
+    name=(name||'').trim();
+    if(!name)return;
+    // Treat medication names case-insensitively so the same drug is counted only once.
+    const existing=[...selected].find(x=>x.toLowerCase()===name.toLowerCase());
+    if(existing){
+      manual.value='';
+      sync();
+      return;
+    }
+    selected.add(name);
+    manual.value='';
+    sync();
+  }
+  chips.forEach(c=>{c.addEventListener('click',()=>{const name=c.dataset.med;if(selected.has(name))selected.delete(name);else selected.add(name);sync();persist?.();});});
+  const manualAdd=document.getElementById('medManualAdd');
+  manualAdd?.addEventListener('click',()=>{ add(manual.value); manual.focus(); });
+  manual.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      add(manual.value);
+    }
+  });
+  root.querySelectorAll('input[name="MED_CHANGED_3M"]').forEach(r=>r.onchange=()=>{
+    const show=r.value==='Yes';
+    document.getElementById('medChangeFields').hidden=!show;
+    if(!show){document.getElementById('medChangedName').value='';document.getElementById('medChangedDose').value='';document.getElementById('medChangedReason').value='';}
+  });
+  sync();
+})();
+</script>
+
+
+<script>
+function toggleLabNA(name,checked){
+  const input=document.querySelector(`[name="${name}"]`);
+  const field=input?.closest('.lab-field');
+  if(!input)return;
+  input.disabled=!!checked;
+  if(checked) input.value='';
+  field?.classList.toggle('is-na',!!checked);
+  if(typeof values!=='undefined'){
+    values[name+'_Status']=checked?'Not Available':'Available';
+    values[name+'_NA']=checked?'Yes':'';
+  }
+  if(typeof persist==='function')persist();
+  if(typeof renderPageStatus==='function')renderPageStatus();
+}
+function syncLabNA(){
+  document.querySelectorAll('.lab-na-row input[type="checkbox"]').forEach(cb=>{
+    const name=cb.name.replace(/_NA$/,'');
+    toggleLabNA(name,cb.checked);
+  });
+}
+document.addEventListener('change',e=>{
+  if(e.target?.matches('.lab-field input[type="number"]') && e.target.value!==''){
+    const cb=document.querySelector(`[name="${e.target.name}_NA"]`);
+    if(cb?.checked){cb.checked=false;toggleLabNA(e.target.name,false)}
+  }
+});
+setTimeout(syncLabNA,0);
+</script>
+
+
+<div id="installBanner" role="dialog" aria-live="polite" aria-label="Install CKD Portal">
+  <img src="icon-192.png" alt="CKD Portal">
+  <div class="install-copy">
+    <div class="install-title">Install CKD Portal</div>
+    <div class="install-sub">Add the research portal to your home screen for quicker access.</div>
+  </div>
+  <div class="install-actions">
+    <button type="button" id="installNowBtn">Install</button>
+    <button type="button" id="installLaterBtn">Later</button>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  let deferredPrompt=null;
+  const banner=document.getElementById('installBanner');
+  const installBtn=document.getElementById('installNowBtn');
+  const laterBtn=document.getElementById('installLaterBtn');
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+  }
+
+  window.addEventListener('beforeinstallprompt',(e)=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    if(!window.matchMedia('(display-mode: standalone)').matches){
+      setTimeout(()=>banner?.classList.add('show'),700);
+    }
+  });
+
+  installBtn?.addEventListener('click',async()=>{
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      try{ await deferredPrompt.userChoice; }catch(e){}
+      deferredPrompt=null;
+      banner?.classList.remove('show');
+    }else{
+      alert('If the install button is not available, open this portal in Chrome from its HTTPS address, then choose “Add to Home screen” / “Install app” from the browser menu.');
+    }
+  });
+
+  laterBtn?.addEventListener('click',()=>banner?.classList.remove('show'));
+  window.addEventListener('appinstalled',()=>{
+    banner?.classList.remove('show');
+    deferredPrompt=null;
+  });
+})();
+</script>
+
+</body>
+</html>
