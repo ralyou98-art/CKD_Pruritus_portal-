@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.41 — Final Review Build</title>
+<title>CKD–Pruritus Research Portal v1.46 — Clinical Dashboard</title>
 <link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -437,6 +437,97 @@ body.followup-mode .baseline-fixed{display:none!important}
 #installNowBtn{background:#7d3c98;color:#fff;border:0}
 #installLaterBtn{background:#fff;color:#7d3c98;border:1px solid #c9afd3}
 
+
+
+/* v1.46 — Clinical dashboard UI refresh */
+:root{
+  --ui-bg:#f5f8f8;--ui-card:#ffffff;--ui-ink:#1f2933;--ui-muted:#7b8790;
+  --ui-purple:#7b3f98;--ui-purple-soft:#f3ebf7;--ui-beige:#f7ecdf;--ui-line:#e5e7eb;
+}
+body{background:var(--ui-bg)!important;color:var(--ui-ink)!important}
+header{position:sticky;top:0;z-index:40;background:#fff!important;border-bottom:1px solid #e7ecef!important;box-shadow:0 2px 10px #172b4d0a!important;padding:0!important}
+.head{max-width:980px;margin:auto;padding:12px 16px!important;display:grid!important;grid-template-columns:48px 1fr 48px;gap:10px;align-items:center}
+.brand{text-align:left;min-width:0}.brand h1{font-size:17px!important;color:#22313a!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{color:#8a969e!important;font-size:11px!important}
+.menu-trigger,.account-trigger{width:44px;height:44px;border:1px solid #dde5e8!important;border-radius:12px!important;background:#fff!important;color:var(--ui-purple)!important;display:flex;align-items:center;justify-content:center;font-weight:900}
+.menu-trigger{font-size:27px}.account-trigger{font-size:16px;background:#f9f5fb!important;border-color:#e4d5eb!important}
+.account-trigger .avatar-mini{width:32px;height:32px;border-radius:10px;background:#4f315c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}
+.header-actions{display:none!important}
+
+.side-menu{width:min(340px,88vw)!important;padding:0!important;background:#fff!important;box-shadow:18px 0 50px #172b4d24!important}
+.side-menu-head{padding:20px 22px 18px!important;margin:0!important;border-bottom:1px solid #edf0f2!important;align-items:center!important}
+.portal-mark{display:flex;align-items:center;gap:12px}.portal-logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(145deg,#f0e5f5,#fff);border:1px solid #dac7e3;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--ui-purple)}
+.side-menu-head strong{font-size:20px!important;color:#1f2933}.side-menu-head small{font-size:12px;color:#7b8790!important}.side-menu-head button{width:40px;height:40px;border-radius:11px!important;background:#f7f9fa!important;font-size:27px!important}
+.menu-scroll{padding:10px 14px 22px}.menu-section-label{padding:14px 12px 7px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#98a3aa}
+.menu-item{min-height:52px!important;padding:12px 14px!important;border-radius:12px!important;margin:3px 0!important;color:#35434b!important;font-weight:800!important}
+.menu-item:hover,.menu-item:active,.menu-item.menu-active{background:#f4ecf8!important;color:var(--ui-purple)!important;box-shadow:inset 4px 0 0 var(--ui-purple)}
+.menu-icon{width:26px!important;color:var(--ui-purple)!important;font-size:20px!important}.menu-spacer{height:10px;border-top:1px solid #edf0f2;margin:10px 8px 0}
+
+body.dashboard-home-mode main{padding-top:18px!important;max-width:980px!important}
+.dashboard-intro{max-width:980px;margin:0 auto 12px;padding:0 16px}.dashboard-intro h2{margin:0 0 5px;font-size:25px;color:#22313a}.dashboard-intro p{margin:0;color:#849198;font-size:13px}
+.dashboard-search{margin:0 auto 16px!important}.dashboard-search-box input{min-height:56px!important;border-radius:16px!important;border:1px solid #d9c9e1!important;box-shadow:0 3px 12px #172b4d08;font-size:15px!important}.dashboard-search-icon{color:#9b73ad!important}
+.dashboard{gap:12px!important}.dashboard-card{background:var(--ui-beige)!important;border:1px solid #d3b9dd!important;border-radius:16px!important;min-height:112px!important;padding:18px 12px!important;display:flex;flex-direction:column;justify-content:center;box-shadow:0 4px 14px #172b4d08}
+.dashboard-label{color:#9b73ad!important;font-size:12px!important;text-transform:uppercase;letter-spacing:.03em}.dashboard-value{font-size:31px!important;color:#4f315c!important;margin-top:7px!important}
+.dashboard-followups .dashboard-card{background:#fff!important}
+
+.hero{max-width:980px!important;padding:18px 16px 8px!important}.hero h2{font-size:24px!important;color:#22313a}.muted{color:#7b8790!important}
+.progress-card,.card,.subsection{border-radius:16px!important;border-color:#e4e8ea!important;box-shadow:0 3px 12px #172b4d08!important}
+.step-title h2{color:#22313a!important}.step-title span{color:var(--ui-purple)!important}
+.navbar{box-shadow:0 -4px 18px #172b4d0d}
+
+.account-backdrop{display:none;position:fixed;inset:0;background:#0006;z-index:105}.account-backdrop.open{display:block}
+.account-sheet{display:none;position:fixed;z-index:110;left:50%;transform:translateX(-50%);bottom:0;width:min(620px,100%);background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -16px 55px #0003;padding:16px 20px calc(24px + env(safe-area-inset-bottom))}.account-sheet.open{display:block}
+.sheet-handle{width:56px;height:5px;border-radius:10px;background:#cfd8dc;margin:0 auto 18px}.account-title-row{display:flex;justify-content:space-between;align-items:center}.account-title-row small{font-size:12px;font-weight:900;color:#98a3aa}.account-close{width:44px;height:44px;border:1px solid #e1e7ea;border-radius:13px;background:#fff;font-size:26px;color:#4d5b63}.account-profile{display:flex;align-items:center;gap:14px;padding:18px 0;border-bottom:1px solid #edf0f2}.account-avatar{width:64px;height:64px;border-radius:17px;background:#4f315c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900}.account-profile h3{margin:0 0 4px;font-size:20px}.account-profile p{margin:0;color:#7b8790;font-size:13px}.account-details{padding:14px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px}.account-detail{padding:12px;border-radius:12px;background:#f7f9fa}.account-detail span{display:block;font-size:11px;color:#98a3aa;font-weight:800;margin-bottom:4px}.account-detail strong{font-size:14px;color:#35434b}.account-actions{display:grid;gap:10px;margin-top:4px}.account-action{min-height:52px;border:1px solid #dfe6e9;background:#fff;border-radius:14px;font:inherit;font-weight:850;color:#35434b}.account-action.primary{border-color:#d8c4e1;color:var(--ui-purple);background:#fbf7fd}
+
+@media(max-width:650px){
+ .head{padding:10px 14px!important}.brand h1{font-size:15px!important}.brand p{display:none}.dashboard{padding:0 10px!important}.dashboard-card{min-height:102px!important}.dashboard-intro{padding:0 10px}.dashboard-search{padding:0 10px!important}.account-details{grid-template-columns:1fr 1fr}
+}
+
+
+/* v1.46 — Calm Research UI */
+:root{--accent:#7b3f98;--accent-soft:#f5eff8;--ink:#25323a;--muted:#8a949b;--line:#e8e4eb;--bg:#fbfbfc}
+body{background:var(--bg)}
+header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #eee!important;box-shadow:0 2px 12px rgba(40,25,50,.04)!important}
+.head{min-height:72px;gap:14px}
+.brand h1{font-size:18px!important;color:#27343b}.brand p{display:none}
+.menu-trigger{border-color:#e7e2e9;background:#fff;border-radius:14px;width:48px;height:48px;font-size:25px}
+.topbtn{display:none!important}
+.account-trigger{border-radius:14px!important}
+.hero{padding-top:20px!important}.hero>.muted{display:none!important}.hero h2{font-size:28px!important;color:#26343b}
+.dashboard-intro{margin:0 auto 14px!important;padding:0 16px!important;max-width:980px}.dashboard-intro p{display:none!important}.dashboard-intro h2{font-size:20px!important;margin:0!important;color:#6d3b80}
+/* remove explanatory helper text beneath fields for a calmer single-user interface */
+.field small,.section-note,.date-format-note,.backup-note{display:none!important}
+.notice{display:none!important}
+.step-title p{display:none!important}
+.step-title{padding-bottom:10px!important;margin-bottom:14px!important}.step-title h2{font-size:22px!important}
+.subsection{padding:16px!important;margin-bottom:12px!important;border-color:#ece8ee!important;border-radius:16px!important;box-shadow:0 2px 12px rgba(45,30,55,.025)}
+.subsection h3{font-size:16px!important;margin-bottom:12px!important}
+.field{margin-bottom:4px}.field label{font-size:13px!important;color:#30343a}
+.field input,.field select,.field textarea,.date-button{min-height:50px!important;border-radius:12px!important;border-color:#e1dce4!important}
+/* Compact horizontal patient-record navigation */
+.progress-card{padding:12px!important;border-radius:18px!important;border-color:#ebe6ed!important;box-shadow:0 4px 18px rgba(43,30,52,.035)!important}
+.progress-top{margin-bottom:8px!important}.bar{height:5px!important}.page-status-grid{display:flex!important;flex-direction:column!important;gap:7px!important;margin-top:10px!important}
+.page-status-item{display:block!important;min-height:auto!important;padding:0!important;border:1px solid #e8e2ea!important;border-radius:13px!important;background:#fff!important;overflow:hidden;transition:.16s}
+.page-status-item.current{border:1.5px solid var(--accent)!important;background:#fff!important;padding:0!important;box-shadow:0 0 0 2px rgba(123,63,152,.06)}
+.page-status-main{display:grid;grid-template-columns:32px minmax(0,1fr) auto 20px;align-items:center;gap:9px;padding:10px 12px;min-height:50px}
+.page-status-number{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f2e8f7;color:var(--accent);font-size:12px;font-weight:900}.page-status-item.current .page-status-number{background:var(--accent);color:#fff}
+.page-status-title{font-size:13px;font-weight:850;line-height:1.2;color:#2b2730;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-status-badge{font-size:10px!important;padding:4px 7px!important}
+.page-status-chevron{font-size:20px;color:#9c93a2;transition:.16s}.page-status-item.expanded .page-status-chevron{transform:rotate(90deg)}
+.page-status-details{display:none;border-top:1px solid #eee9f0;background:#fcfbfd;padding:9px 12px 10px 53px;color:#7d7582;font-size:11px;line-height:1.45}
+.page-status-item.expanded .page-status-details{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.page-status-open{border:0;background:transparent;color:var(--accent);font:inherit;font-weight:850;padding:3px 0;white-space:nowrap}
+/* dashboard stat cards calmer */
+.dashboard{gap:8px!important}.dashboard-card{background:#fff!important;border-color:#e9e3ec!important;border-radius:15px!important;min-height:74px!important;box-shadow:0 2px 10px rgba(45,30,55,.025)}
+.dashboard-label{color:#8b8090!important;font-size:11px!important}.dashboard-value{font-size:24px!important;margin-top:2px!important}
+.dashboard-search-box input{border-color:#e6dfe9!important;border-radius:14px!important;background:#fff!important}
+/* quieter choice controls */
+.visit-options{gap:8px!important}.visit-option span{padding:13px 10px!important;border-radius:12px!important;border-color:#e4dfe6!important}
+.choice-row span,.multi-choice span{border-color:#e4dfe6!important;background:#fff!important}
+/* v1.47 — keep Yes/No text visible after selection */
+.choice-row input:checked+span,.multi-choice input:checked+span{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+.navbar{box-shadow:0 -6px 18px rgba(40,25,50,.035);padding-top:9px!important;padding-bottom:max(9px,env(safe-area-inset-bottom))!important}.navbar button{min-height:48px;border-radius:12px!important}
+@media(max-width:650px){main{padding-left:8px!important;padding-right:8px!important}.hero{padding-left:12px!important;padding-right:12px!important}.hero h2{font-size:24px!important}.dashboard-intro{padding:0 10px!important}.progress-card{margin-left:2px!important;margin-right:2px!important}.page-status-main{grid-template-columns:30px minmax(0,1fr) auto 18px;padding:9px 10px}.page-status-title{font-size:12.5px}.page-status-details{padding-left:49px}.card{padding:12px!important;border-radius:16px!important}}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -446,52 +537,55 @@ body.followup-mode .baseline-fixed{display:none!important}
 <meta name="apple-mobile-web-app-title" content="CKD Portal">
 <link rel="apple-touch-icon" href="icon-192.png">
 
+
+<style>body.dashboard-home-mode .hero{display:none!important} body.form-entry-mode .dashboard-intro{display:none!important}</style>
 </head>
 <body>
 
 <header>
   <div class="head">
-    <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()">
-      <span>⋮</span>
-    </button>
-    <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Research Portal • Mobile-first</p></div>
-    <button class="topbtn" onclick="showDashboardHome()">Dashboard</button><button class="topbtn" onclick="openRegistry()">Patients</button>
+    <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
+    <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
+    <button class="account-trigger" type="button" aria-label="Researcher account" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
 <div id="sideMenuBackdrop" class="side-menu-backdrop" onclick="closeSideMenu()"></div>
 <aside id="sideMenu" class="side-menu" aria-hidden="true">
   <div class="side-menu-head">
-    <div><strong>Menu</strong><small>Research Portal</small></div>
+    <div class="portal-mark"><div class="portal-logo">◉</div><div><strong>CKD Portal</strong><small>Pruritus Research</small></div></div>
     <button type="button" onclick="closeSideMenu()">×</button>
   </div>
+  <div class="menu-scroll">
+    <div class="menu-section-label">Research</div>
+    <button class="menu-item menu-active" type="button" onclick="showDashboardHome();closeSideMenu()"><span class="menu-icon">⌂</span><span>Dashboard</span></button>
+    <button class="menu-item" type="button" onclick="openRegistry();closeSideMenu()"><span class="menu-icon">◉</span><span>Patients</span></button>
+    <button class="menu-item" type="button" onclick="openRegistry();closeSideMenu()"><span class="menu-icon">↻</span><span>Follow-ups</span></button>
 
-  <button class="menu-item" type="button" onclick="showDashboardHome();closeSideMenu()">
-    <span class="menu-icon">⌂</span><span>Dashboard</span>
-  </button>
-  <button class="menu-item" type="button" onclick="openRegistry();closeSideMenu()">
-    <span class="menu-icon">👤</span><span>Patients</span>
-  </button>
-  <button class="menu-item" type="button" onclick="openRegistry();closeSideMenu()">
-    <span class="menu-icon">↻</span><span>Follow-ups</span>
-  </button>
-  <button class="menu-item" type="button" onclick="newPatient();closeSideMenu()">
-    <span class="menu-icon">＋</span><span>New Patient</span>
-  </button>
-  <button class="menu-item" type="button" onclick="exportPatients();closeSideMenu()">
-    <span class="menu-icon">⇩</span><span>Export Excel</span>
-  </button>
-  <button class="menu-item" type="button" onclick="showDraft();closeSideMenu()">
-    <span class="menu-icon">▣</span><span>Drafts</span>
-  </button>
-  <button class="menu-item" type="button" onclick="createFullBackup();closeSideMenu()">
-    <span class="menu-icon">⤓</span><span>Backup Data</span>
-  </button>
-  <button class="menu-item" type="button" onclick="document.getElementById('restoreBackupInput').click();closeSideMenu()">
-    <span class="menu-icon">⤒</span><span>Restore Backup</span>
-  </button>
-  <input id="restoreBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="restoreFullBackup(this.files[0]);this.value=''">
+    <div class="menu-section-label">Data collection</div>
+    <button class="menu-item" type="button" onclick="newPatient();closeSideMenu()"><span class="menu-icon">＋</span><span>New Patient</span></button>
+    <button class="menu-item" type="button" onclick="showDraft();closeSideMenu()"><span class="menu-icon">▣</span><span>Drafts</span></button>
+
+    <div class="menu-section-label">Data management</div>
+    <button class="menu-item" type="button" onclick="exportPatients();closeSideMenu()"><span class="menu-icon">⇩</span><span>Export Excel</span></button>
+    <button class="menu-item" type="button" onclick="createFullBackup();closeSideMenu()"><span class="menu-icon">⤓</span><span>Backup Data</span></button>
+    <button class="menu-item" type="button" onclick="document.getElementById('restoreBackupInput').click();closeSideMenu()"><span class="menu-icon">⤒</span><span>Restore Backup</span></button>
+    <input id="restoreBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="restoreFullBackup(this.files[0]);this.value=''">
+
+    <div class="menu-spacer"></div>
+    <div class="menu-section-label">App</div>
+    <button class="menu-item" type="button" onclick="openAccountSheet();closeSideMenu()"><span class="menu-icon">ⓘ</span><span>About / Install App</span></button>
+  </div>
 </aside>
+
+<div id="accountBackdrop" class="account-backdrop" onclick="closeAccountSheet()"></div>
+<section id="accountSheet" class="account-sheet" aria-hidden="true">
+  <div class="sheet-handle"></div>
+  <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
+  <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.46</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
+</section>
 
 
 
@@ -538,6 +632,7 @@ body.followup-mode .baseline-fixed{display:none!important}
 <main>
   <div class="hero"><h2 id="heroTitle">Patient Record</h2><div class="muted">Complete one section at a time. Your answers remain saved while moving between pages.</div></div>
 
+<div class="dashboard-intro"><h2>Research Dashboard</h2><p>Patient registry, follow-ups, drafts, and local research data.</p></div>
 <div id="dashboardSearch" class="dashboard-search" aria-label="Search patients">
   <div class="dashboard-search-box">
     <span class="dashboard-search-icon">⌕</span>
@@ -1685,26 +1780,27 @@ function updateOtherCkdCause(){
 function renderPageStatus(){
   const box=document.getElementById('pageStatusGrid');
   if(!box)return;
+  const expanded=box.querySelector('.page-status-item.expanded')?.dataset.step || '';
   box.innerHTML='';
-
   for(let i=0;i<TOTAL;i++){
     const st=getPageStatus(i);
     const name=i<TOTAL-1?labels[i]:'Review & Save';
-    const btn=document.createElement('button');
-    btn.type='button';
-    btn.className='page-status-item'+(i===current-1?' current':'');
-    btn.innerHTML=`
-      <div class="page-status-name">
-        <span>${name}</span>
-        <span class="page-status-badge ${st.kind}">${st.badge}</span>
-      </div>
-      <div class="page-status-sub">${st.sub}</div>
-    `;
-    btn.onclick=()=>{
-      persist();
-      current=i+1;
-      render();
-    };
+    const btn=document.createElement('div');
+    btn.className='page-status-item'+(i===current-1?' current':'')+(String(i+1)===expanded?' expanded':'');
+    btn.dataset.step=String(i+1);
+    const detail = st.sub || '';
+    btn.innerHTML=`<div class="page-status-main" role="button" tabindex="0" aria-expanded="${String(i+1)===expanded?'true':'false'}">
+      <span class="page-status-number">${i+1}</span>
+      <span class="page-status-title">${name}</span>
+      <span class="page-status-badge ${st.kind}">${st.badge}</span>
+      <span class="page-status-chevron">›</span>
+    </div>
+    <div class="page-status-details"><span>${detail}</span><button type="button" class="page-status-open">Open section</button></div>`;
+    const main=btn.querySelector('.page-status-main');
+    const toggle=()=>{btn.classList.toggle('expanded');main.setAttribute('aria-expanded',btn.classList.contains('expanded')?'true':'false');};
+    main.addEventListener('click',toggle);
+    main.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+    btn.querySelector('.page-status-open').onclick=(e)=>{e.stopPropagation();persist();current=i+1;render();};
     box.appendChild(btn);
   }
 }
@@ -2242,6 +2338,27 @@ updateDashboard();
 document.getElementById('ckdCauseSelect')?.addEventListener('change',()=>{ updateOtherCkdCause(); persist(); });
 updateOtherCkdCause();
 
+
+function openAccountSheet(){
+  document.getElementById('accountSheet')?.classList.add('open');
+  document.getElementById('accountBackdrop')?.classList.add('open');
+  document.getElementById('accountSheet')?.setAttribute('aria-hidden','false');
+}
+function closeAccountSheet(){
+  document.getElementById('accountSheet')?.classList.remove('open');
+  document.getElementById('accountBackdrop')?.classList.remove('open');
+  document.getElementById('accountSheet')?.setAttribute('aria-hidden','true');
+}
+function triggerInstallFromAccount(){
+  closeAccountSheet();
+  const btn=document.getElementById('installNowBtn');
+  if(btn){ btn.click(); return; }
+  if(window.deferredInstallPrompt && typeof window.deferredInstallPrompt.prompt==='function'){
+    window.deferredInstallPrompt.prompt();
+  }else{
+    alert('If the install prompt is not shown automatically, use your browser menu and choose “Add to Home screen” or “Install app”.');
+  }
+}
 
 function toggleSideMenu(){
   document.getElementById('sideMenu').classList.toggle('open');
@@ -2935,62 +3052,82 @@ function calculateKDQOL36(){
 </script>
 
 <script>
-(function(){
-  const root=document.querySelector('[data-step="6"]');
-  if(!root)return;
-  const selected=new Set();
-  const list=document.getElementById('medSelectedList');
-  const count=document.getElementById('medCount');
-  const manual=document.getElementById('medManualInput');
-  const current=document.getElementById('currentMedicationsValue');
-  const common=document.getElementById('selectedCommonMedicationsValue');
-  const total=document.getElementById('totalCurrentMedications');
-  const chips=[...root.querySelectorAll('.med-chip')];
-  function sync(){
-    list.innerHTML='';
-    [...selected].forEach(name=>{
-      const pill=document.createElement('span'); pill.className='med-pill'; pill.textContent=name;
-      const x=document.createElement('button'); x.type='button'; x.textContent='×';
-      x.onclick=()=>{selected.delete(name);sync();};
-      pill.appendChild(x); list.appendChild(pill);
-    });
-    const arr=[...selected];
-    count.textContent=arr.length;
-    current.value=arr.join(', ');
-    common.value=chips.filter(c=>selected.has(c.dataset.med)).map(c=>c.dataset.med).join(', ');
-    total.value=arr.length;
-    chips.forEach(c=>c.classList.toggle('is-selected',selected.has(c.dataset.med)));
-  }
-  function add(name){
-    name=(name||'').trim();
-    if(!name)return;
-    // Treat medication names case-insensitively so the same drug is counted only once.
-    const existing=[...selected].find(x=>x.toLowerCase()===name.toLowerCase());
-    if(existing){
-      manual.value='';
-      sync();
-      return;
-    }
-    selected.add(name);
-    manual.value='';
-    sync();
-  }
-  chips.forEach(c=>{c.addEventListener('click',()=>{const name=c.dataset.med;if(selected.has(name))selected.delete(name);else selected.add(name);sync();persist?.();});});
-  const manualAdd=document.getElementById('medManualAdd');
-  manualAdd?.addEventListener('click',()=>{ add(manual.value); manual.focus(); });
-  manual.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      e.preventDefault();
-      add(manual.value);
-    }
+/* v1.46 medication interaction fix — robust on Android/local file preview */
+let medicationSelected = new Set();
+function medicationEls(){
+  return {
+    root:document.querySelector('[data-step="6"]'),
+    list:document.getElementById('medSelectedList'),
+    count:document.getElementById('medCount'),
+    manual:document.getElementById('medManualInput'),
+    current:document.getElementById('currentMedicationsValue'),
+    common:document.getElementById('selectedCommonMedicationsValue'),
+    total:document.getElementById('totalCurrentMedications'),
+    chips:[...document.querySelectorAll('[data-step="6"] .med-chip')]
+  };
+}
+function syncMedicationUI(){
+  const e=medicationEls(); if(!e.root||!e.list)return;
+  e.list.innerHTML='';
+  [...medicationSelected].forEach(name=>{
+    const pill=document.createElement('span'); pill.className='med-pill';
+    const text=document.createElement('span'); text.textContent=name; pill.appendChild(text);
+    const x=document.createElement('button'); x.type='button'; x.textContent='×'; x.setAttribute('aria-label','Remove '+name);
+    x.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();medicationSelected.delete(name);syncMedicationUI();if(typeof persist==='function')persist();});
+    pill.appendChild(x); e.list.appendChild(pill);
   });
-  root.querySelectorAll('input[name="MED_CHANGED_3M"]').forEach(r=>r.onchange=()=>{
-    const show=r.value==='Yes';
-    document.getElementById('medChangeFields').hidden=!show;
-    if(!show){document.getElementById('medChangedName').value='';document.getElementById('medChangedDose').value='';document.getElementById('medChangedReason').value='';}
+  const arr=[...medicationSelected];
+  if(e.count)e.count.textContent=String(arr.length);
+  if(e.current)e.current.value=arr.join(', ');
+  if(e.common)e.common.value=e.chips.filter(c=>medicationSelected.has(c.dataset.med)).map(c=>c.dataset.med).join(', ');
+  if(e.total)e.total.value=String(arr.length);
+  e.chips.forEach(c=>{
+    const on=medicationSelected.has(c.dataset.med);
+    c.classList.toggle('is-selected',on);
+    c.setAttribute('aria-pressed',on?'true':'false');
   });
-  sync();
-})();
+  if(typeof values!=='undefined'){
+    values.Current_Medications=arr.join(', ');
+    values.Selected_Common_Medications=e.chips.filter(c=>medicationSelected.has(c.dataset.med)).map(c=>c.dataset.med).join(', ');
+    values.Total_Current_Medications=String(arr.length);
+  }
+  if(typeof renderPageStatus==='function')renderPageStatus();
+}
+function toggleMedicationChip(button){
+  if(!button)return;
+  const name=(button.dataset.med||'').trim(); if(!name)return;
+  if(medicationSelected.has(name)) medicationSelected.delete(name); else medicationSelected.add(name);
+  syncMedicationUI();
+  if(typeof persist==='function')persist();
+}
+function addManualMedication(){
+  const e=medicationEls(); const name=(e.manual?.value||'').trim(); if(!name)return;
+  const existing=[...medicationSelected].find(x=>x.toLowerCase()===name.toLowerCase());
+  if(!existing) medicationSelected.add(name);
+  if(e.manual)e.manual.value='';
+  syncMedicationUI(); if(typeof persist==='function')persist();
+}
+function hydrateMedicationSelection(){
+  const e=medicationEls(); if(!e.root)return;
+  const raw=(e.current?.value || (typeof values!=='undefined' ? values.Current_Medications : '') || '');
+  medicationSelected=new Set(String(raw).split(/[,;]+/).map(x=>x.trim()).filter(Boolean));
+  syncMedicationUI();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const e=medicationEls();
+  e.chips.forEach(c=>{
+    c.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();toggleMedicationChip(c);};
+    c.style.touchAction='manipulation';
+  });
+  document.getElementById('medManualAdd')?.addEventListener('click',ev=>{ev.preventDefault();addManualMedication();});
+  e.manual?.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();addManualMedication();}});
+  e.root?.querySelectorAll('input[name="MED_CHANGED_3M"]').forEach(r=>r.addEventListener('change',()=>{
+    const show=r.checked && r.value==='Yes';
+    const fields=document.getElementById('medChangeFields'); if(fields)fields.hidden=!show;
+    if(!show){['medChangedName','medChangedDose','medChangedReason'].forEach(id=>{const x=document.getElementById(id);if(x)x.value='';});}
+  }));
+  hydrateMedicationSelection();
+});
 </script>
 
 
