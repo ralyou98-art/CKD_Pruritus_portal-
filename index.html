@@ -2002,6 +2002,14 @@ document.getElementById('dashboardPatientSearch')?.addEventListener('input',rend
 document.getElementById('registrySearch')?.addEventListener('input',renderRegistry);
 window.addEventListener('storage',()=>{updateDashboard();renderDashboardSearch();});
 
+function inferQuestionnaireCompletionFromLoadedRecord(){
+  if(typeof questionnaireState==='undefined'||typeof qProgress!=='function') return;
+  Object.keys(questionnaireState).forEach(key=>{
+    const p=qProgress(key);
+    questionnaireState[key]=(p.total>0 && p.missing.length===0);
+  });
+  if(typeof renderQuestionnaireCards==='function') renderQuestionnaireCards();
+}
 function openPatient(id){
   const p=getRegistry().find(x=>x.id===id); if(!p)return;
   showFormView();
@@ -2017,6 +2025,7 @@ function openPatient(id){
   current=1;
   updateFollowupDashboard();
   render();
+  inferQuestionnaireCompletionFromLoadedRecord();
   checkDuplicatePatient?.();
 }
 
@@ -2320,40 +2329,180 @@ async function exportPatients(){
   const patients=getRegistry();
   if(!patients.length){alert('There are no saved patient records to export yet.');return;}
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
-  const patient=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
-  const visit=['Visit_Type','Visit_Date','Visit_ID'];
-  const ckd=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
-  const lab=['Last_Lab_Date','Hb','Hb_Status','Albumin','Albumin_Status','Urea','Urea_Status','Post_Urea','Post_Urea_Status','Serum_Creatinine','Serum_Creatinine_Status','Sodium','Sodium_Status','Potassium','Potassium_Status','Phosphate','Phosphate_Status','Calcium','Calcium_Status','PTH','PTH_Status','Vit_D3','Vit_D3_Status','Ferritin','Ferritin_Status','Iron','Iron_Status'];
-  const pru=['Pruritus_Past_4_Weeks','Pruritus_Pattern','Pruritus_Duration_Value','Pruritus_Duration_Unit','Worse_At_Night','Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit','Herbal_Use','Herbal_Name','Herbal_Reason','Herbal_Duration_Value','Herbal_Duration_Unit','Herbal_Time','Herbal_Frequency'];
-  const med=['Current_Medications','Selected_Common_Medications','Total_Current_Medications','MED_CHANGED_3M','MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'];
-  const wi=['WI_NRS','WI_NRS_Category','Severe_Pruritus'];
-  const mars=['MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5','MARS_Total'];
-  const psqi=['PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j','PSQI_Q5j_text','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9','PSQI_Q10','PSQI_C1','PSQI_C2','PSQI_C3','PSQI_C4','PSQI_C5','PSQI_C6','PSQI_C7','PSQI_Global','PSQI_Sleep_Category'];
-  const kd=[...Array.from({length:36},(_,i)=>`KDQOL_Q${i+1}`),'KDQOL_PCS','KDQOL_MCS','KDQOL_Burden','KDQOL_Symptoms','KDQOL_Effects','KDQOL_KSS'];
-  const quest=[...wi,...mars,...psqi,...kd], review=['Patient_Notes'], code=['Patient_ID',...visit];
-  function scores(d){const x={...d};const m=[1,2,3,4,5].map(n=>Number(x[`MARS_Q${n}`]));if(m.every(v=>v>=1&&v<=5))x.MARS_Total=m.reduce((a,b)=>a+b,0);return x;}
+
+  const exportDate=new Date().toISOString();
+  const appVersion='1.43';
+  const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
+  const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
+  const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
+  const pruritusFields=['Pruritus_Past_4_Weeks','Pruritus_Pattern','Pruritus_Duration_Value','Pruritus_Duration_Unit','Worse_At_Night','Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit','Herbal_Use','Herbal_Name','Herbal_Reason','Herbal_Duration_Value','Herbal_Duration_Unit','Herbal_Time','Herbal_Frequency'];
+  const medFields=['Current_Medications','Selected_Common_Medications','Total_Current_Medications','MED_CHANGED_3M','MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'];
+  const wiFields=['WI_NRS'];
+  const marsFields=['MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5'];
+  const psqiRaw=['PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j_text','PSQI_Q5j','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9','PSQI_Q10'];
+  const kdRaw=Array.from({length:36},(_,i)=>`KDQOL_Q${i+1}`);
+  const scoreFields=['WI_NRS','WI_NRS_Category','Severe_Pruritus','MARS_Total','PSQI_C1','PSQI_C2','PSQI_C3','PSQI_C4','PSQI_C5','PSQI_C6','PSQI_C7','PSQI_Global','PSQI_Sleep_Category','KDQOL_Burden','KDQOL_Symptoms','KDQOL_Effects','KDQOL_PCS','KDQOL_MCS','KDQOL_KSS'];
+  const labDefs=[
+    ['Hb','Hemoglobin','g/dL'],['Albumin','Albumin','g/dL'],['Urea','Urea','mg/dL'],['Post_Urea','Post Urea','mg/dL'],['Serum_Creatinine','Serum Creatinine','mg/dL'],['Sodium','Sodium','mmol/L'],['Potassium','Potassium','mmol/L'],['Phosphate','Phosphate','mg/dL'],['Calcium','Calcium','mg/dL'],['PTH','PTH','pg/mL'],['Vit_D3','Vitamin D3','ng/mL'],['Ferritin','Ferritin','ng/mL'],['Iron','Iron','µg/dL']
+  ];
+
+  const text=v=>v===null||v===undefined?'':String(v);
+  const uniq=a=>[...new Set(a)];
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const avg=arr=>{const a=arr.map(num).filter(v=>v!==null);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10:'';};
+  const has=v=>text(v).trim()!=='';
+  const statusFromNA=(d,key)=>{
+    const st=text(d[key+'_Status']).trim();
+    if(st)return st;
+    if(['Yes','on','true','1'].includes(text(d[key+'_NA']).trim().toLowerCase()))return 'Not Available';
+    return has(d[key])?'Available':'';
+  };
+  function derive(d){
+    const x={...d};
+    const wi=num(x.WI_NRS);
+    if(wi!==null){
+      if(!x.WI_NRS_Category)x.WI_NRS_Category=wi===0?'No pruritus':wi<=3?'Mild':wi<=6?'Moderate':'Severe';
+      if(!has(x.Severe_Pruritus))x.Severe_Pruritus=wi>=7?1:0;
+    }
+    const m=[1,2,3,4,5].map(i=>num(x[`MARS_Q${i}`]));
+    if(m.every(v=>v!==null&&v>=1&&v<=5))x.MARS_Total=m.reduce((a,b)=>a+b,0);
+    return x;
+  }
+
   const records=[];
-  patients.forEach((p,pi)=>{
+  patients.forEach((p,patientIndex)=>{
     const profile={...(p.profile||{}),Patient_ID:p.patientId||(p.profile||{}).Patient_ID||'',Patient_Name:p.name||(p.profile||{}).Patient_Name||'',Patient_Number:p.number||(p.profile||{}).Patient_Number||''};
     const visits=(p.visits&&p.visits.length)?p.visits:[{type:profile.Visit_Type||'Baseline',date:profile.Visit_Date||'',visitId:profile.Visit_ID||'',status:p.status||'',data:profile}];
-    visits.forEach(v=>records.push({patientIndex:pi,data:scores({...profile,...(v.data||{}),Patient_ID:profile.Patient_ID,Visit_Type:v.type||'',Visit_Date:v.date||'',Visit_ID:v.visitId||'',Record_Status:v.status||p.status||''})}));
+    visits.forEach((v,visitIndex)=>{
+      const d=derive({...profile,...(v.data||{}),Patient_ID:profile.Patient_ID,Patient_Name:profile.Patient_Name,Patient_Number:profile.Patient_Number,Visit_ID:v.visitId||profile.Visit_ID||'',Visit_Type:v.type||profile.Visit_Type||'',Visit_Date:v.date||profile.Visit_Date||'',Record_Status:v.status||p.status||'',Export_Date:exportDate,App_Version:appVersion});
+      records.push({patientIndex,visitIndex,patient:p,data:d});
+    });
   });
-  const wb=new ExcelJS.Workbook(); wb.creator='CKD–Pruritus Research Portal'; wb.created=new Date();
-  function sheet(name,fields,rows,alt=false){
+
+  const wb=new ExcelJS.Workbook();
+  wb.creator='CKD–Pruritus Research Portal';wb.created=new Date();wb.modified=new Date();
+  const PURPLE='FF8F5AA5',PURPLE_DARK='FF5B3868',BEIGE='FFF6EBDD',BLUE='FFE8F2FB',WHITE='FFFFFFFF',RED='FFFFE5E5',GREEN='FFE4F4EA',GRAY='FFF3F2F4';
+  function pretty(f){return f.replaceAll('_',' ')}
+  function styleHeader(ws){
+    const row=ws.getRow(1);row.height=28;
+    row.eachCell(c=>{c.font={bold:true,color:{argb:WHITE}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:PURPLE}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border={bottom:{style:'thin',color:{argb:PURPLE_DARK}}};});
+  }
+  function addSheet(name,fields,rows,{altPatient=false,filter=true}={}){
     const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:1}]});
-    ws.columns=fields.map(f=>({header:f.replaceAll('_',' '),key:f,width:Math.min(34,Math.max(12,f.length+2))}));
-    ws.getRow(1).height=26;ws.getRow(1).eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF9B73AD'}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true}});
-    rows.forEach(r=>{const row=ws.addRow(fields.map(f=>r.data[f]??''));row.alignment={vertical:'top',wrapText:true};if(alt){const color=r.patientIndex%2===0?'FFDCEAF7':'FFFFFFFF';row.eachCell(c=>c.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}})}});
-    if(fields.length)ws.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,ws.rowCount),column:fields.length}};
+    ws.columns=fields.map(f=>({header:pretty(f),key:f,width:Math.min(34,Math.max(12,pretty(f).length+2))}));styleHeader(ws);
+    rows.forEach(r=>{
+      const data=r.data||r;
+      const row=ws.addRow(fields.map(f=>data[f]??''));
+      row.alignment={vertical:'top',wrapText:true};
+      if(altPatient){const idx=r.patientIndex??0;const color=idx%2===0?BLUE:WHITE;row.eachCell(c=>c.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}})}
+    });
+    if(filter&&fields.length)ws.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,ws.rowCount),column:fields.length}};
     return ws;
   }
-  const reg=patients.map((p,i)=>({patientIndex:i,data:{Patient_ID:p.patientId||(p.profile||{}).Patient_ID||'',Patient_Name:p.name||(p.profile||{}).Patient_Name||'',Patient_Number:p.number||(p.profile||{}).Patient_Number||'',Status:p.status||'',Created_At:p.createdAt||'',Updated_At:p.updatedAt||''}}));
-  sheet('Patient Registry',['Patient_ID','Patient_Name','Patient_Number','Status','Created_At','Updated_At'],reg);
-  const coded=[...new Set([...code,...patient.filter(x=>!['Patient_ID','Patient_Name','Patient_Number'].includes(x)),...ckd,...lab,...pru,...quest,...med,...review,'Record_Status'])];
-  sheet('Master Data',coded,records); sheet('Baseline',coded,records.filter(r=>r.data.Visit_Type==='Baseline')); sheet('Follow-up 1',coded,records.filter(r=>r.data.Visit_Type==='Follow-up 1')); sheet('Follow-up 2',coded,records.filter(r=>r.data.Visit_Type==='Follow-up 2'));
-  sheet('Patient & Visit',[...patient,...visit,'Record_Status'],records); sheet('CKD & HD',[...code,...ckd],records); sheet('Lab Data',[...code,...lab],records,true); sheet('Pruritus',[...code,...pru],records); sheet('Questionnaires',[...code,...quest],records); sheet('Medication',[...code,...med],records); sheet('Final Review',[...code,...review,'Record_Status'],records);
-  const all=[...new Set([...patient,...visit,...ckd,...lab,...pru,...quest,...med,...review,'Record_Status'])]; sheet('All Data',all,records);
-  const buf=await wb.xlsx.writeBuffer();const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`CKD_Pruritus_Research_Export_${new Date().toISOString().slice(0,10)}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);alert('Excel workbook created successfully with multiple sheets.');
+
+  // 1) Patient Registry — the only routine analysis sheet containing names / patient number.
+  const registry=patients.map((p,i)=>({patientIndex:i,data:{
+    Study_ID:p.patientId||(p.profile||{}).Patient_ID||'',Study_Status:p.status==='Complete'?'Active':(p.status||'Draft'),Dialysis_Center:(p.profile||{}).Center||'',Collection_Date:(p.profile||{}).Visit_Date||'',Interviewer:(p.profile||{}).Researcher_Interviewer_Name||'',Age:(p.profile||{}).Age||'',Sex:(p.profile||{}).Sex||'',Marital_Status:(p.profile||{}).Marital_Status||'',Education:(p.profile||{}).Education_Level||'',Employment:(p.profile||{}).Employment_Status||'',Smoking_Status:(p.profile||{}).Smoking_Status||'',CKD_Diagnosis_Date:(p.profile||{}).CKD_Diagnosis_Date||'',CKD_Duration_Months:(p.profile||{}).CKD_Duration_Months||'',CKD_Cause:(p.profile||{}).CKD_Cause||'',Other_CKD_Cause:(p.profile||{}).CKD_Cause_Other||'',First_Hemodialysis_Date:(p.profile||{}).Hemodialysis_First_Session_Date||'',HD_Duration_Months:(p.profile||{}).Hemodialysis_Duration_Months||'',Patient_Name:p.name||(p.profile||{}).Patient_Name||'',Patient_Number:p.number||(p.profile||{}).Patient_Number||'',Total_Visits:(p.visits||[]).length||1,Last_Visit_Date:(p.visits||[]).length?(p.visits[p.visits.length-1].date||''):'',Last_Visit_Status:(p.visits||[]).length?(p.visits[p.visits.length-1].status||p.status||''):(p.status||''),Created_At:p.createdAt||'',Updated_At:p.updatedAt||''
+  }}));
+  addSheet('Patient Registry',['Study_ID','Study_Status','Dialysis_Center','Collection_Date','Interviewer','Age','Sex','Marital_Status','Education','Employment','Smoking_Status','CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','Other_CKD_Cause','First_Hemodialysis_Date','HD_Duration_Months','Patient_Name','Patient_Number','Total_Visits','Last_Visit_Date','Last_Visit_Status','Created_At','Updated_At'],registry);
+
+  // 2) Long coded dataset — no patient name/number.
+  const codedCore=['Patient_ID',...visitFields,...patientFields.filter(f=>!['Patient_ID','Patient_Name','Patient_Number'].includes(f)),...ckdFields,...pruritusFields,...medFields,...wiFields,...marsFields,...psqiRaw,...kdRaw,...scoreFields,'Patient_Notes','Export_Date','App_Version'];
+  addSheet('Visits Long Format',uniq(codedCore),records);
+  addSheet('Baseline Dataset',uniq(codedCore),records.filter(r=>r.data.Visit_Type==='Baseline'));
+  addSheet('Follow-up Dataset',uniq(codedCore),records.filter(r=>/^Follow-up/.test(r.data.Visit_Type||'')));
+  addSheet('Follow-up 1',uniq(codedCore),records.filter(r=>r.data.Visit_Type==='Follow-up 1'));
+  addSheet('Follow-up 2',uniq(codedCore),records.filter(r=>r.data.Visit_Type==='Follow-up 2'));
+
+  // 3) Questionnaire raw data + separate scores.
+  const qFields=['Patient_ID','Visit_ID','Visit_Type','Visit_Date',...wiFields,...marsFields,...psqiRaw,...kdRaw,'MARS_Total'];
+  addSheet('Questionnaire Raw Data',qFields,records);
+  const scoreRows=records.map(r=>({patientIndex:r.patientIndex,data:{
+    Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Visit_Type:r.data.Visit_Type,Visit_Date:r.data.Visit_Date,Visit_Status:r.data.Record_Status,
+    WI_NRS:r.data.WI_NRS,WI_NRS_Category:r.data.WI_NRS_Category,Severe_Pruritus:r.data.Severe_Pruritus,MARS_Total:r.data.MARS_Total,
+    PSQI_C1:r.data.PSQI_C1,PSQI_C2:r.data.PSQI_C2,PSQI_C3:r.data.PSQI_C3,PSQI_C4:r.data.PSQI_C4,PSQI_C5:r.data.PSQI_C5,PSQI_C6:r.data.PSQI_C6,PSQI_C7:r.data.PSQI_C7,PSQI_Global:r.data.PSQI_Global,PSQI_Sleep_Category:r.data.PSQI_Sleep_Category,
+    KDQOL_Burden:r.data.KDQOL_Burden,KDQOL_Symptoms:r.data.KDQOL_Symptoms,KDQOL_Effects:r.data.KDQOL_Effects,KDQOL_PCS:r.data.KDQOL_PCS,KDQOL_MCS:r.data.KDQOL_MCS,KDQOL_KSS:r.data.KDQOL_KSS,
+    MARS_Scoring_Status:has(r.data.MARS_Total)?'Calculated':'Incomplete',PSQI_Scoring_Status:has(r.data.PSQI_Global)?'Calculated':'Incomplete',KDQOL36_Scoring_Status:(has(r.data.KDQOL_Burden)||has(r.data.KDQOL_Symptoms)||has(r.data.KDQOL_Effects))?'Calculated':'Incomplete'
+  }}));
+  addSheet('Scores',['Patient_ID','Visit_ID','Visit_Type','Visit_Date','Visit_Status',...scoreFields,'MARS_Scoring_Status','PSQI_Scoring_Status','KDQOL36_Scoring_Status'],scoreRows);
+
+  // 4) Laboratory data in long format, with alternating patient shading.
+  const labRows=[];
+  records.forEach(r=>labDefs.forEach(([key,test,unit])=>{
+    const st=statusFromNA(r.data,key);
+    labRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Visit_Type:r.data.Visit_Type,Visit_Date:r.data.Visit_Date,Lab_Date:r.data.Last_Lab_Date||'',Test:test,Value:r.data[key]??'',Availability_Status:st,Unit:unit}})
+  }));
+  addSheet('Laboratory Data',['Patient_ID','Visit_ID','Visit_Type','Visit_Date','Lab_Date','Test','Value','Availability_Status','Unit'],labRows,{altPatient:true});
+
+  // 5) Medication and pruritus sheets.
+  addSheet('Medication Review',['Patient_ID','Visit_ID','Visit_Type','Visit_Date',...medFields,'Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit'],records);
+  addSheet('Pruritus Data',['Patient_ID','Visit_ID','Visit_Type','Visit_Date',...pruritusFields],records);
+
+  // 6) Missing Data Report — distinguishes missing from intentionally Not Available.
+  const missingRows=[];
+  const requiredQuestion=[...wiFields,...marsFields,...psqiRaw.filter(x=>x!=='PSQI_Q5j_text'),...kdRaw];
+  records.forEach(r=>{
+    labDefs.forEach(([key,test])=>{
+      const st=statusFromNA(r.data,key);
+      if(!has(r.data[key]))missingRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Section:'Laboratory',Field:test,Required:'Yes',Applicability:'Applicable',Missing_Status:st==='Not Available'?'Not Available':'Missing',Reason:st==='Not Available'?'Not available / not tested':r.data['Review_Reason_field:'+key]||'',Action_Needed:st==='Not Available'?'Review only':'Fix or document reason'}})
+    });
+    requiredQuestion.forEach(f=>{if(!has(r.data[f]))missingRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Section:'Questionnaire',Field:f,Required:'Yes',Applicability:'Applicable',Missing_Status:'Missing',Reason:r.data['Review_Reason_field:'+f]||'',Action_Needed:'Complete questionnaire or document reason'}})});
+    ['CKD_Diagnosis_Date','CKD_Cause','Hemodialysis_First_Session_Date','Kt_V','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'].forEach(f=>{if(!has(r.data[f]))missingRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Section:'Clinical',Field:f,Required:'Review',Applicability:'Applicable',Missing_Status:'Missing',Reason:r.data['Review_Reason_field:'+f]||'',Action_Needed:'Review'}})});
+  });
+  addSheet('Missing Data Report',['Patient_ID','Visit_ID','Section','Field','Required','Applicability','Missing_Status','Reason','Action_Needed'],missingRows);
+
+  // 7) Validation report.
+  const validation=[];
+  const warn=(r,type,detail,severity='Warning')=>validation.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Visit_Type:r.data.Visit_Type,Severity:severity,Issue_Type:type,Detail:detail}});
+  records.forEach(r=>{
+    if(!has(r.data.Patient_ID))warn(r,'Missing identifier','Patient ID is missing.','Error');
+    if(!has(r.data.Visit_ID))warn(r,'Missing identifier','Visit ID is missing.');
+    const wi=num(r.data.WI_NRS);if(wi!==null&&(wi<0||wi>10))warn(r,'Out of range','WI-NRS should be 0–10.','Error');
+    [1,2,3,4,5].forEach(i=>{const v=num(r.data[`MARS_Q${i}`]);if(v!==null&&(v<1||v>5))warn(r,'Out of range',`MARS Q${i} should be 1–5.`,'Error')});
+    labDefs.forEach(([key,test])=>{const st=statusFromNA(r.data,key);if(st==='Not Available'&&has(r.data[key]))warn(r,'Conflicting laboratory status',`${test} has a value but is marked Not Available.`)});
+  });
+  addSheet('Validation Report',['Patient_ID','Visit_ID','Visit_Type','Severity','Issue_Type','Detail'],validation);
+
+  // 8) Codebook.
+  const codebook=[];
+  const addCode=(field,instrument,required,analysis,description)=>codebook.push({data:{Field:field,Description:description||pretty(field),Instrument:instrument,Required:required,Analysis_Use:analysis,App_Version:appVersion,Export_Date:exportDate}});
+  patientFields.forEach(f=>addCode(f,'Patient Registry',f==='Patient_ID'?'Yes':'Optional',f==='Patient_Name'||f==='Patient_Number'?'Identification only':'Main analysis dataset'));
+  visitFields.forEach(f=>addCode(f,'Visit','Yes','Main analysis dataset'));
+  ckdFields.forEach(f=>addCode(f,'CKD / Hemodialysis','Review','Main analysis dataset'));
+  labDefs.forEach(([k,test,unit])=>{addCode(k,'Laboratory','Review','Laboratory analysis',`${test} result (${unit})`);addCode(k+'_Status','Laboratory','Calculated','Missing-data analysis',`${test} availability status`)});
+  pruritusFields.forEach(f=>addCode(f,'Pruritus','Review','Main analysis dataset'));
+  medFields.forEach(f=>addCode(f,'Medication Review','Review','Medication analysis'));
+  wiFields.forEach(f=>addCode(f,'WI-NRS','Yes','Questionnaire analysis'));
+  marsFields.forEach(f=>addCode(f,'MARS-5','Yes','Questionnaire analysis'));
+  psqiRaw.forEach(f=>addCode(f,'PSQI','Yes','Questionnaire analysis'));
+  kdRaw.forEach(f=>addCode(f,'KDQOL-36','Yes','Questionnaire analysis'));
+  scoreFields.forEach(f=>addCode(f,'Calculated Score','Calculated','Main analysis dataset'));
+  addSheet('Codebook',['Field','Description','Instrument','Required','Analysis_Use','App_Version','Export_Date'],codebook);
+
+  // 9) Dashboard Summary similar to the previous portal export.
+  const totalVisits=records.length,completeVisits=records.filter(r=>r.data.Record_Status==='Complete').length,draftVisits=totalVisits-completeVisits;
+  const summary=[];const sm=(section,label,count)=>summary.push({data:{Section:section,Label:label,Count:count,Export_Date:exportDate,App_Version:appVersion}});
+  sm('Metric','Total patients',patients.length);sm('Metric','Total visits',totalVisits);sm('Metric','Completed visits',completeVisits);sm('Metric','Draft visits',draftVisits);
+  sm('Metric','Average WI-NRS',avg(records.map(r=>r.data.WI_NRS)));sm('Metric','Average PSQI',avg(records.map(r=>r.data.PSQI_Global)));sm('Metric','Average MARS',avg(records.map(r=>r.data.MARS_Total)));sm('Metric','Average Hb',avg(records.map(r=>r.data.Hb)));sm('Metric','Average Albumin',avg(records.map(r=>r.data.Albumin)));sm('Metric','Average Phosphate',avg(records.map(r=>r.data.Phosphate)));
+  ['No pruritus','Mild','Moderate','Severe'].forEach(cat=>sm('Pruritus severity distribution',cat,records.filter(r=>r.data.WI_NRS_Category===cat).length));
+  sm('Missing data summary','Laboratory missing',missingRows.filter(r=>r.data.Section==='Laboratory'&&r.data.Missing_Status==='Missing').length);sm('Missing data summary','Laboratory not available',missingRows.filter(r=>r.data.Section==='Laboratory'&&r.data.Missing_Status==='Not Available').length);sm('Missing data summary','Questionnaire missing',missingRows.filter(r=>r.data.Section==='Questionnaire').length);
+  addSheet('Dashboard Summary',['Section','Label','Count','Export_Date','App_Version'],summary,{filter:false});
+
+  // 10) All Data — convenient full export including patient identifiers.
+  const allFields=uniq([...patientFields,...visitFields,...ckdFields,...pruritusFields,...medFields,...wiFields,...marsFields,...psqiRaw,...kdRaw,...scoreFields,'Patient_Notes','Export_Date','App_Version']);
+  addSheet('All Data',allFields,records);
+
+  // Improve common date column formatting and visibility.
+  wb.eachSheet(ws=>{
+    ws.views=[{state:'frozen',ySplit:1}];
+    ws.properties.defaultRowHeight=18;
+    ws.eachRow((row,rowNumber)=>{if(rowNumber>1)row.eachCell(cell=>{cell.alignment={vertical:'top',wrapText:true}})});
+  });
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`CKD_Pruritus_Research_Export_${new Date().toISOString().slice(0,10)}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1200);
+  alert('Excel workbook created successfully. It now follows the previous portal structure with registry, coded datasets, questionnaires, scores, laboratory, medication, missing-data, validation, codebook and dashboard sheets.');
 }
 </script>
 
