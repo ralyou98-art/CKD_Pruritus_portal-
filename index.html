@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.53 — Deploy Fix</title>
+<title>CKD–Pruritus Research Portal v1.55 — Deploy Fix</title>
 <link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -536,7 +536,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
 .lab-range-note{display:none!important}
 
 
-/* v1.53 medication conditional-field fail-safe:
+/* v1.55 medication conditional-field fail-safe:
    works even if a mobile browser delays or skips the JS change handler */
 .med-section:has(input[name="MED_CHANGED_3M"][value="Yes"]:checked) #medChangeFields{
   display:grid !important;
@@ -563,7 +563,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.53" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.55" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -1889,9 +1889,11 @@ document.querySelectorAll('input,select,textarea').forEach(el=>{
     persist();calculateClinicalDurations();renderPageStatus();
   });
 });
-// v1.53 — continuous autosave: no Save Draft button required.
+// v1.55 — continuous autosave: no Save Draft button required.
 let autosaveTimer=null;
+let autosaveSuspended=false;
 function autosaveNow(){
+  if(autosaveSuspended) return;
   try{
     persist();
     const name=String(values.Patient_Name||'').trim();
@@ -1900,6 +1902,7 @@ function autosaveNow(){
   }catch(e){}
 }
 function queueAutosave(){
+  if(autosaveSuspended) return;
   clearTimeout(autosaveTimer);
   autosaveTimer=setTimeout(autosaveNow,180);
 }
@@ -1909,6 +1912,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 window.addEventListener('pagehide',autosaveNow);
 window.addEventListener('beforeunload',autosaveNow);
 setInterval(()=>{
+  if(autosaveSuspended) return;
   const name=(document.querySelector('[name="Patient_Name"]')?.value||'').trim();
   const number=(document.querySelector('[name="Patient_Number"]')?.value||'').trim();
   if(name||number) autosaveNow();
@@ -1932,9 +1936,33 @@ document.getElementById('saveDraftBtn').onclick=()=>{
 };
 document.getElementById('deleteInterviewBtn').onclick=()=>{
   if(!confirm('Delete this interview and its saved draft? This cannot be undone.')) return;
+
+  autosaveSuspended=true;
+  clearTimeout(autosaveTimer);
+
+  const data=currentPatientSnapshot();
+  const pid=(data.Patient_ID||values.Patient_ID||'').trim();
+  const key=patientKey(data.Patient_Name||'',data.Patient_Number||'');
+
+  const list=getRegistry().filter(p=>{
+    const sameId=pid && (p.patientId===pid || p.profile?.Patient_ID===pid);
+    const sameKey=key && p.key===key;
+    return !((sameId||sameKey) && p.status==='Draft');
+  });
+  setRegistry(list);
+
   localStorage.removeItem('ckd_wizard_draft');
   localStorage.removeItem(REVIEW_REASON_KEY);
-  location.reload();
+  Object.keys(values).forEach(k=>delete values[k]);
+
+  form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
+    if(el.type==='radio'||el.type==='checkbox') el.checked=false;
+    else if(el.name!=='Visit_Date') el.value='';
+  });
+  setPatientId('');
+
+  updateDashboard();
+  showDashboardHome();
 };
 document.getElementById('saveReviewBtn').onclick=()=>{
   persist();
@@ -2368,6 +2396,8 @@ setDefaultVisitDate();
 updateVisitId();
 
 function newPatient(){
+  autosaveSuspended=false;
+  clearTimeout(autosaveTimer);
   localStorage.removeItem('ckd_wizard_draft');
   Object.keys(values).forEach(k=>delete values[k]);
   showFormView();
@@ -2464,6 +2494,8 @@ function renderDrafts(){
   }).join('');
 }
 function resumeDraft(id){
+  autosaveSuspended=false;
+  clearTimeout(autosaveTimer);
   const p=getRegistry().find(x=>x.id===id);if(!p)return;
   closeDraftPanel();showFormView();
   const latest=(p.visits||[]).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0];
@@ -2494,9 +2526,43 @@ function resumeDraft(id){
 function deleteDraft(id){
   const p=getRegistry().find(x=>x.id===id);if(!p)return;
   if(!confirm(`Delete draft for ${p.name||p.patientId||'this patient'}? This cannot be undone.`))return;
-  const list=getRegistry().filter(x=>x.id!==id);setRegistry(list);
-  localStorage.removeItem('ckd_wizard_draft');
-  updateDashboard();renderDrafts();
+
+  // Stop continuous autosave first, otherwise the just-deleted draft is recreated
+  // from the form values a few seconds later.
+  autosaveSuspended=true;
+  clearTimeout(autosaveTimer);
+
+  const list=getRegistry().filter(x=>x.id!==id);
+  setRegistry(list);
+
+  // Remove the working autosave if it belongs to this draft.
+  try{
+    const w=JSON.parse(localStorage.getItem('ckd_wizard_draft')||'{}');
+    const sameId=p.patientId && (w.Patient_ID===p.patientId);
+    const sameKey=p.key && patientKey(w.Patient_Name||'',w.Patient_Number||'')===p.key;
+    if(sameId||sameKey) localStorage.removeItem('ckd_wizard_draft');
+  }catch(e){}
+
+  // Clear the currently loaded form if it is the same patient, so pagehide/visibility
+  // events also cannot reconstruct the deleted record.
+  const currentId=(document.querySelector('[name="Patient_ID"]')?.value||values.Patient_ID||'').trim();
+  const currentKey=patientKey(
+    document.querySelector('[name="Patient_Name"]')?.value||values.Patient_Name||'',
+    document.querySelector('[name="Patient_Number"]')?.value||values.Patient_Number||''
+  );
+  if((p.patientId && currentId===p.patientId) || (p.key && currentKey===p.key)){
+    Object.keys(values).forEach(k=>delete values[k]);
+    form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
+      if(el.type==='radio'||el.type==='checkbox') el.checked=false;
+      else if(el.name!=='Visit_Date') el.value='';
+    });
+    setPatientId('');
+  }
+
+  updateDashboard();
+  renderDrafts();
+  closeDraftPanel();
+  showDashboardHome();
 }
 function backupPayload(){
   const data={};
@@ -2529,7 +2595,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.53';
+  const appVersion='1.55';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];

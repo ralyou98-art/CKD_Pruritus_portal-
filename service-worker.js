@@ -1,4 +1,4 @@
-const CACHE = 'ckd-pruritus-v1-53_autosave';
+const CACHE = 'ckd-pruritus-v1-55_autosave';
 const STATIC_ASSETS = [
   './manifest.webmanifest',
   './icon-192.png',
