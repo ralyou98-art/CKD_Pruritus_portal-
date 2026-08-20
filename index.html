@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.51 — Deploy Fix</title>
+<title>CKD–Pruritus Research Portal v1.52 — Deploy Fix</title>
 <link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -1879,7 +1879,7 @@ document.querySelectorAll('input,select,textarea').forEach(el=>{
     persist();calculateClinicalDurations();renderPageStatus();
   });
 });
-// v1.51 — continuous autosave: no Save Draft button required.
+// v1.52 — continuous autosave: no Save Draft button required.
 let autosaveTimer=null;
 function autosaveNow(){
   try{
@@ -2519,7 +2519,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.51';
+  const appVersion='1.52';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -3209,12 +3209,23 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 function setMedicationChanged(choice){
   const fields=document.getElementById('medChangeFields');
-  const show=choice==='Yes';
+  const normalized=(choice||'').trim();
+  const show=normalized==='Yes';
+
+  document.querySelectorAll('input[name="MED_CHANGED_3M"]').forEach(r=>{
+    r.checked=(r.value===normalized);
+  });
 
   if(fields){
-    fields.hidden=!show;
-    fields.style.display=show?'grid':'none';
-    fields.setAttribute('aria-hidden', show?'false':'true');
+    if(show){
+      fields.hidden=false;
+      fields.style.setProperty('display','grid','important');
+      fields.setAttribute('aria-hidden','false');
+    }else{
+      fields.hidden=true;
+      fields.style.setProperty('display','none','important');
+      fields.setAttribute('aria-hidden','true');
+    }
   }
 
   ['medChangedName','medChangedDose','medChangedReason'].forEach(id=>{
@@ -3225,7 +3236,7 @@ function setMedicationChanged(choice){
   });
 
   if(typeof values!=='undefined'){
-    values.MED_CHANGED_3M=choice||'';
+    values.MED_CHANGED_3M=normalized;
     if(!show){
       values.MED_CHANGED_NAME='';
       values.MED_CHANGED_DOSE='';
@@ -3344,5 +3355,12 @@ setTimeout(()=>{syncLabNA();updateAllLabRangeFlags();},0);
 })();
 </script>
 
+<script>
+document.addEventListener('change',function(e){
+  if(e && e.target && e.target.matches('input[name="MED_CHANGED_3M"]')){
+    setMedicationChanged(e.target.value);
+  }
+},true);
+</script>
 </body>
 </html>
