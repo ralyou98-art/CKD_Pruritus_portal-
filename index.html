@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.49 — Deploy Fix</title>
+<title>CKD–Pruritus Research Portal v1.51 — Deploy Fix</title>
 <link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -1298,8 +1298,8 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
     <div class="med-section">
       <div class="med-section-title">Was any medication changed during the past 3 months?</div>
       <div class="med-yesno">
-        <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="No"><span>No</span></label>
-        <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="Yes"><span>Yes</span></label>
+        <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="No" onchange="setMedicationChanged('No')"><span>No</span></label>
+        <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="Yes" onchange="setMedicationChanged('Yes')"><span>Yes</span></label>
       </div>
       <div id="medChangeFields" class="med-change-fields" hidden>
         <label>Medication changed<input type="text" name="MED_CHANGED_NAME" id="medChangedName" placeholder="Medication name"></label>
@@ -1879,6 +1879,31 @@ document.querySelectorAll('input,select,textarea').forEach(el=>{
     persist();calculateClinicalDurations();renderPageStatus();
   });
 });
+// v1.51 — continuous autosave: no Save Draft button required.
+let autosaveTimer=null;
+function autosaveNow(){
+  try{
+    persist();
+    const name=String(values.Patient_Name||'').trim();
+    const number=String(values.Patient_Number||'').trim();
+    if(name||number) savePatientRecord('Draft',true);
+  }catch(e){}
+}
+function queueAutosave(){
+  clearTimeout(autosaveTimer);
+  autosaveTimer=setTimeout(autosaveNow,180);
+}
+form.addEventListener('input',queueAutosave,true);
+form.addEventListener('change',queueAutosave,true);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')autosaveNow();});
+window.addEventListener('pagehide',autosaveNow);
+window.addEventListener('beforeunload',autosaveNow);
+setInterval(()=>{
+  const name=(document.querySelector('[name="Patient_Name"]')?.value||'').trim();
+  const number=(document.querySelector('[name="Patient_Number"]')?.value||'').trim();
+  if(name||number) autosaveNow();
+},5000);
+
 document.getElementById('next').onclick=()=>{
   if(current===5){
     const incomplete=Object.keys(questionnaireTitles).filter(k=>!questionnaireState[k]||qProgress(k).missing.length);
@@ -1989,9 +2014,20 @@ function updateDashboard(){
 
 function currentPatientSnapshot(){
   const data={};
+  const radioNames=new Set();
   document.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
     if(['Visit_Type','Visit_Date','Visit_ID'].includes(el.name))return;
-    if(el.type==='radio'){if(el.checked)data[el.name]=el.value}else data[el.name]=el.value;
+    if(el.type==='radio'){
+      radioNames.add(el.name);
+      if(el.checked)data[el.name]=el.value;
+    }else if(el.type==='checkbox'){
+      data[el.name]=el.checked?(el.value||'on'):'';
+    }else{
+      data[el.name]=el.value;
+    }
+  });
+  radioNames.forEach(name=>{
+    if(!document.querySelector(`input[type="radio"][name="${CSS.escape(name)}"]:checked`)) delete data[name];
   });
   return data;
 }
@@ -2322,6 +2358,8 @@ setDefaultVisitDate();
 updateVisitId();
 
 function newPatient(){
+  localStorage.removeItem('ckd_wizard_draft');
+  Object.keys(values).forEach(k=>delete values[k]);
   showFormView();
   document.body.classList.remove('followup-mode');
   registryFilter='all';
@@ -2418,18 +2456,30 @@ function renderDrafts(){
 function resumeDraft(id){
   const p=getRegistry().find(x=>x.id===id);if(!p)return;
   closeDraftPanel();showFormView();
-  Object.entries(p.profile||{}).forEach(([name,value])=>{
-    document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{if(el.type==='radio')el.checked=(el.value===value);else el.value=value;});
-  });
-  setPatientId(p.patientId||p.profile?.Patient_ID||'');
   const latest=(p.visits||[]).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0];
+  const restoredData={...(p.profile||{}),...(latest?.data||{})};
+  Object.keys(values).forEach(k=>delete values[k]);
+  Object.assign(values,restoredData);
+  Object.entries(restoredData).forEach(([name,value])=>{
+    document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
+      if(el.type==='radio')el.checked=(String(el.value)===String(value));
+      else if(el.type==='checkbox')el.checked=['on','yes','true','1'].includes(String(value).toLowerCase());
+      else el.value=value??'';
+    });
+  });
+  setPatientId(p.patientId||restoredData.Patient_ID||'');
   if(latest){
     const r=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===latest.type);if(r)r.checked=true;
     if(document.getElementById('visitDate')&&latest.date)document.getElementById('visitDate').value=latest.date;
     if(document.getElementById('visitId')&&latest.visitId)document.getElementById('visitId').value=latest.visitId;
     syncVisitDateDisplay();
   }
-  current=1;render();updateFollowupDashboard();
+  localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+  try{hydrateMedicationSelection();}catch(e){}
+  try{updateConditionalSections();}catch(e){}
+  try{updateMedicationChangeVisibility();}catch(e){}
+  try{restoreClinicalDateDisplays();calculateClinicalDurations();}catch(e){}
+  current=1;render();updateFollowupDashboard();renderPageStatus();
 }
 function deleteDraft(id){
   const p=getRegistry().find(x=>x.id===id);if(!p)return;
@@ -2469,7 +2519,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.49';
+  const appVersion='1.51';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -3157,17 +3207,39 @@ document.addEventListener('DOMContentLoaded',()=>{
   hydrateMedicationSelection();
   updateMedicationChangeVisibility();
 });
-function updateMedicationChangeVisibility(){
-  const selected=document.querySelector('input[name="MED_CHANGED_3M"]:checked')?.value||'';
-  const show=selected==='Yes';
-  const fields=document.getElementById('medChangeFields'); if(fields)fields.hidden=!show;
+function setMedicationChanged(choice){
+  const fields=document.getElementById('medChangeFields');
+  const show=choice==='Yes';
+
+  if(fields){
+    fields.hidden=!show;
+    fields.style.display=show?'grid':'none';
+    fields.setAttribute('aria-hidden', show?'false':'true');
+  }
+
   ['medChangedName','medChangedDose','medChangedReason'].forEach(id=>{
     const x=document.getElementById(id);
-    if(x){x.disabled=!show;if(!show)x.value='';}
+    if(!x)return;
+    x.disabled=!show;
+    if(!show)x.value='';
   });
-  if(typeof values!=='undefined' && selected==='No'){
-    values.MED_CHANGED_NAME='';values.MED_CHANGED_DOSE='';values.MED_CHANGED_REASON='';
+
+  if(typeof values!=='undefined'){
+    values.MED_CHANGED_3M=choice||'';
+    if(!show){
+      values.MED_CHANGED_NAME='';
+      values.MED_CHANGED_DOSE='';
+      values.MED_CHANGED_REASON='';
+    }
   }
+
+  if(typeof persist==='function')persist();
+  if(typeof renderPageStatus==='function')renderPageStatus();
+}
+
+function updateMedicationChangeVisibility(){
+  const selected=document.querySelector('input[name="MED_CHANGED_3M"]:checked')?.value||'';
+  setMedicationChanged(selected);
 }
 </script>
 
