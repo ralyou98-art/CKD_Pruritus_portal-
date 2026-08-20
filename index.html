@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.52 — Deploy Fix</title>
+<title>CKD–Pruritus Research Portal v1.53 — Deploy Fix</title>
 <link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -535,6 +535,16 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
 .lab-field.lab-out-of-range .lab-input input{background:#fffdf2!important;border-color:#d6bd62!important}
 .lab-range-note{display:none!important}
 
+
+/* v1.53 medication conditional-field fail-safe:
+   works even if a mobile browser delays or skips the JS change handler */
+.med-section:has(input[name="MED_CHANGED_3M"][value="Yes"]:checked) #medChangeFields{
+  display:grid !important;
+}
+.med-section:has(input[name="MED_CHANGED_3M"][value="No"]:checked) #medChangeFields{
+  display:none !important;
+}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -553,7 +563,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.53" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -1301,7 +1311,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
         <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="No" onchange="setMedicationChanged('No')"><span>No</span></label>
         <label class="med-radio"><input type="radio" name="MED_CHANGED_3M" value="Yes" onchange="setMedicationChanged('Yes')"><span>Yes</span></label>
       </div>
-      <div id="medChangeFields" class="med-change-fields" hidden>
+      <div id="medChangeFields" class="med-change-fields" style="display:none">
         <label>Medication changed<input type="text" name="MED_CHANGED_NAME" id="medChangedName" placeholder="Medication name"></label>
         <label>Dose<input type="text" name="MED_CHANGED_DOSE" id="medChangedDose" placeholder="Dose"></label>
         <label>Reason for change<input type="text" name="MED_CHANGED_REASON" id="medChangedReason" placeholder="Reason for change"></label>
@@ -1879,7 +1889,7 @@ document.querySelectorAll('input,select,textarea').forEach(el=>{
     persist();calculateClinicalDurations();renderPageStatus();
   });
 });
-// v1.52 — continuous autosave: no Save Draft button required.
+// v1.53 — continuous autosave: no Save Draft button required.
 let autosaveTimer=null;
 function autosaveNow(){
   try{
@@ -2519,7 +2529,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.52';
+  const appVersion='1.53';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -3218,11 +3228,11 @@ function setMedicationChanged(choice){
 
   if(fields){
     if(show){
-      fields.hidden=false;
+      fields.removeAttribute('hidden');
       fields.style.setProperty('display','grid','important');
       fields.setAttribute('aria-hidden','false');
     }else{
-      fields.hidden=true;
+      fields.removeAttribute('hidden');
       fields.style.setProperty('display','none','important');
       fields.setAttribute('aria-hidden','true');
     }
