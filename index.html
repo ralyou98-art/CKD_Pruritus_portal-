@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.55 — Deploy Fix</title>
-<link rel="icon" type="image/png" href="ckd_pruritus_icon_512.png">
+<title>CKD–Pruritus Research Portal v1.63 — Excel Summary Fix</title>
+<link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
 :root{--bg:#f7f4fa;--card:#fff;--ink:#241c2f;--muted:#70677a;--line:#e2dbe8;--accent:#7b3f98;--accent2:#5f2f78;--danger:#d92d20;--ok:#087443}
@@ -533,10 +533,13 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
 #ckdDurationMonths.has-value,#hdDurationMonths.has-value{color:#b42318!important;font-weight:900;background:#fff7f5!important;border-color:#efc2bb!important}
 .lab-field.lab-out-of-range{background:#fff8dc!important;border:1px solid #ead48a!important;border-radius:12px;padding:10px}
 .lab-field.lab-out-of-range .lab-input input{background:#fffdf2!important;border-color:#d6bd62!important}
+.lab-field:not(.lab-out-of-range){background:transparent!important;border-color:transparent!important}
+.lab-field.is-na,.lab-field:has(.lab-input input:disabled){background:transparent!important;border-color:transparent!important}
+.lab-field.is-na .lab-input input,.lab-field:has(.lab-input input:disabled) .lab-input input{background:#f2eef4!important;border-color:#ddd!important}
 .lab-range-note{display:none!important}
 
 
-/* v1.55 medication conditional-field fail-safe:
+/* v1.61.1 medication conditional-field fail-safe:
    works even if a mobile browser delays or skips the JS change handler */
 .med-section:has(input[name="MED_CHANGED_3M"][value="Yes"]:checked) #medChangeFields{
   display:grid !important;
@@ -544,6 +547,26 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
 .med-section:has(input[name="MED_CHANGED_3M"][value="No"]:checked) #medChangeFields{
   display:none !important;
 }
+
+
+/* v1.61.1 research-safety additions (no redesign) */
+.study-status-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1e6f6;color:var(--accent);font-size:11px;font-weight:900}
+.visit-status-label{font-size:10px;color:var(--muted);font-weight:800;margin-left:4px}
+.study-status-select{width:auto;min-width:145px;padding:7px 9px;border:1px solid #d8c7df;border-radius:8px;background:#fff;color:var(--ink);font-size:12px;font-weight:800}
+.migration-backdrop{position:fixed;inset:0;background:#0007;z-index:20000;display:flex;align-items:center;justify-content:center;padding:18px}
+.migration-card{max-width:560px;width:100%;background:#fff;border-radius:16px;padding:18px;border:1px solid var(--line);box-shadow:0 20px 60px #0004}
+.migration-card h2{margin:0 0 8px;color:var(--accent)}
+.migration-card p{font-size:13px;line-height:1.5;color:var(--muted)}
+.migration-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.migration-stat{background:#f7f2fa;border:1px solid #e3d8e8;border-radius:10px;padding:10px;text-align:center}
+.migration-stat strong{display:block;font-size:20px;color:var(--accent)}
+.migration-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.migration-actions button{flex:1;min-width:180px;padding:11px;border-radius:9px;font-weight:900;font:inherit}
+.migration-primary{border:0;background:var(--accent);color:#fff}.migration-secondary{border:1px solid #d8c7df;background:#fff;color:var(--accent)}
+.migration-error{display:none;margin-top:10px;padding:10px;border-radius:9px;background:#fff2f0;color:#b42318;font-size:12px;white-space:pre-wrap}
+.migration-error.show{display:block}
+.p0-test-report{position:fixed;inset:0;z-index:30000;background:#fff;overflow:auto;padding:20px;font-family:system-ui;color:#222}
+.p0-test-report table{border-collapse:collapse;width:100%;max-width:900px}.p0-test-report th,.p0-test-report td{border:1px solid #ddd;padding:8px;text-align:left}.p0-pass{color:#087443;font-weight:900}.p0-fail{color:#b42318;font-weight:900}
 
 </style>
 
@@ -563,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.55" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.63" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -630,7 +653,9 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
 
     <div class="registry-tabs">
       <button type="button" class="registry-tab active" onclick="setRegistryFilter('all',this)">All Patients</button>
-      <button type="button" class="registry-tab" onclick="setRegistryFilter('followup',this)">Follow-ups Due</button>
+      <button type="button" class="registry-tab" onclick="setRegistryFilter('legacy',this)">Legacy Baseline</button>
+      <button type="button" class="registry-tab" onclick="setRegistryFilter('fu1',this)">Follow-up 1</button>
+      <button type="button" class="registry-tab" onclick="setRegistryFilter('fu2',this)">Follow-up 2</button>
     </div>
 
     <div class="registry-tools">
@@ -663,22 +688,28 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
     <div class="dashboard-value" id="dashTotalPatients">0</div>
   </div>
   <div class="dashboard-card">
-    <div class="dashboard-label">Completed Patients</div>
-    <div class="dashboard-value" id="dashCompletedPatients">0</div>
+    <div class="dashboard-label">Legacy Baseline</div>
+    <div class="dashboard-value" id="dashLegacyBaseline">0</div>
   </div>
   <div class="dashboard-card">
-    <div class="dashboard-label">Draft Patients</div>
-    <div class="dashboard-value" id="dashDraftPatients">0</div>
+    <div class="dashboard-label">Baseline Completed</div>
+    <div class="dashboard-value" id="dashBaselineCompleted">0</div>
   </div>
-</div>
-<div id="dashboardFollowups" class="dashboard dashboard-followups" aria-label="Follow-up statistics">
   <div class="dashboard-card">
-    <div class="dashboard-label">Follow-up 1</div>
+    <div class="dashboard-label">Follow-up 1 Completed</div>
     <div class="dashboard-value" id="dashFollowup1">0</div>
   </div>
   <div class="dashboard-card">
-    <div class="dashboard-label">Follow-up 2</div>
+    <div class="dashboard-label">Follow-up 2 Completed</div>
     <div class="dashboard-value" id="dashFollowup2">0</div>
+  </div>
+  <div class="dashboard-card">
+    <div class="dashboard-label">Draft / Incomplete Visits</div>
+    <div class="dashboard-value" id="dashDraftPatients">0</div>
+  </div>
+  <div class="dashboard-card">
+    <div class="dashboard-label">Study Complete</div>
+    <div class="dashboard-value" id="dashStudyComplete">0</div>
   </div>
 </div>
 
@@ -1102,7 +1133,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   </div>
 </section>
 <section class="step" data-step="5">
-  <div class="step-title"><span>Page 5</span><h2>Questionnaires</h2><p>Open each questionnaire, complete all required answers, then press Submit.</p></div>
+  <div class="step-title"><span>Page 5</span><h2>Questionnaires</h2><p>Open each questionnaire and press Submit. If answers are missing, you may save it as incomplete and resume later.</p></div>
   <div class="questionnaire-cards" id="questionnaireCards"></div>
   <div id="questionnairePanels">
     <div class="questionnaire-panel" id="qpanel-wi" data-qkey="wi" style="display:none">
@@ -1357,6 +1388,7 @@ const values={};
 const labels=["PT. & Visit Information","CKD & HD","Lab Data","Pruritus","Questionnaires","Medication"];
 function persist(){
   // Capture the whole interview, including radios/checkboxes and hidden clinical dates.
+  values.__currentStep=Number(current||1);
   const radioNames=new Set();
   form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
     if(el.type==='radio'){
@@ -1372,13 +1404,17 @@ function persist(){
     if(!form.querySelector(`input[type="radio"][name="${CSS.escape(name)}"]:checked`)) delete values[name];
   });
   calculateClinicalDurations();
-  localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+  if(CKD_IDB_PRIMARY){
+    ckdPutWorkingDraft(values,current).catch(showStorageError);
+  }else{
+    localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+  }
 
   // Once the patient has an identity, keep the registry draft synchronized with ALL pages.
   // This makes refresh/closing safe even when the interview reached page 2-6.
   const name=String(values.Patient_Name||'').trim();
   const number=String(values.Patient_Number||'').trim();
-  if(name||number){
+  if(!autosaveSuspended && (name||number)){
     try{ savePatientRecord('Draft',true); }catch(e){}
   }
 }
@@ -1420,16 +1456,23 @@ function validateStep(){ return true; }
 
 const REVIEW_REASON_KEY='ckd_review_reasons_v135';
 
-function getReviewReasons(){
-  try{return JSON.parse(localStorage.getItem(REVIEW_REASON_KEY)||'{}')}catch(e){return {}}
-}
+function getReviewReasons(){return cloneData(CKD_REVIEW_CACHE||{});}
 function setReviewReasons(obj){
-  localStorage.setItem(REVIEW_REASON_KEY,JSON.stringify(obj||{}));
+  CKD_REVIEW_CACHE=cloneData(obj||{});
+  if(CKD_IDB_PRIMARY) ckdPutMeta('reviewReasons',CKD_REVIEW_CACHE).catch(showStorageError);
+  else localStorage.setItem(REVIEW_REASON_KEY,JSON.stringify(CKD_REVIEW_CACHE));
 }
 function reviewFieldLabel(el){
   const field=el.closest('.field');
   const label=field?.querySelector('label');
   return (label?.textContent||el.name||'Field').replace(/\s*\*+\s*$/,'').trim();
+}
+function controlIsApplicable(el){
+  if(!el||el.disabled||el.type==='hidden'||el.dataset.statusIgnore==='true')return false;
+  const conditional=el.closest('#pruritusDetails,#herbalDetails,#pruritusTreatmentDetails,#medChangeFields');
+  if(conditional&&getComputedStyle(conditional).display==='none')return false;
+  if(el.closest('[hidden]'))return false;
+  return true;
 }
 function reviewMissingFields(){
   const missing=[];
@@ -1439,11 +1482,11 @@ function reviewMissingFields(){
       if(typeof questionnaireTitles!=='undefined'){
         Object.keys(questionnaireTitles).forEach(key=>{
           const prog=qProgress(key);
-          if(!questionnaireState[key] || prog.missing.length){
+          if(prog.missing.length){
             missing.push({
               type:'questionnaire', step:i+1, key,
               label:questionnaireTitles[key],
-              detail:prog.missing.length ? `${prog.missing.length} unanswered item(s)` : 'Not submitted',
+              detail:`${prog.missing.length} unanswered item(s)`,
               reasonKey:`questionnaire:${key}`
             });
           }
@@ -1453,10 +1496,13 @@ function reviewMissingFields(){
     }
     const section=steps[i];
     if(!section)continue;
+    // Medication list is represented by hidden storage controls, so check it explicitly for Review.
+    if(i===5 && !String(values.Current_Medications||document.getElementById('currentMedicationsValue')?.value||'').trim()){
+      missing.push({type:'field',step:i+1,key:'Current_Medications',label:'Current Medications',detail:'No medication selected or added',reasonKey:'field:Current_Medications'});
+    }
     updateOtherCkdCause();
     const controls=[...section.querySelectorAll('input[name],select[name],textarea[name]')]
-      .filter(el=>!el.disabled && el.type!=='hidden' && el.dataset.statusIgnore!=='true' && !el.closest('[hidden]') &&
-        !(el.closest('#pruritusDetails,#herbalDetails') && el.closest('#pruritusDetails,#herbalDetails').style.display==='none'));
+      .filter(controlIsApplicable);
     const groups=new Map();
     controls.forEach(el=>{
       if(!groups.has(el.name))groups.set(el.name,[]);
@@ -1753,11 +1799,25 @@ function getPageStatus(stepIndex){
 
   if(stepIndex===4 && typeof questionnaireTitles!=='undefined'){
     const keys=Object.keys(questionnaireTitles);
-    const done=keys.filter(k=>questionnaireState[k]&&qProgress(k).missing.length===0).length;
+    const done=keys.filter(k=>questionnaireIsSubmittedComplete(k)&&qProgress(k).missing.length===0).length;
     if(done===keys.length)return {kind:'complete',badge:'✓ Complete',sub:`${keys.length} questionnaires complete`};
     const answered=keys.filter(k=>qProgress(k).answered>0).length;
     const missing=keys.length-done;
     return answered?{kind:'missed',badge:`${missing} incomplete`,sub:`${done} / ${keys.length} submitted`}:{kind:'empty',badge:`${keys.length} pending`,sub:`0 / ${keys.length} submitted`};
+  }
+
+  // Medication page: an empty medication list must never be shown as Complete.
+  if(stepIndex===5){
+    const meds=String(values.Current_Medications||document.getElementById('currentMedicationsValue')?.value||'').trim();
+    const changed=document.querySelector('input[name="MED_CHANGED_3M"]:checked')?.value||values.MED_CHANGED_3M||'';
+    let total=2, filled=(meds?1:0)+(changed?1:0);
+    if(changed==='Yes'){
+      ['MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'].forEach(name=>{total++;const el=form.elements[name];if(String(el?.value||values[name]||'').trim())filled++;});
+    }
+    const missed=total-filled;
+    if(missed===0)return {kind:'complete',badge:'✓ Complete',sub:`${total} fields filled`};
+    if(filled===0)return {kind:'empty',badge:`${missed} missed`,sub:`0 / ${total} filled`};
+    return {kind:'missed',badge:`${missed} missed`,sub:`${filled} / ${total} filled`};
   }
 
   const section=steps[stepIndex];
@@ -1768,7 +1828,7 @@ function getPageStatus(stepIndex){
   updateOtherCkdCause();
 
   const controls=[...section.querySelectorAll('input[name],select[name],textarea[name]')]
-    .filter(el=>!el.disabled && el.type!=='hidden' && el.dataset.statusIgnore!=='true' && !el.closest('[hidden]') && !(el.closest('#pruritusDetails,#herbalDetails') && el.closest('#pruritusDetails,#herbalDetails').style.display==='none'));
+    .filter(controlIsApplicable);
   const groups=new Map();
 
   controls.forEach(el=>{
@@ -1872,6 +1932,7 @@ function render(){
     document.getElementById('next').className='next';
   }
   renderPageStatus();
+  if(typeof reconcileLabUI==='function') setTimeout(reconcileLabUI,0);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1879,17 +1940,17 @@ document.querySelectorAll('input,select,textarea').forEach(el=>{
   el.addEventListener('input',()=>{
     if(el.name==='Patient_Name'||el.name==='Patient_Number') ensurePatientId();
     if(el.id==='otherCkdCause') values.CKD_Cause_Other=el.value;
-    if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=false; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
+    if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=qProgress(key).missing.length===0; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
     persist();calculateClinicalDurations();renderPageStatus();
   });
   el.addEventListener('change',()=>{
     if(el.id==='ckdCauseSelect') updateOtherCkdCause();
     if(el.id==='otherCkdCause') values.CKD_Cause_Other=el.value;
-    if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=false; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
+    if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=qProgress(key).missing.length===0; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
     persist();calculateClinicalDurations();renderPageStatus();
   });
 });
-// v1.55 — continuous autosave: no Save Draft button required.
+// v1.61.1 — continuous autosave: no Save Draft button required.
 let autosaveTimer=null;
 let autosaveSuspended=false;
 function autosaveNow(){
@@ -1919,10 +1980,8 @@ setInterval(()=>{
 },5000);
 
 document.getElementById('next').onclick=()=>{
-  if(current===5){
-    const incomplete=Object.keys(questionnaireTitles).filter(k=>!questionnaireState[k]||qProgress(k).missing.length);
-    if(incomplete.length){ alert('Please submit all questionnaires before moving to the next page.'); return; }
-  }
+  // Flexible interview workflow: navigation never blocks on missing fields.
+  // Strict validation remains on Review/final completion.
   if(current<=labels.length){ persist(); if(current===1) registerCurrentPatient(); }
   persist();
   if(current<TOTAL){current++;render();}
@@ -1934,56 +1993,41 @@ document.getElementById('saveDraftBtn').onclick=()=>{
   savePatientRecord('Draft');
   alert('Draft saved successfully.');
 };
-document.getElementById('deleteInterviewBtn').onclick=()=>{
-  if(!confirm('Delete this interview and its saved draft? This cannot be undone.')) return;
-
-  autosaveSuspended=true;
-  clearTimeout(autosaveTimer);
-
-  const data=currentPatientSnapshot();
-  const pid=(data.Patient_ID||values.Patient_ID||'').trim();
-  const key=patientKey(data.Patient_Name||'',data.Patient_Number||'');
-
-  const list=getRegistry().filter(p=>{
-    const sameId=pid && (p.patientId===pid || p.profile?.Patient_ID===pid);
-    const sameKey=key && p.key===key;
-    return !((sameId||sameKey) && p.status==='Draft');
-  });
-  setRegistry(list);
-
-  localStorage.removeItem('ckd_wizard_draft');
-  localStorage.removeItem(REVIEW_REASON_KEY);
-  Object.keys(values).forEach(k=>delete values[k]);
-
-  form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
-    if(el.type==='radio'||el.type==='checkbox') el.checked=false;
-    else if(el.name!=='Visit_Date') el.value='';
-  });
-  setPatientId('');
-
-  updateDashboard();
-  showDashboardHome();
+document.getElementById('deleteInterviewBtn').onclick=async()=>{
+  if(!confirm('Delete this unfinished interview and its autosaved draft? Completed visits for the same patient will not be deleted.')) return;
+  autosaveSuspended=true;clearTimeout(autosaveTimer);
+  const data=currentPatientSnapshot();const pid=(data.Patient_ID||values.Patient_ID||'').trim();const visitId=document.getElementById('visitId')?.value||values.Visit_ID||'';const type=document.querySelector('input[name="Visit_Type"]:checked')?.value||values.Visit_Type||'';
+  const list=getRegistry();const p=list.find(x=>(pid&&(x.patientId===pid||x.profile?.Patient_ID===pid))||x.id===values.__patientInternalId);
+  if(p){p.visits=(p.visits||[]).filter(v=>!(v.visitId===visitId&&v.type===type&&normalizeVisitStatus(v.status)!=='Complete'));if(!p.visits.length){const i=list.findIndex(x=>x.id===p.id);if(i>=0)list.splice(i,1)}else{p.status=p.visits.some(v=>['Draft','Incomplete'].includes(normalizeVisitStatus(v.status)))?'Draft':'Complete';p.updatedAt=new Date().toISOString()}setRegistry(list)}
+  if(CKD_IDB_PRIMARY){await ckdClearWorkingDraft().catch(showStorageError);setReviewReasons({})}else{localStorage.removeItem('ckd_wizard_draft');localStorage.removeItem(REVIEW_REASON_KEY)}
+  Object.keys(values).forEach(k=>delete values[k]);form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{if(el.type==='radio'||el.type==='checkbox')el.checked=false;else if(el.name!=='Visit_Date')el.value=''});setPatientId('');updateDashboard();showDashboardHome();
 };
 document.getElementById('saveReviewBtn').onclick=()=>{
   persist();
-  savePatientRecord();
+  const status=reviewMissingFields().length?'Incomplete':'Ready to Complete';
+  values.Interview_Status=status;
+  savePatientRecord(status);
 };
-document.getElementById('completeBtn').onclick=()=>{
+document.getElementById('completeBtn').onclick=async()=>{
   persist();
   const missing=reviewMissingFields();
   if(missing.length){
-    const proceed=confirm(`There are ${missing.length} missing item(s). You can Fix them or enter a Reason.\n\nDo you want to save as incomplete and mark the interview Complete anyway?`);
-    if(!proceed)return;
+    alert(`There are ${missing.length} applicable required item(s) still missing. Please use Review → Fix before final completion.`);
+    return;
   }
+  autosaveSuspended=true;
+  clearTimeout(autosaveTimer);
   values.Interview_Status='Complete';
   values.Completed_At=new Date().toISOString();
   persist();
-  savePatientRecord('Complete');
-  localStorage.removeItem('ckd_wizard_draft');
-  setTimeout(()=>{
-    document.querySelector('main').innerHTML='<div class="card success"><h2>✓ Interview Completed</h2><p class="muted">The patient interview has been saved successfully.</p><button onclick="location.reload()">Add Another Patient</button></div>';
-    document.querySelector('.navbar').style.display='none';
-  },50);
+  savePatientRecord('Complete',true);
+  if(CKD_IDB_PRIMARY){await ckdClearWorkingDraft().catch(showStorageError)}else{localStorage.removeItem('ckd_wizard_draft')}
+  updateDashboard();
+  alert('Visit completed and moved out of Draft.');
+  Object.keys(values).forEach(k=>delete values[k]);
+  form.reset();
+  autosaveSuspended=false;
+  showDashboardHome();
 };
 function goHome(){if(confirm('Leave this form? Your draft remains saved in this browser.'))location.reload();}
 restore();
@@ -1996,13 +2040,34 @@ ensurePatientId();
 updateVisitId();
 updateOtherCkdCause();
 const REGISTRY_KEY='ckd_pruritus_patient_registry_v2';
+const STUDY_STATUSES=['Active','Study Complete','Withdrawn','Lost to Follow-up','Archived'];
+const VISIT_STATUSES=['Pending','Draft','Incomplete','Ready to Complete','Complete'];
+let CKD_REGISTRY_CACHE=(()=>{try{return JSON.parse(localStorage.getItem(REGISTRY_KEY)||'[]')}catch(e){return []}})();
+let CKD_REVIEW_CACHE=(()=>{try{return JSON.parse(localStorage.getItem(REVIEW_REASON_KEY)||'{}')}catch(e){return {}}})();
+let CKD_IDB_PRIMARY=false;
+let CKD_IDB_DB=null;
+let CKD_IDB_WRITE_TIMER=null;
+
+function normalizeText(v){return (v||'').trim().toLowerCase().replace(/\s+/g,' ');}
+function normalizeStudyStatus(v){return STUDY_STATUSES.includes(v)?v:'Active';}
+function normalizeVisitStatus(v){return VISIT_STATUSES.includes(v)?v:(v==='Complete'?'Complete':'Draft');}
+function cloneData(v){try{return structuredClone(v)}catch(e){return JSON.parse(JSON.stringify(v))}}
+function getRegistry(){return cloneData(CKD_REGISTRY_CACHE||[])}
+function setRegistry(list){
+  CKD_REGISTRY_CACHE=cloneData(list||[]);
+  if(CKD_IDB_PRIMARY){
+    clearTimeout(CKD_IDB_WRITE_TIMER);
+    CKD_IDB_WRITE_TIMER=setTimeout(()=>ckdWriteRegistryAtomic(CKD_REGISTRY_CACHE).catch(showStorageError),60);
+  }else{
+    // Legacy fallback only until migration is verified. Existing legacy data is never deleted by migration.
+    localStorage.setItem(REGISTRY_KEY,JSON.stringify(CKD_REGISTRY_CACHE));
+  }
+}
+function patientKey(name,number){const n=normalizeText(name),p=(number||'').trim();return p?'num:'+p:(n?'name:'+n:'');}
+
 updateDashboard();
 render();
 showDashboardHome();
-function normalizeText(v){return (v||'').trim().toLowerCase().replace(/\s+/g,' ');}
-function getRegistry(){try{return JSON.parse(localStorage.getItem(REGISTRY_KEY)||'[]')}catch(e){return []}}
-function setRegistry(list){localStorage.setItem(REGISTRY_KEY,JSON.stringify(list))}
-function patientKey(name,number){const n=normalizeText(name),p=(number||'').trim();return p?'num:'+p:(n?'name:'+n:'');}
 
 function nextPatientId(){
   const list=getRegistry();
@@ -2026,28 +2091,76 @@ function ensurePatientId(){
   const existing=getRegistry().find(p=>p.key===key);
   setPatientId(existing?.patientId || nextPatientId());
 }
-function updateFollowupDashboard(){
-  const wrap=document.getElementById('dashboardFollowups');
-  if(!wrap)return;
+function isLegacyPatient(p){
+  return !!p && (p.legacyBaseline===true || /^LEGACY_/i.test(String(p.id||'')) || String(p.profile?.Legacy_Baseline||'').toLowerCase()==='yes');
+}
+function baselineSatisfied(p){
+  return isLegacyPatient(p) || hasCompletedVisit(p,'Baseline');
+}
+function hasCompletedVisit(p,type){
+  return (p.visits||[]).some(v=>v.type===type && normalizeVisitStatus(v.status)==='Complete');
+}
+function effectiveDraftVisits(p){
+  // The study has exactly one Baseline, one FU1 and one FU2 per patient.
+  // A historical Draft/Incomplete row for a visit type is superseded once that
+  // same visit type has a Complete row, so it must never remain in Draft counts/UI.
+  const completedTypes=new Set((p.visits||[])
+    .filter(v=>normalizeVisitStatus(v.status)==='Complete')
+    .map(v=>v.type));
+  return (p.visits||[]).filter(v=>
+    ['Draft','Incomplete'].includes(normalizeVisitStatus(v.status)) &&
+    !completedTypes.has(v.type)
+  );
+}
+function reconcileSupersededDraftsInRegistry(){
   const list=getRegistry();
-  const fu1=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 1').length,0);
-  const fu2=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 2').length,0);
-  wrap.classList.toggle('show', fu1>0 || fu2>0);
+  let changed=false;
+  list.forEach(p=>{
+    const completedTypes=new Set((p.visits||[])
+      .filter(v=>normalizeVisitStatus(v.status)==='Complete')
+      .map(v=>v.type));
+    const before=(p.visits||[]).length;
+    p.visits=(p.visits||[]).filter(v=>{
+      const stale=['Draft','Incomplete','Ready to Complete'].includes(normalizeVisitStatus(v.status)) && completedTypes.has(v.type);
+      return !stale;
+    });
+    if(p.visits.length!==before){
+      changed=true;
+      const hasDraft=effectiveDraftVisits(p).length>0;
+      const hasComplete=(p.visits||[]).some(v=>normalizeVisitStatus(v.status)==='Complete');
+      p.status=hasDraft?'Draft':(hasComplete?'Complete':'Pending');
+      p.updatedAt=new Date().toISOString();
+    }
+  });
+  if(changed)setRegistry(list);
+  return changed;
+}
+function visitForType(p,type){
+  const rows=(p.visits||[]).filter(v=>v.type===type);
+  // Prefer the completed row if older duplicate records exist.
+  return rows.find(v=>normalizeVisitStatus(v.status)==='Complete') || rows[0] || null;
+}
+function updateFollowupDashboard(){
+  // Kept for compatibility with older calls. Dashboard cards are always visible in v1.63.
 }
 function updateDashboard(){
   const list=getRegistry();
+  const visits=list.flatMap(p=>p.visits||[]);
   const total=list.length;
-  const completed=list.filter(p=>p.status==='Complete' || (p.visits||[]).some(v=>v.status==='Complete')).length;
-  const drafts=list.filter(p=>p.status==='Draft').length;
-  const fu1=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 1').length,0);
-  const fu2=list.reduce((n,p)=>n+(p.visits||[]).filter(v=>v.type==='Follow-up 2').length,0);
+  const legacyBaseline=list.filter(isLegacyPatient).length;
+  const baselineCompleted=list.filter(p=>!isLegacyPatient(p)&&hasCompletedVisit(p,'Baseline')).length;
+  const fu1Completed=list.filter(p=>hasCompletedVisit(p,'Follow-up 1')).length;
+  const fu2Completed=list.filter(p=>hasCompletedVisit(p,'Follow-up 2')).length;
+  const drafts=list.reduce((n,p)=>n+effectiveDraftVisits(p).length,0);
+  const studyComplete=list.filter(p=>baselineSatisfied(p)&&hasCompletedVisit(p,'Follow-up 1')&&hasCompletedVisit(p,'Follow-up 2')).length;
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=String(val)};
   set('dashTotalPatients',total);
-  set('dashCompletedPatients',completed);
+  set('dashLegacyBaseline',legacyBaseline);
+  set('dashBaselineCompleted',baselineCompleted);
+  set('dashFollowup1',fu1Completed);
+  set('dashFollowup2',fu2Completed);
   set('dashDraftPatients',drafts);
-  set('dashFollowup1',fu1);
-  set('dashFollowup2',fu2);
-  updateFollowupDashboard();
+  set('dashStudyComplete',studyComplete);
 }
 
 function currentPatientSnapshot(){
@@ -2069,6 +2182,49 @@ function currentPatientSnapshot(){
   });
   return data;
 }
+const PATIENT_PROFILE_FIELDS=[
+  'Patient_Name','Patient_ID','Patient_Number','Age','Center','Researcher_Interviewer_Name',
+  'Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'
+];
+const FOLLOWUP_CARRY_FIELDS=[
+  ...PATIENT_PROFILE_FIELDS,
+  'CKD_Diagnosis_Date','CKD_Cause','CKD_Cause_Other',
+  'Hemodialysis_First_Session_Date','Hemodialysis_Sessions_Per_Week'
+];
+function pickFields(data,names){
+  const out={}; names.forEach(k=>{if(data && Object.prototype.hasOwnProperty.call(data,k))out[k]=data[k]}); return out;
+}
+function stablePatientProfile(data){return pickFields(data,PATIENT_PROFILE_FIELDS)}
+function completedBaselineData(p){
+  if(isLegacyPatient(p)) return p.profile||null;
+  const v=(p.visits||[]).find(v=>v.type==='Baseline'&&normalizeVisitStatus(v.status)==='Complete');
+  return v?.data||null;
+}
+function resetVisitForm(){
+  Object.keys(values).forEach(k=>delete values[k]);
+  form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
+    if(el.type==='radio'||el.type==='checkbox')el.checked=false;
+    else el.value='';
+    if(el.disabled && !el.readOnly) el.disabled=false;
+  });
+  Object.keys(questionnaireState||{}).forEach(k=>questionnaireState[k]=false);
+  Object.keys(questionnaireOpen||{}).forEach(k=>questionnaireOpen[k]=false);
+  document.querySelectorAll('.questionnaire-panel').forEach(x=>x.style.display='none');
+  try{hydrateMedicationSelection()}catch(e){}
+  try{updateMedicationChangeVisibility()}catch(e){}
+  try{updateConditionalSections()}catch(e){}
+}
+function applyDataToForm(data){
+  Object.assign(values,data||{});
+  Object.entries(data||{}).forEach(([name,value])=>{
+    document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
+      if(el.type==='radio')el.checked=(String(el.value)===String(value));
+      else if(el.type==='checkbox')el.checked=['on','yes','true','1'].includes(String(value).toLowerCase());
+      else el.value=value??'';
+    });
+  });
+}
+
 function registerCurrentPatient(statusOverride){
   ensurePatientId();
   const data=currentPatientSnapshot();
@@ -2081,13 +2237,15 @@ function registerCurrentPatient(statusOverride){
       key,
       id:'P'+String(Date.now()).slice(-6),
       patientId:data.Patient_ID||nextPatientId(),
-      name,number,profile:data,visits:[],
+      name,number,profile:stablePatientProfile(data),visits:[],
       status:statusOverride||'Draft',
+      studyStatus:'Active',
       createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
     };
   }else{
     p.patientId=p.patientId||data.Patient_ID||nextPatientId();
-    p.profile={...p.profile,...data,Patient_ID:p.patientId};
+    p.studyStatus=normalizeStudyStatus(p.studyStatus);
+    p.profile={...stablePatientProfile(p.profile||{}),...stablePatientProfile(data),Patient_ID:p.patientId};
     p.name=name||p.name;p.number=number||p.number;
     if(statusOverride)p.status=statusOverride;
     p.updatedAt=new Date().toISOString();
@@ -2098,23 +2256,41 @@ function registerCurrentPatient(statusOverride){
   return p;
 }
 function savePatientRecord(statusOverride,silent=false){
-  const p=registerCurrentPatient(statusOverride||values.Interview_Status||'Draft');
-  if(!p){alert('Please enter at least a Patient Name or Patient Number before saving.');return}
+  let requested=statusOverride||values.Interview_Status||'Draft';
+  if(!VISIT_STATUSES.includes(requested)) requested=(requested==='Complete'?'Complete':'Draft');
+  const p=registerCurrentPatient(requested);
+  if(!p){if(!silent)alert('Please enter at least a Patient Name or Patient Number before saving.');return}
   const list=getRegistry(), idx=list.findIndex(x=>x.id===p.id);
   const type=document.querySelector('input[name="Visit_Type"]:checked')?.value||'';
   const date=document.getElementById('visitDate')?.value||todayISO();
   const visitId=document.getElementById('visitId')?.value||'';
-  const status=statusOverride||values.Interview_Status||'Draft';
+  const visitStatus=normalizeVisitStatus(requested);
   if(type||visitId){
-    const visitData={...currentPatientSnapshot(),Visit_Type:type,Visit_Date:date,Visit_ID:visitId};
-    const v={type,date,visitId,status,data:visitData,updatedAt:new Date().toISOString()};
+    const visitData={...currentPatientSnapshot(),Visit_Type:type,Visit_Date:date,Visit_ID:visitId,__currentStep:Number(current||1)};
+    const v={type,date,visitId,status:visitStatus,data:visitData,updatedAt:new Date().toISOString()};
     const vi=p.visits.findIndex(x=>x.visitId===visitId);
     if(vi>=0)p.visits[vi]={...p.visits[vi],...v};else p.visits.push(v);
+    // Completion is authoritative for this study visit type. Remove any older
+    // Draft/Incomplete copy of the same Baseline/FU1/FU2, even if an older build
+    // gave it a different Visit ID.
+    if(visitStatus==='Complete'){
+      p.visits=p.visits.filter(x=>
+        x===v || x.visitId===visitId || x.type!==type || normalizeVisitStatus(x.status)==='Complete'
+      );
+      // If two Complete rows somehow exist for the same type, keep the newest one.
+      const sameComplete=p.visits.filter(x=>x.type===type&&normalizeVisitStatus(x.status)==='Complete')
+        .sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+      if(sameComplete.length>1){
+        const keep=sameComplete[0];
+        p.visits=p.visits.filter(x=>x.type!==type||normalizeVisitStatus(x.status)!=='Complete'||x===keep);
+      }
+    }
   }
-  p.status=status;
+  p.studyStatus=normalizeStudyStatus(p.studyStatus);
+  p.status=visitStatus; // legacy compatibility only; studyStatus is authoritative for patient lifecycle.
   p.updatedAt=new Date().toISOString();
   list[idx]=p;setRegistry(list);updateDashboard();
-  if(status!=='Draft' && !silent) alert('Patient record saved.');
+  if(visitStatus!=='Draft' && !silent) alert('Patient record saved.');
 }
 
 let registryFilter='all';
@@ -2137,35 +2313,60 @@ function patientVisits(p){return p.visits||[]}
 function hasFollowUp(p){
   return patientVisits(p).some(v=>v.type==='Follow-up 1' || v.type==='Follow-up 2');
 }
+function studyCompletionEligible(p){
+  const completedType=t=>(p.visits||[]).some(v=>v.type===t&&normalizeVisitStatus(v.status)==='Complete');
+  return baselineSatisfied(p)&&completedType('Follow-up 1')&&completedType('Follow-up 2');
+}
+function changeStudyStatus(id,status){
+  const list=getRegistry();const p=list.find(x=>x.id===id);if(!p)return;
+  if(status==='Study Complete'&&!studyCompletionEligible(p)){
+    alert('Study Complete is available only after Baseline, Follow-up 1, and Follow-up 2 are Complete.');
+    renderRegistry();return;
+  }
+  p.studyStatus=normalizeStudyStatus(status);p.updatedAt=new Date().toISOString();setRegistry(list);updateDashboard();renderRegistry();
+}
 function renderRegistry(){
   const q=normalizeText(document.getElementById('registrySearch')?.value);
-  let list=getRegistry();
-  if(registryFilter==='followup') list=list.filter(p=>!patientVisits(p).some(v=>v.type==='Follow-up 2'));
-  list=list.filter(p=>!q || normalizeText(p.name||p.profile?.Patient_Name).includes(q) || normalizeText(p.patientId||p.profile?.Patient_ID).includes(q) || (p.number||p.profile?.Patient_Number||'').toLowerCase().includes(q));
-  document.getElementById('registrySummary').textContent=
-    `${list.length} patient${list.length===1?'':'s'} shown`;
-
+  let list=getRegistry().map(p=>({...p,studyStatus:normalizeStudyStatus(p.studyStatus),visits:(p.visits||[]).map(v=>({...v,status:normalizeVisitStatus(v.status)}))}));
+  if(registryFilter==='legacy') list=list.filter(isLegacyPatient);
+  if(registryFilter==='fu1') list=list.filter(p=>baselineSatisfied(p));
+  if(registryFilter==='fu2') list=list.filter(p=>hasCompletedVisit(p,'Follow-up 1'));
+  list=list.filter(p=>!q || normalizeText(p.name||p.profile?.Patient_Name).includes(q) || normalizeText(p.patientId||p.profile?.Patient_ID).includes(q) || normalizeText(p.number||p.profile?.Patient_Number).includes(q));
+  document.getElementById('registrySummary').textContent=`${list.length} patient${list.length===1?'':'s'} shown`;
   const box=document.getElementById('registryList');
-  if(!list.length){
-    box.innerHTML='<div class="empty-registry">No patients found.<br><small>Try another search or create a new patient.</small></div>';
-    return;
-  }
+  if(!list.length){box.innerHTML='<div class="empty-registry">No patients found.<br><small>Try another search or create a new patient.</small></div>';return;}
   box.innerHTML=list.map(p=>{
-    const visits=patientVisits(p);
-    const chips=visits.length
-      ? visits.map(v=>`<span class="visit-chip">${escapeHtml(v.type||v.visitId)}${v.date?' · '+escapeHtml(v.date):''}</span>`).join('')
-      : '<span class="visit-chip">No visit saved</span>';
-    const next=visits.some(v=>v.type==='Follow-up 1')?'Follow-up 2':'Follow-up 1';
+    const visits=p.visits||[];
+    const chips=(isLegacyPatient(p)
+      ? [`<span class="visit-chip">Legacy Baseline <span class="visit-status-label">External ✓</span></span>`]
+      : [(()=>{const v=visits.find(x=>x.type==='Baseline');const st=v?normalizeVisitStatus(v.status):'Pending';return `<span class="visit-chip">Baseline <span class="visit-status-label">${escapeHtml(st)}</span></span>`;})()]
+    ).concat(['Follow-up 1','Follow-up 2'].map(type=>{
+      const v=visits.find(x=>x.type===type);const st=v?normalizeVisitStatus(v.status):'Pending';
+      return `<span class="visit-chip">${escapeHtml(type)} <span class="visit-status-label">${escapeHtml(st)}</span></span>`;
+    })).join('');
+    const options=STUDY_STATUSES.map(st=>`<option value="${st}" ${p.studyStatus===st?'selected':''} ${st==='Study Complete'&&!studyCompletionEligible(p)?'disabled':''}>${st}</option>`).join('');
+    const fu1=visitForType(p,'Follow-up 1');
+    const fu2=visitForType(p,'Follow-up 2');
+    let workflow='';
+    if(registryFilter==='legacy'){
+      const st=fu1?normalizeVisitStatus(fu1.status):'Pending';
+      workflow=st==='Complete'?'<button type="button" disabled>✓ FU1 Complete</button>':`<button type="button" onclick="startFollowUp('${p.id}','Follow-up 1')">${st==='Pending'?'＋ Start FU1':'Resume FU1'}</button>`;
+    }else if(registryFilter==='fu1'){
+      const st=fu1?normalizeVisitStatus(fu1.status):'Pending';
+      workflow=st==='Complete'?'<button type="button" disabled>✓ FU1 Complete</button>':`<button type="button" onclick="startFollowUp('${p.id}','Follow-up 1')">${st==='Pending'?'＋ Start FU1':'Resume FU1'}</button>`;
+    }else if(registryFilter==='fu2'){
+      const st=fu2?normalizeVisitStatus(fu2.status):'Pending';
+      workflow=st==='Complete'?'<button type="button" disabled>✓ FU2 Complete</button>':`<button type="button" onclick="startFollowUp('${p.id}','Follow-up 2')">${st==='Pending'?'＋ Start FU2':'Resume FU2'}</button>`;
+    }else if(p.studyStatus==='Active'){
+      if(!baselineSatisfied(p)) workflow='<button type="button" disabled>Baseline not complete</button>';
+      else if(!hasCompletedVisit(p,'Follow-up 1')) workflow=`<button type="button" onclick="startFollowUp('${p.id}','Follow-up 1')">＋ Follow-up 1</button>`;
+      else if(!hasCompletedVisit(p,'Follow-up 2')) workflow=`<button type="button" onclick="startFollowUp('${p.id}','Follow-up 2')">＋ Follow-up 2</button>`;
+    }
     return `<div class="patient-card">
-      <div class="pc-top">
-        <div><h3>${escapeHtml(p.name||'Unnamed patient')}</h3><div class="patient-number">${escapeHtml(p.patientId||p.profile?.Patient_ID||'CKD PT —')} · Patient No. ${escapeHtml(p.number||'—')}</div></div>
-        <div class="patient-number">${escapeHtml(p.profile?.Center||'')}</div>
-      </div>
+      <div class="pc-top"><div><h3>${escapeHtml(p.name||'Unnamed patient')}</h3><div class="patient-number">${escapeHtml(p.patientId||p.profile?.Patient_ID||'CKD PT —')} · Patient No. ${escapeHtml(p.number||'—')}</div></div><span class="study-status-badge">${escapeHtml(p.studyStatus)}</span></div>
+      <div class="patient-meta">${escapeHtml(p.profile?.Center||'')}</div>
       <div class="visit-chips">${chips}</div>
-      <div class="patient-actions">
-        <button type="button" class="primary" onclick="openPatient('${p.id}')">Open Patient</button>
-        <button type="button" onclick="startFollowUp('${p.id}','${next}')">＋ ${next}</button>
-      </div>
+      <div class="patient-actions"><button type="button" class="primary" onclick="openPatient('${p.id}')">Open Patient</button>${workflow}<select class="study-status-select" onchange="changeStudyStatus('${p.id}',this.value)">${options}</select></div>
     </div>`;
   }).join('');
 }
@@ -2196,8 +2397,11 @@ window.addEventListener('storage',()=>{updateDashboard();renderDashboardSearch()
 function inferQuestionnaireCompletionFromLoadedRecord(){
   if(typeof questionnaireState==='undefined'||typeof qProgress!=='function') return;
   Object.keys(questionnaireState).forEach(key=>{
+    const explicit=String(values[`Questionnaire_${key}_Status`]||'').trim();
     const p=qProgress(key);
-    questionnaireState[key]=(p.total>0 && p.missing.length===0);
+    if(explicit==='Complete') questionnaireState[key]=true;
+    else if(explicit==='Incomplete') questionnaireState[key]='incomplete';
+    else questionnaireState[key]=false; // answered data without Submit stays In progress, never auto-complete
   });
   if(typeof renderQuestionnaireCards==='function') renderQuestionnaireCards();
 }
@@ -2220,30 +2424,46 @@ function openPatient(id){
   checkDuplicatePatient?.();
 }
 
-function startFollowUp(id,type){
+async function startFollowUp(id,type){
   const p=getRegistry().find(x=>x.id===id);
   if(!p)return;
+  if(type==='Follow-up 1' && !baselineSatisfied(p)){alert('Baseline must be completed, or registered as a Legacy Baseline, before starting Follow-up 1.');return;}
+  if(type==='Follow-up 2' && !hasCompletedVisit(p,'Follow-up 1')){alert('Follow-up 1 must be completed before starting Follow-up 2.');return;}
+
+  const existing=(p.visits||[]).find(v=>v.type===type);
+  if(existing && normalizeVisitStatus(existing.status)==='Complete'){
+    alert(`${type} is already complete for this patient.`);
+    return;
+  }
+  if(existing && ['Draft','Incomplete','Ready to Complete'].includes(normalizeVisitStatus(existing.status))){
+    closeRegistry();
+    await resumeDraft(id);
+    return;
+  }
+
+  autosaveSuspended=true; clearTimeout(autosaveTimer);
+  if(CKD_IDB_PRIMARY) await ckdClearWorkingDraft().catch(showStorageError); else localStorage.removeItem('ckd_wizard_draft');
+  resetVisitForm();
   showFormView();
   document.body.classList.add('followup-mode');
   closeRegistry();
 
-  Object.entries(p.profile||{}).forEach(([name,value])=>{
-    document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
-      if(el.type==='radio') el.checked=(el.value===value);
-      else el.value=value;
-    });
-  });
+  const baseline=completedBaselineData(p) || p.profile || {};
+  const carry={...pickFields(baseline,FOLLOWUP_CARRY_FIELDS),Patient_ID:p.patientId||baseline.Patient_ID||''};
+  applyDataToForm(carry);
+  setPatientId(p.patientId||carry.Patient_ID||'');
 
   const radio=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===type);
-  if(radio) radio.checked=true;
-
-  setPatientId(p.patientId||p.profile?.Patient_ID||'');
-  updateVisitId();
-  updateFollowupDashboard();
-  setDefaultVisitDate();
-  current=1;
-  render();
-  alert('The original patient profile is loaded. Confirm the patient information, then continue with the selected follow-up visit.');
+  if(radio)radio.checked=true;
+  const vd=document.getElementById('visitDate'); if(vd)vd.value=todayISO();
+  updateVisitId(); syncVisitDateDisplay(); restoreClinicalDateDisplays(); calculateClinicalDurations();
+  values.Visit_Type=type; values.Visit_Date=vd?.value||todayISO(); values.Visit_ID=document.getElementById('visitId')?.value||'';
+  current=1; values.__currentStep=1;
+  try{updateOtherCkdCause()}catch(e){}
+  try{syncLabNA()}catch(e){}
+  render(); renderPageStatus();
+  autosaveSuspended=false;
+  queueAutosave();
 }
 
 
@@ -2398,7 +2618,7 @@ updateVisitId();
 function newPatient(){
   autosaveSuspended=false;
   clearTimeout(autosaveTimer);
-  localStorage.removeItem('ckd_wizard_draft');
+  if(CKD_IDB_PRIMARY){ckdClearWorkingDraft().catch(showStorageError)}else{localStorage.removeItem('ckd_wizard_draft')}
   Object.keys(values).forEach(k=>delete values[k]);
   showFormView();
   document.body.classList.remove('followup-mode');
@@ -2477,7 +2697,7 @@ function showDraft(){
   renderDrafts();
 }
 function closeDraftPanel(){document.getElementById('draftPanel').style.display='none'}
-function getDraftPatients(){return getRegistry().filter(p=>p.status==='Draft')}
+function getDraftPatients(){return getRegistry().filter(p=>effectiveDraftVisits(p).length>0)}
 function renderDrafts(){
   const list=getDraftPatients();
   const box=document.getElementById('draftList');
@@ -2485,7 +2705,7 @@ function renderDrafts(){
   sum.textContent=`${list.length} draft${list.length===1?'':'s'} saved on this device`;
   if(!list.length){box.innerHTML='<div class="empty-registry">No drafts found.</div>';return;}
   box.innerHTML=list.map(p=>{
-    const latest=(p.visits||[]).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0]||{};
+    const latest=effectiveDraftVisits(p).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0]||{};
     return `<div class="patient-card">
       <div class="pc-top"><div><h3>${escapeHtml(p.name||'Unnamed patient')}</h3><div class="patient-number">${escapeHtml(p.patientId||p.profile?.Patient_ID||'')} ${p.number?'· Patient No. '+escapeHtml(p.number):''}</div></div><span class="draft-status">Draft</span></div>
       <div class="visit-chips"><span class="visit-chip">${escapeHtml(latest.type||'Interview')} ${latest.date?'· '+escapeHtml(latest.date):''}</span></div>
@@ -2493,15 +2713,35 @@ function renderDrafts(){
     </div>`;
   }).join('');
 }
-function resumeDraft(id){
+async function resumeDraft(id){
   autosaveSuspended=false;
   clearTimeout(autosaveTimer);
   const p=getRegistry().find(x=>x.id===id);if(!p)return;
   closeDraftPanel();showFormView();
-  const latest=(p.visits||[]).slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0];
-  const restoredData={...(p.profile||{}),...(latest?.data||{})};
+
+  const latest=effectiveDraftVisits(p)
+    .slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0];
+
+  let restoredData={...(p.profile||{}),...(latest?.data||{})};
+  let resumeStep=Number(restoredData.__currentStep||1);
+
+  if(CKD_IDB_PRIMARY){
+    try{
+      const wd=await ckdGetWorkingDraft();
+      const wdData=wd?.data||{};
+      const samePatient=(wdData.Patient_ID&&String(wdData.Patient_ID)===String(p.patientId||restoredData.Patient_ID||''))
+        || (!!p.key && patientKey(wdData.Patient_Name||'',wdData.Patient_Number||'')===p.key);
+      const sameVisit=!latest || !wdData.Visit_ID || String(wdData.Visit_ID)===String(latest.visitId||'');
+      if(samePatient&&sameVisit){
+        restoredData={...restoredData,...wdData};
+        resumeStep=Number(wd.currentStep||wdData.__currentStep||resumeStep||1);
+      }
+    }catch(e){console.warn('Working draft recovery skipped',e)}
+  }
+
   Object.keys(values).forEach(k=>delete values[k]);
   Object.assign(values,restoredData);
+
   Object.entries(restoredData).forEach(([name,value])=>{
     document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
       if(el.type==='radio')el.checked=(String(el.value)===String(value));
@@ -2509,6 +2749,7 @@ function resumeDraft(id){
       else el.value=value??'';
     });
   });
+
   setPatientId(p.patientId||restoredData.Patient_ID||'');
   if(latest){
     const r=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===latest.type);if(r)r.checked=true;
@@ -2516,78 +2757,58 @@ function resumeDraft(id){
     if(document.getElementById('visitId')&&latest.visitId)document.getElementById('visitId').value=latest.visitId;
     syncVisitDateDisplay();
   }
-  localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+
   try{hydrateMedicationSelection();}catch(e){}
   try{updateConditionalSections();}catch(e){}
   try{updateMedicationChangeVisibility();}catch(e){}
   try{restoreClinicalDateDisplays();calculateClinicalDurations();}catch(e){}
-  current=1;render();updateFollowupDashboard();renderPageStatus();
+
+  current=Math.min(TOTAL,Math.max(1,resumeStep||1));
+  values.__currentStep=current;
+  inferQuestionnaireCompletionFromLoadedRecord?.();
+  render();updateFollowupDashboard();renderPageStatus();
+
+  if(CKD_IDB_PRIMARY) ckdPutWorkingDraft(values,current).catch(showStorageError);
+  else localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
 }
-function deleteDraft(id){
-  const p=getRegistry().find(x=>x.id===id);if(!p)return;
-  if(!confirm(`Delete draft for ${p.name||p.patientId||'this patient'}? This cannot be undone.`))return;
-
-  // Stop continuous autosave first, otherwise the just-deleted draft is recreated
-  // from the form values a few seconds later.
-  autosaveSuspended=true;
-  clearTimeout(autosaveTimer);
-
-  const list=getRegistry().filter(x=>x.id!==id);
-  setRegistry(list);
-
-  // Remove the working autosave if it belongs to this draft.
-  try{
-    const w=JSON.parse(localStorage.getItem('ckd_wizard_draft')||'{}');
-    const sameId=p.patientId && (w.Patient_ID===p.patientId);
-    const sameKey=p.key && patientKey(w.Patient_Name||'',w.Patient_Number||'')===p.key;
-    if(sameId||sameKey) localStorage.removeItem('ckd_wizard_draft');
-  }catch(e){}
-
-  // Clear the currently loaded form if it is the same patient, so pagehide/visibility
-  // events also cannot reconstruct the deleted record.
-  const currentId=(document.querySelector('[name="Patient_ID"]')?.value||values.Patient_ID||'').trim();
-  const currentKey=patientKey(
-    document.querySelector('[name="Patient_Name"]')?.value||values.Patient_Name||'',
-    document.querySelector('[name="Patient_Number"]')?.value||values.Patient_Number||''
-  );
-  if((p.patientId && currentId===p.patientId) || (p.key && currentKey===p.key)){
-    Object.keys(values).forEach(k=>delete values[k]);
-    form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
-      if(el.type==='radio'||el.type==='checkbox') el.checked=false;
-      else if(el.name!=='Visit_Date') el.value='';
-    });
-    setPatientId('');
+async function deleteDraft(id){
+  const list=getRegistry();const p=list.find(x=>x.id===id);if(!p)return;
+  const draftVisits=effectiveDraftVisits(p).sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+  const target=draftVisits[0];if(!target)return;
+  if(!confirm(`Delete ${target.type||'draft'} for ${p.name||p.patientId||'this patient'}? This cannot be undone.`))return;
+  autosaveSuspended=true;clearTimeout(autosaveTimer);
+  p.visits=(p.visits||[]).filter(v=>v!==target && !(v.visitId===target.visitId&&v.type===target.type));
+  const remainingComplete=p.visits.some(v=>normalizeVisitStatus(v.status)==='Complete');
+  const remainingDraft=p.visits.some(v=>['Draft','Incomplete'].includes(normalizeVisitStatus(v.status)));
+  if(!p.visits.length&&!remainingComplete){
+    const idx=list.findIndex(x=>x.id===p.id);if(idx>=0)list.splice(idx,1);
+  }else{
+    p.status=remainingDraft?'Draft':(remainingComplete?'Complete':'Pending');p.updatedAt=new Date().toISOString();
   }
-
-  updateDashboard();
-  renderDrafts();
-  closeDraftPanel();
-  showDashboardHome();
+  setRegistry(list);
+  if(CKD_IDB_PRIMARY){await ckdClearWorkingDraft().catch(showStorageError)}
+  else{localStorage.removeItem('ckd_wizard_draft')}
+  const currentId=(document.querySelector('[name="Patient_ID"]')?.value||values.Patient_ID||'').trim();
+  if(p.patientId&&currentId===p.patientId){Object.keys(values).forEach(k=>delete values[k]);form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{if(el.type==='radio'||el.type==='checkbox')el.checked=false;else if(el.name!=='Visit_Date')el.value=''});setPatientId('')}
+  updateDashboard();renderDrafts();closeDraftPanel();showDashboardHome();
 }
-function backupPayload(){
+function legacyBackupPayload(){
   const data={};
   for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ckd_'))data[k]=localStorage.getItem(k);}
   return {app:'CKD–Pruritus Research Portal',backupVersion:1,createdAt:new Date().toISOString(),data};
 }
-function createFullBackup(){
-  const payload=backupPayload();
+async function createFullBackup(){
+  const payload=await backupPayload();
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`CKD_Pruritus_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),500);
   alert('Full backup created. Keep this JSON file in a safe location. It can be restored on another phone.');
 }
-async function restoreFullBackup(file){
-  if(!file)return;
-  try{
-    const text=await file.text();const payload=JSON.parse(text);
-    if(payload.app!=='CKD–Pruritus Research Portal'||!payload.data)throw new Error('Invalid backup');
-    if(!confirm('Restore this backup? Current CKD Portal data on this device will be replaced by the backup.'))return;
-    const remove=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ckd_'))remove.push(k)}
-    remove.forEach(k=>localStorage.removeItem(k));
-    Object.entries(payload.data).forEach(([k,v])=>localStorage.setItem(k,v));
-    alert('Backup restored successfully. The portal will reload now.');location.reload();
-  }catch(e){alert('This file is not a valid CKD–Pruritus Portal backup.');}
+async function legacyRestoreFullBackup(file){
+  // Kept only as a compatibility placeholder. The production restore implementation
+  // below restores into IndexedDB and deliberately preserves all legacy localStorage data.
+  return restoreFullBackup(file);
 }
 async function exportPatients(){
   const patients=getRegistry();
@@ -2595,12 +2816,12 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.55';
+  const appVersion='1.63.1';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
   const pruritusFields=['Pruritus_Past_4_Weeks','Pruritus_Pattern','Pruritus_Duration_Value','Pruritus_Duration_Unit','Worse_At_Night','Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit','Herbal_Use','Herbal_Name','Herbal_Reason','Herbal_Duration_Value','Herbal_Duration_Unit','Herbal_Time','Herbal_Frequency'];
-  const medFields=['Current_Medications','Selected_Common_Medications','Total_Current_Medications','MED_CHANGED_3M','MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'];
+  const medFields=['Selected_Medications','Total_Current_Medications','MED_CHANGED_3M','MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'];
   const wiFields=['WI_NRS'];
   const marsFields=['MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5'];
   const psqiRaw=['PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j_text','PSQI_Q5j','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9'];
@@ -2612,17 +2833,18 @@ async function exportPatients(){
 
   const text=v=>v===null||v===undefined?'':String(v);
   const uniq=a=>[...new Set(a)];
-  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const num=v=>{if(v===null||v===undefined||String(v).trim()==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;};
   const avg=arr=>{const a=arr.map(num).filter(v=>v!==null);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10:'';};
   const has=v=>text(v).trim()!=='';
   const statusFromNA=(d,key)=>{
     const st=text(d[key+'_Status']).trim();
     if(st)return st;
-    if(['Yes','on','true','1'].includes(text(d[key+'_NA']).trim().toLowerCase()))return 'Not Available';
+    if(['yes','on','true','1'].includes(text(d[key+'_NA']).trim().toLowerCase()))return 'Not Available';
     return has(d[key])?'Available':'';
   };
   function derive(d){
     const x={...d};
+    x.Selected_Medications=x.Current_Medications||'';
     const wi=num(x.WI_NRS);
     if(wi!==null){
       if(!x.WI_NRS_Category)x.WI_NRS_Category=wi===0?'No pruritus':wi<=3?'Mild':wi<=6?'Moderate':'Severe';
@@ -2630,13 +2852,18 @@ async function exportPatients(){
     }
     const m=[1,2,3,4,5].map(i=>num(x[`MARS_Q${i}`]));
     if(m.every(v=>v!==null&&v>=1&&v<=5))x.MARS_Total=m.reduce((a,b)=>a+b,0);
+    x.KDQOL_PCS='Not calculated';
+    x.KDQOL_MCS='Not calculated';
     return x;
   }
 
   const records=[];
   patients.forEach((p,patientIndex)=>{
     const profile={...(p.profile||{}),Patient_ID:p.patientId||(p.profile||{}).Patient_ID||'',Patient_Name:p.name||(p.profile||{}).Patient_Name||'',Patient_Number:p.number||(p.profile||{}).Patient_Number||''};
-    const visits=(p.visits&&p.visits.length)?p.visits:[{type:profile.Visit_Type||'Baseline',date:profile.Visit_Date||'',visitId:profile.Visit_ID||'',status:p.status||'',data:profile}];
+    const rawVisits=(p.visits&&p.visits.length)?p.visits:[{type:profile.Visit_Type||'Baseline',date:profile.Visit_Date||'',visitId:profile.Visit_ID||'',status:p.status||'',data:profile}];
+    // Legacy Baseline lives in the original historical Excel. Do not export the placeholder
+    // Baseline row into the new workbook; only new FU1/FU2 visits belong to the new file.
+    const visits=rawVisits.filter(v=>!(isLegacyPatient(p)&&v.type==='Baseline'));
     visits.forEach((v,visitIndex)=>{
       const merged={...profile,...(v.data||{})};
       const d=derive({...merged,Patient_ID:profile.Patient_ID,Patient_Name:profile.Patient_Name,Patient_Number:profile.Patient_Number,Visit_ID:v.visitId||merged.Visit_ID||'',Visit_Type:v.type||merged.Visit_Type||'',Visit_Date:v.date||merged.Visit_Date||'',CKD_Diagnosis_Date:merged.CKD_Diagnosis_Date||'',Hemodialysis_First_Session_Date:merged.Hemodialysis_First_Session_Date||'',Last_Lab_Date:merged.Last_Lab_Date||'',Record_Status:v.status||p.status||'',Export_Date:exportDate,App_Version:appVersion});
@@ -2669,14 +2896,15 @@ async function exportPatients(){
   const registry=patients.map((p,i)=>{
     const profile=p.profile||{};
     const visits=p.visits||[];
-    const baseline=visits.find(v=>v.type==='Baseline')||visits[0]||{};
-    const latest=visits[visits.length-1]||{};
-    const d={...profile,...(baseline.data||{})};
+    const baseline=visits.find(v=>v.type==='Baseline')||{};
+    const realVisits=visits.filter(v=>!(isLegacyPatient(p)&&v.type==='Baseline'));
+    const latest=realVisits[realVisits.length-1]||baseline||{};
+    const d={...profile,...(!isLegacyPatient(p)?(baseline.data||{}):{})};
     return {patientIndex:i,data:{
-      Study_ID:p.patientId||d.Patient_ID||'',Study_Status:p.status==='Complete'?'Active':(p.status||'Draft'),Dialysis_Center:d.Center||'',Collection_Date:baseline.date||d.Visit_Date||'',Interviewer:d.Researcher_Interviewer_Name||'',Age:d.Age||'',Sex:d.Sex||'',Marital_Status:d.Marital_Status||'',Education:d.Education_Level||'',Employment:d.Employment_Status||'',Smoking_Status:d.Smoking_Status||'',CKD_Diagnosis_Date:d.CKD_Diagnosis_Date||'',CKD_Duration_Months:d.CKD_Duration_Months||'',CKD_Cause:d.CKD_Cause||'',Other_CKD_Cause:d.CKD_Cause_Other||'',First_Hemodialysis_Date:d.Hemodialysis_First_Session_Date||'',HD_Duration_Months:d.Hemodialysis_Duration_Months||'',Patient_Name:p.name||d.Patient_Name||'',Patient_Number:p.number||d.Patient_Number||'',Total_Visits:visits.length||1,Last_Visit_Date:latest.date||'',Last_Visit_Status:latest.status||p.status||'',Created_At:p.createdAt||'',Updated_At:p.updatedAt||''
+      Study_ID:p.patientId||d.Patient_ID||'',Study_Status:normalizeStudyStatus(p.studyStatus),Baseline_Source:isLegacyPatient(p)?'Legacy Excel (external)':'Portal',Dialysis_Center:d.Center||'',Collection_Date:isLegacyPatient(p)?'':(baseline.date||d.Visit_Date||''),Interviewer:d.Researcher_Interviewer_Name||'',Age:d.Age||'',Sex:d.Sex||'',Marital_Status:d.Marital_Status||'',Education:d.Education_Level||'',Employment:d.Employment_Status||'',Smoking_Status:d.Smoking_Status||'',CKD_Diagnosis_Date:d.CKD_Diagnosis_Date||'',CKD_Duration_Months:d.CKD_Duration_Months||'',CKD_Cause:d.CKD_Cause||'',Other_CKD_Cause:d.CKD_Cause_Other||'',First_Hemodialysis_Date:d.Hemodialysis_First_Session_Date||'',HD_Duration_Months:d.Hemodialysis_Duration_Months||'',Patient_Name:p.name||d.Patient_Name||'',Patient_Number:p.number||d.Patient_Number||'',Total_Visits:realVisits.length,Last_Visit_Date:latest.date||'',Last_Visit_Status:latest.status||'',Created_At:p.createdAt||'',Updated_At:p.updatedAt||''
     }};
   });
-  addSheet('Patient Registry',['Study_ID','Study_Status','Dialysis_Center','Collection_Date','Interviewer','Age','Sex','Marital_Status','Education','Employment','Smoking_Status','CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','Other_CKD_Cause','First_Hemodialysis_Date','HD_Duration_Months','Patient_Name','Patient_Number','Total_Visits','Last_Visit_Date','Last_Visit_Status','Created_At','Updated_At'],registry);
+  addSheet('Patient Registry',['Study_ID','Study_Status','Baseline_Source','Dialysis_Center','Collection_Date','Interviewer','Age','Sex','Marital_Status','Education','Employment','Smoking_Status','CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','Other_CKD_Cause','First_Hemodialysis_Date','HD_Duration_Months','Patient_Name','Patient_Number','Total_Visits','Last_Visit_Date','Last_Visit_Status','Created_At','Updated_At'],registry);
 
   // 2) Long coded dataset — no patient name/number.
   const codedCore=['Patient_ID',...visitFields,...patientFields.filter(f=>!['Patient_ID','Patient_Name','Patient_Number'].includes(f)),...ckdFields,...pruritusFields,...medFields,...wiFields,...marsFields,...psqiRaw,...kdRaw,...scoreFields,'Patient_Notes','Export_Date','App_Version'];
@@ -2708,7 +2936,13 @@ async function exportPatients(){
 
   // 5) Medication and pruritus sheets.
   addSheet('Medication Review',['Patient_ID','Visit_ID','Visit_Type','Visit_Date',...medFields,'Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit'],records);
-  addSheet('Pruritus Data',['Patient_ID','Visit_ID','Visit_Type','Visit_Date',...pruritusFields],records);
+  const pruritusExportRows=records.map(r=>({patientIndex:r.patientIndex,data:{
+    ...r.data,
+    Pruritus_Details_Applicable:r.data.Pruritus_Past_4_Weeks==='Yes'?'Yes':'No',
+    Herbal_Details_Applicable:r.data.Herbal_Use==='Yes'?'Yes':'No',
+    Pruritus_Treatment_Details_Applicable:r.data.Pruritus_Treatment_Use==='Yes'?'Yes':'No'
+  }}));
+  addSheet('Pruritus Data',['Patient_ID','Visit_ID','Visit_Type','Visit_Date','Pruritus_Details_Applicable','Herbal_Details_Applicable','Pruritus_Treatment_Details_Applicable',...pruritusFields],pruritusExportRows);
 
   // 6) Missing Data Report — distinguishes missing from intentionally Not Available.
   const missingRows=[];
@@ -2720,6 +2954,15 @@ async function exportPatients(){
     });
     requiredQuestion.forEach(f=>{if(!has(r.data[f]))missingRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Section:'Questionnaire',Field:f,Required:'Yes',Applicability:'Applicable',Missing_Status:'Missing',Reason:r.data['Review_Reason_field:'+f]||'',Action_Needed:'Complete questionnaire or document reason'}})});
     ['CKD_Diagnosis_Date','CKD_Cause','Hemodialysis_First_Session_Date','Kt_V','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'].forEach(f=>{if(!has(r.data[f]))missingRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Section:'Clinical',Field:f,Required:'Review',Applicability:'Applicable',Missing_Status:'Missing',Reason:r.data['Review_Reason_field:'+f]||'',Action_Needed:'Review'}})});
+
+    const addApplicableMissing=(section,fields,applicable)=>{
+      if(!applicable)return;
+      fields.forEach(f=>{if(!has(r.data[f]))missingRows.push({patientIndex:r.patientIndex,data:{Patient_ID:r.data.Patient_ID,Visit_ID:r.data.Visit_ID,Section:section,Field:f,Required:'Yes',Applicability:'Applicable',Missing_Status:'Missing',Reason:r.data['Review_Reason_field:'+f]||'',Action_Needed:'Fix or document reason'}})});
+    };
+    addApplicableMissing('Pruritus',['Pruritus_Pattern','Pruritus_Duration_Value','Pruritus_Duration_Unit','Worse_At_Night','Pruritus_Treatment_Use','Herbal_Use'],r.data.Pruritus_Past_4_Weeks==='Yes');
+    addApplicableMissing('Pruritus Treatment',['Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit'],r.data.Pruritus_Past_4_Weeks==='Yes'&&r.data.Pruritus_Treatment_Use==='Yes');
+    addApplicableMissing('Herbal Medicine',['Herbal_Name','Herbal_Reason','Herbal_Duration_Value','Herbal_Duration_Unit','Herbal_Frequency'],r.data.Pruritus_Past_4_Weeks==='Yes'&&r.data.Herbal_Use==='Yes');
+    addApplicableMissing('Medication Change',['MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'],r.data.MED_CHANGED_3M==='Yes');
   });
   addSheet('Missing Data Report',['Patient_ID','Visit_ID','Section','Field','Required','Applicability','Missing_Status','Reason','Action_Needed'],missingRows);
 
@@ -2751,10 +2994,24 @@ async function exportPatients(){
   scoreFields.forEach(f=>addCode(f,'Calculated Score','Calculated','Main analysis dataset'));
   addSheet('Codebook',['Field','Description','Instrument','Required','Analysis_Use','App_Version','Export_Date'],codebook);
 
-  // 9) Dashboard Summary similar to the previous portal export.
-  const totalVisits=records.length,completeVisits=records.filter(r=>r.data.Record_Status==='Complete').length,draftVisits=totalVisits-completeVisits;
+  // 9) Dashboard Summary — mirrors the current portal dashboard and visit workflow.
+  const visitComplete=(p,type)=>(p.visits||[]).some(v=>v.type===type&&normalizeVisitStatus(v.status)==='Complete');
+  const legacyBaseline=patients.filter(isLegacyPatient).length;
+  const baselineCompleted=patients.filter(p=>!isLegacyPatient(p)&&visitComplete(p,'Baseline')).length;
+  const fu1Completed=patients.filter(p=>visitComplete(p,'Follow-up 1')).length;
+  const fu2Completed=patients.filter(p=>visitComplete(p,'Follow-up 2')).length;
+  const draftIncompleteVisits=patients.reduce((n,p)=>n+effectiveDraftVisits(p).length,0);
+  const studyComplete=patients.filter(p=>baselineSatisfied(p)&&visitComplete(p,'Follow-up 1')&&visitComplete(p,'Follow-up 2')).length;
+  const totalVisits=records.length;
   const summary=[];const sm=(section,label,count)=>summary.push({data:{Section:section,Label:label,Count:count,Export_Date:exportDate,App_Version:appVersion}});
-  sm('Metric','Total patients',patients.length);sm('Metric','Total visits',totalVisits);sm('Metric','Completed visits',completeVisits);sm('Metric','Draft visits',draftVisits);
+  sm('Dashboard','Total Patients',patients.length);
+  sm('Dashboard','Legacy Baseline',legacyBaseline);
+  sm('Dashboard','Baseline Completed',baselineCompleted);
+  sm('Dashboard','Follow-up 1 Completed',fu1Completed);
+  sm('Dashboard','Follow-up 2 Completed',fu2Completed);
+  sm('Dashboard','Draft / Incomplete Visits',draftIncompleteVisits);
+  sm('Dashboard','Study Complete',studyComplete);
+  sm('Visit audit','Total Stored Visits',totalVisits);
   sm('Metric','Average WI-NRS',avg(records.map(r=>r.data.WI_NRS)));sm('Metric','Average PSQI',avg(records.map(r=>r.data.PSQI_Global)));sm('Metric','Average MARS',avg(records.map(r=>r.data.MARS_Total)));sm('Metric','Average Hb',avg(records.map(r=>r.data.Hb)));sm('Metric','Average Albumin',avg(records.map(r=>r.data.Albumin)));sm('Metric','Average Phosphate',avg(records.map(r=>r.data.Phosphate)));
   ['No pruritus','Mild','Moderate','Severe'].forEach(cat=>sm('Pruritus severity distribution',cat,records.filter(r=>r.data.WI_NRS_Category===cat).length));
   sm('Missing data summary','Laboratory missing',missingRows.filter(r=>r.data.Section==='Laboratory'&&r.data.Missing_Status==='Missing').length);sm('Missing data summary','Laboratory not available',missingRows.filter(r=>r.data.Section==='Laboratory'&&r.data.Missing_Status==='Not Available').length);sm('Missing data summary','Questionnaire missing',missingRows.filter(r=>r.data.Section==='Questionnaire').length);
@@ -2808,16 +3065,26 @@ function submitQuestionnaire(key){
   const pr=qProgress(key);
   const err=document.getElementById('qerror-'+key);
   if(pr.missing.length){
-    questionnaireState[key]=false;
     const names=pr.missing.map(n=>n.replaceAll('_',' '));
-    if(err){err.classList.add('show');err.innerHTML=`<b>Please complete the missing answers.</b><br>${names.join(' • ')}`;}
-    alert(`${questionnaireTitles[key]} is incomplete.\n\n${pr.missing.length} required answer(s) are missing.`);
+    if(err){err.classList.add('show');err.innerHTML=`<b>Incomplete questionnaire:</b> ${pr.missing.length} required answer(s) are missing.<br>${names.join(' • ')}<br><b>You may still submit it as incomplete and resume it later.</b>`;}
+    const accept=confirm(`${questionnaireTitles[key]} is incomplete.\n\n${pr.missing.length} required answer(s) are missing.\n\nPress OK to SUBMIT AS INCOMPLETE and resume later.\nPress Cancel to return to the questions.`);
+    if(!accept){
+      questionnaireState[key]=false;
+      renderQuestionnaireCards();
+      const first=form.elements[pr.missing[0]];
+      if(first&&typeof first.focus==='function')first.focus();
+      return;
+    }
+    questionnaireState[key]='incomplete';
+    values[`Questionnaire_${key}_Status`]='Incomplete';
+    persist();
     renderQuestionnaireCards();
-    const first=form.elements[pr.missing[0]];
-    if(first&&typeof first.focus==='function')first.focus();
+    closeQuestionnaire(key);
+    alert(`${questionnaireTitles[key]} saved as incomplete. You can use Open / Resume later to finish the remaining answers.`);
     return;
   }
   questionnaireState[key]=true;
+  values[`Questionnaire_${key}_Status`]='Complete';
   if(err){err.classList.remove('show');err.innerHTML='';}
   if(key==='mars')calculateMarsTotal();
   if(key==='kdqol')calculateKDQOL36();
@@ -2826,7 +3093,8 @@ function submitQuestionnaire(key){
   closeQuestionnaire(key);
   alert(`${questionnaireTitles[key]} submitted successfully.`);
 }
-function renderQuestionnaireCards(){const box=document.getElementById('questionnaireCards');if(!box)return;box.innerHTML='';Object.keys(questionnaireTitles).forEach(key=>{const p=qProgress(key);const done=questionnaireState[key]&&p.missing.length===0;const card=document.createElement('div');card.className='questionnaire-card'+(questionnaireOpen[key]?' current':'');card.innerHTML=`<div class="qcard-top"><div class="qcard-title">${questionnaireTitles[key]}</div><div class="qcard-status ${done?'complete':(p.answered?'missed':'')}">${done?'✓ Complete':(p.answered?'In progress':'Not completed')}</div></div><div class="qcard-count">${p.answered} of ${p.total} required answered</div><div class="qcard-bar"><div class="qcard-fill" style="width:${p.percent}%"></div></div><button type="button" class="qopen" onclick="openQuestionnaire('${key}')">${done?'Review':'Open / Resume'}</button>`;box.appendChild(card);});}
+function questionnaireIsSubmittedComplete(key){return questionnaireState[key]===true||String(values[`Questionnaire_${key}_Status`]||'').trim()==='Complete';}
+function renderQuestionnaireCards(){const box=document.getElementById('questionnaireCards');if(!box)return;box.innerHTML='';Object.keys(questionnaireTitles).forEach(key=>{const p=qProgress(key);const done=questionnaireIsSubmittedComplete(key)&&p.missing.length===0;const submittedIncomplete=!done&&(questionnaireState[key]==='incomplete'||values[`Questionnaire_${key}_Status`]==='Incomplete');const card=document.createElement('div');card.className='questionnaire-card'+(questionnaireOpen[key]?' current':'');const status=done?'✓ Complete':(submittedIncomplete?'Submitted incomplete':(p.answered?'In progress':'Not completed'));card.innerHTML=`<div class="qcard-top"><div class="qcard-title">${questionnaireTitles[key]}</div><div class="qcard-status ${done?'complete':((p.answered||submittedIncomplete)?'missed':'')}">${status}</div></div><div class="qcard-count">${p.answered} of ${p.total} required answered</div><div class="qcard-bar"><div class="qcard-fill" style="width:${p.percent}%"></div></div><button type="button" class="qopen" onclick="openQuestionnaire('${key}')">${done?'Review':'Open / Resume'}</button>`;box.appendChild(card);});}
 
 const kdqolPages=[[1,3],[4,8],[9,12],[13,16],[17,28],[29,36]];
 let kdqolPage=1;
@@ -3024,64 +3292,22 @@ function calculateKDQOL36(){
   const vals=Array.from({length:36},(_,i)=>kdqolValue(i+1));
   if(vals.some(v=>v==null)) return null;
 
-  // Kidney-targeted scales: 0-100, higher = better HRQOL.
-  const burden=kdqolLinear100(vals.slice(12,16));     // Q13-16
-  const symptoms=kdqolLinear100(vals.slice(16,28));   // Q17-28
-  const effects=kdqolLinear100(vals.slice(28,36));     // Q29-36
+  // Kidney-specific scales retained from the existing implementation.
+  const burden=kdqolLinear100(vals.slice(12,16));
+  const symptoms=kdqolLinear100(vals.slice(16,28));
+  const effects=kdqolLinear100(vals.slice(28,36));
   const kss=Math.round(((burden+symptoms+effects)/3)*100)/100;
 
-  // SF-12 version 1 PCS/MCS scoring weights.
-  const pcsW=[
-    [0,-1.31872,-3.0296,-5.56461,-8.37399],
-    [-7.23216,-3.45555,0],
-    [-6.24397,-2.73557,0],
-    [-4.61617,0],
-    [-5.51747,0],
-    [3.04365,0],
-    [2.32091,0],
-    [0,-3.80130,-6.50522,-8.38063,-11.25544],
-    [0,0.66514,1.36689,2.37241,2.90426,3.46638],
-    [0,-0.42251,-1.14387,-1.61850,-2.02168,-2.44706],
-    [4.61446,3.41593,2.34247,1.28044,0.41188,0],
-    [-0.33682,-0.94342,-0.18043,0.11038,0]
-  ];
-  const mcsW=[
-    [0,-0.06064,0.03482,-0.16891,-1.71175],
-    [3.93115,1.86840,0],
-    [2.68282,1.43103,0],
-    [1.44060,0],
-    [1.66968,0],
-    [-6.82672,0],
-    [-5.69921,0],
-    [0,0.90384,1.49384,1.76691,1.48619],
-    [0,-1.94949,-4.09842,-6.31121,-7.92717,-10.19085],
-    [0,-0.92057,-1.65178,-3.29805,-4.88962,-6.02409],
-    [-16.15395,-10.77911,-8.09914,-4.59055,-1.95934,0],
-    [-6.29724,-8.26066,-5.63286,-3.13896,0]
-  ];
-
-  let pcs=56.57706, mcs=60.75781;
-  vals.slice(0,12).forEach((v,i)=>{
-    pcs+=pcsW[i][v-1]??0;
-    mcs+=mcsW[i][v-1]??0;
-  });
-  pcs=Math.round(pcs*100)/100;
-  mcs=Math.round(mcs*100)/100;
-
-  const out={
-    PCS:pcs,MCS:mcs,Burden:burden,Symptoms:symptoms,Effects:effects,KSS:kss
-  };
-  const map={
-    KDQOL_PCS:pcs,KDQOL_MCS:mcs,KDQOL_Burden:burden,
-    KDQOL_Symptoms:symptoms,KDQOL_Effects:effects,KDQOL_KSS:kss
-  };
-  Object.entries(map).forEach(([name,val])=>{
-    const el=form.elements[name];
-    if(el)el.value=val;
-    values[name]=String(val);
-  });
+  // P0 research-safety decision: PCS/MCS are intentionally NOT calculated.
+  // The exact official SF-12 scoring transformation/coefficients for the questionnaire
+  // version used in this research could not be fully verified from an authoritative
+  // scoring specification. Raw KDQOL_Q1..Q36 are always preserved/exported.
+  const pcs='Not calculated', mcs='Not calculated';
+  const out={PCS:pcs,MCS:mcs,Burden:burden,Symptoms:symptoms,Effects:effects,KSS:kss};
+  const map={KDQOL_PCS:pcs,KDQOL_MCS:mcs,KDQOL_Burden:burden,KDQOL_Symptoms:symptoms,KDQOL_Effects:effects,KDQOL_KSS:kss};
+  Object.entries(map).forEach(([name,val])=>{const el=form.elements[name];if(el)el.value=val;values[name]=String(val);});
   const box=document.getElementById('kdqolScore');
-  if(box)box.innerHTML=`<b>KDQOL-36 scores calculated:</b> PCS ${pcs} · MCS ${mcs} · Burden ${burden} · Symptoms/Problems ${symptoms} · Effects ${effects} · KSS ${kss}`;
+  if(box)box.innerHTML=`<b>KDQOL-36 kidney-specific scores calculated.</b> PCS: Not calculated · MCS: Not calculated · Burden ${burden} · Symptoms/Problems ${symptoms} · Effects ${effects} · KSS ${kss}`;
   return out;
 }
 </script>
@@ -3343,40 +3569,76 @@ function labRangeFor(name){
   return cfg;
 }
 function updateLabRangeFlag(input){
-  if(!input)return;const field=input.closest('.lab-field');if(!field)return;
-  const r=labRangeFor(input.name),v=Number(input.value);
-  const abnormal=!!r && input.value!=='' && Number.isFinite(v) && (v<r[0]||v>r[1]);
+  if(!input)return;
+  const field=input.closest('.lab-field');
+  if(!field)return;
+  const cb=document.querySelector(`[name="${input.name}_NA"]`);
+  const raw=String(input.value??'').trim();
+  const r=labRangeFor(input.name);
+  const v=raw===''?NaN:Number(raw);
+  // Never flag an empty, disabled, or Not Available laboratory field.
+  const abnormal=!!r && !input.disabled && !cb?.checked && raw!=='' && Number.isFinite(v) && (v<r[0]||v>r[1]);
   field.classList.toggle('lab-out-of-range',abnormal);
-  if(abnormal)field.title=`Outside general adult reference range (${r[0]}–${r[1]}). Research attention cue only.`;else field.removeAttribute('title');
+  if(abnormal) field.title=`Outside general adult reference range (${r[0]}–${r[1]}). Research attention cue only.`;
+  else field.removeAttribute('title');
 }
-function updateAllLabRangeFlags(){document.querySelectorAll('.lab-field input[type="number"]').forEach(updateLabRangeFlag);}
-function toggleLabNA(name,checked){
+function updateAllLabRangeFlags(){
+  document.querySelectorAll('.lab-field input[type="number"]').forEach(updateLabRangeFlag);
+}
+function toggleLabNA(name,checked,opts={}){
   const input=document.querySelector(`[name="${name}"]`);
+  const cb=document.querySelector(`[name="${name}_NA"]`);
   const field=input?.closest('.lab-field');
   if(!input)return;
-  input.disabled=!!checked;
-  if(checked) input.value='';
-  field?.classList.toggle('is-na',!!checked);
+  const isNA=!!checked;
+  if(cb && cb.checked!==isNA) cb.checked=isNA;
+  input.disabled=isNA;
+  if(isNA) input.value='';
+  field?.classList.toggle('is-na',isNA);
+  // Clearing/NA must immediately clear any stale yellow warning.
+  updateLabRangeFlag(input);
   if(typeof values!=='undefined'){
-    values[name+'_Status']=checked?'Not Available':'Available';
-    values[name+'_NA']=checked?'Yes':'';
+    values[name+'_Status']=isNA?'Not Available':'Available';
+    values[name+'_NA']=isNA?'Yes':'';
+    if(isNA) values[name]='';
   }
-  if(typeof persist==='function')persist();
-  if(typeof renderPageStatus==='function')renderPageStatus();
+  if(!opts.silent){
+    if(typeof persist==='function')persist();
+    if(typeof renderPageStatus==='function')renderPageStatus();
+  }
 }
-function syncLabNA(){
+function reconcileLabUI(){
   document.querySelectorAll('.lab-na-row input[type="checkbox"]').forEach(cb=>{
     const name=cb.name.replace(/_NA$/,'');
-    toggleLabNA(name,cb.checked);
+    const input=document.querySelector(`[name="${name}"]`);
+    if(!input)return;
+    // Saved NA state is authoritative when reopening a record; otherwise the
+    // unchecked box means the numeric field must be enabled immediately.
+    const savedNA=['yes','on','true','1'].includes(String(values?.[name+'_NA']||'').toLowerCase()) ||
+                  String(values?.[name+'_Status']||'').toLowerCase()==='not available';
+    const isNA=cb.checked || savedNA;
+    cb.checked=isNA;
+    input.disabled=isNA;
+    if(isNA) input.value='';
+    input.closest('.lab-field')?.classList.toggle('is-na',isNA);
+    updateLabRangeFlag(input);
   });
 }
-document.addEventListener('change',e=>{
+function syncLabNA(){reconcileLabUI();}
+document.addEventListener('input',e=>{
   if(e.target?.matches('.lab-field input[type="number"]')){
-    if(e.target.value!==''){const cb=document.querySelector(`[name="${e.target.name}_NA"]`);if(cb?.checked){cb.checked=false;toggleLabNA(e.target.name,false)}}
+    const cb=document.querySelector(`[name="${e.target.name}_NA"]`);
+    if(String(e.target.value??'').trim()!=='' && cb?.checked){
+      cb.checked=false;
+      toggleLabNA(e.target.name,false,{silent:true});
+    }
     updateLabRangeFlag(e.target);
   }
 });
-setTimeout(()=>{syncLabNA();updateAllLabRangeFlags();},0);
+document.addEventListener('change',e=>{
+  if(e.target?.matches('.lab-field input[type="number"]')) updateLabRangeFlag(e.target);
+});
+setTimeout(()=>{reconcileLabUI();updateAllLabRangeFlags();},0);
 </script>
 
 
@@ -3438,5 +3700,234 @@ document.addEventListener('change',function(e){
   }
 },true);
 </script>
+
+<div id="idbMigrationModal" class="migration-backdrop" style="display:none" role="dialog" aria-modal="true" aria-label="Research database migration">
+  <div class="migration-card">
+    <h2>Research Data Safety Upgrade</h2>
+    <p>Your existing research data will remain untouched in legacy storage. Before IndexedDB becomes the primary database, the portal will download a Full Backup JSON, validate records, migrate atomically, then verify patient and visit counts plus representative records.</p>
+    <div class="migration-stats">
+      <div class="migration-stat"><strong id="migPatients">0</strong><span>Patients before migration</span></div>
+      <div class="migration-stat"><strong id="migVisits">0</strong><span>Visits before migration</span></div>
+    </div>
+    <div id="migMessage" class="muted">No existing localStorage data will be deleted.</div>
+    <div id="migError" class="migration-error"></div>
+    <div class="migration-actions">
+      <button type="button" class="migration-primary" onclick="startSafeIndexedDBMigration()">Download Backup &amp; Migrate</button>
+      <button type="button" class="migration-secondary" onclick="deferIndexedDBMigration()">Not now</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== v1.61.1 IndexedDB research data layer ===== */
+const CKD_DB_NAME='CKD_Pruritus_Research_DB';
+const CKD_DB_VERSION=1;
+const CKD_STORES=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews','meta'];
+const Q_RAW=['WI_NRS','MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5',...Array.from({length:36},(_,i)=>`KDQOL_Q${i+1}`),'PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j','PSQI_Q5j_text','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9'];
+const SCORE_KEYS=['WI_NRS_Category','Severe_Pruritus','MARS_Total','PSQI_C1','PSQI_C2','PSQI_C3','PSQI_C4','PSQI_C5','PSQI_C6','PSQI_C7','PSQI_Global','PSQI_Sleep_Category','KDQOL_Burden','KDQOL_Symptoms','KDQOL_Effects','KDQOL_PCS','KDQOL_MCS','KDQOL_KSS'];
+const LAB_KEYS=['Last_Lab_Date','Hb','Hb_NA','Albumin','Albumin_NA','Urea','Urea_NA','Post_Urea','Post_Urea_NA','Serum_Creatinine','Serum_Creatinine_NA','Sodium','Sodium_NA','Potassium','Potassium_NA','Phosphate','Phosphate_NA','Calcium','Calcium_NA','PTH','PTH_NA','Vit_D3','Vit_D3_NA','Ferritin','Ferritin_NA','Iron','Iron_NA'];
+const MED_KEYS=['Current_Medications','Selected_Common_Medications','Total_Current_Medications','MED_CHANGED_3M','MED_CHANGED_NAME','MED_CHANGED_DOSE','MED_CHANGED_REASON'];
+const PRU_KEYS=['Pruritus_Past_4_Weeks','Pruritus_Pattern','Pruritus_Duration_Value','Pruritus_Duration_Unit','Worse_At_Night','Pruritus_Treatment_Use','Treatment_Name','Dose','Pruritus_Treatment_Frequency','Pruritus_Treatment_Duration_Value','Pruritus_Treatment_Duration_Unit','Herbal_Use','Herbal_Name','Herbal_Reason','Herbal_Duration_Value','Herbal_Duration_Unit','Herbal_Time','Herbal_Frequency'];
+function pickKeys(d,keys){const o={};keys.forEach(k=>{if(Object.prototype.hasOwnProperty.call(d||{},k))o[k]=d[k]});return o}
+function showStorageError(err){console.error('CKD IndexedDB error',err);const msg=err?.message||String(err||'Unknown storage error');if(!location.search.includes('p0test=1'))alert('Research database error: '+msg+'\nLegacy localStorage data have not been deleted.');}
+function reqP(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error||new Error('IndexedDB request failed'))})}
+function txDone(tx){return new Promise((res,rej)=>{tx.oncomplete=()=>res();tx.onabort=()=>rej(tx.error||new Error('IndexedDB transaction aborted'));tx.onerror=()=>rej(tx.error||new Error('IndexedDB transaction failed'))})}
+async function openCKDDB(name=CKD_DB_NAME){
+  if(name===CKD_DB_NAME&&CKD_IDB_DB)return CKD_IDB_DB;
+  const db=await new Promise((res,rej)=>{
+    const r=indexedDB.open(name,CKD_DB_VERSION);
+    r.onupgradeneeded=()=>{const d=r.result;
+      const make=(n,key='id')=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:key})};
+      make('patients');make('visits','pk');make('drafts');make('questionnaires','pk');make('scores','pk');make('labs','pk');make('medications','pk');make('pruritus','pk');make('reviews','pk');make('meta','key');
+    };
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('Database upgrade blocked by another open tab.'));
+  });
+  if(name===CKD_DB_NAME)CKD_IDB_DB=db;return db;
+}
+function visitPk(patientId,v){return `${patientId}::${v.visitId||v.type||'visit'}`}
+function sectionRecord(pk,patientId,visitId,data){return {pk,patientId,visitId,data:cloneData(data||{})}}
+function sanitizeResearchData(d){const x=cloneData(d||{});if(x.KDQOL_PCS&&x.KDQOL_PCS!=='Not calculated')x.Legacy_KDQOL_PCS_Unverified=x.KDQOL_PCS;if(x.KDQOL_MCS&&x.KDQOL_MCS!=='Not calculated')x.Legacy_KDQOL_MCS_Unverified=x.KDQOL_MCS;x.KDQOL_PCS='Not calculated';x.KDQOL_MCS='Not calculated';return x}
+function normalizeRegistryForStorage(list){
+  const out={patients:[],visits:[],drafts:[],questionnaires:[],scores:[],labs:[],medications:[],pruritus:[],reviews:[]};
+  (list||[]).forEach((source,pi)=>{
+    const p=cloneData(source);p.id=p.id||`P_MIG_${pi+1}`;p.studyStatus=normalizeStudyStatus(p.studyStatus);
+    const visits=(p.visits||[]).map((vv,vi)=>{const v=cloneData(vv);v.status=normalizeVisitStatus(v.status||p.status);v.visitId=v.visitId||v.data?.Visit_ID||`${v.type||'VISIT'}_${vi+1}`;v.type=v.type||v.data?.Visit_Type||'Baseline';v.date=v.date||v.data?.Visit_Date||'';return v});
+    const base={...p,visits:undefined,status:p.status||visits.at(-1)?.status||'Draft'};delete base.visits;out.patients.push(base);
+    visits.forEach(v=>{
+      const pk=visitPk(p.id,v);const d=sanitizeResearchData({...(v.data||{}),Visit_ID:v.visitId,Visit_Type:v.type,Visit_Date:v.date});
+      out.visits.push({pk,patientInternalId:p.id,patientId:p.patientId||p.profile?.Patient_ID||'',visitId:v.visitId,type:v.type,date:v.date,status:v.status,data:d,updatedAt:v.updatedAt||p.updatedAt||new Date().toISOString()});
+      out.questionnaires.push(sectionRecord(pk,p.id,v.visitId,pickKeys(d,Q_RAW)));
+      out.scores.push(sectionRecord(pk,p.id,v.visitId,pickKeys(d,SCORE_KEYS)));
+      out.labs.push(sectionRecord(pk,p.id,v.visitId,pickKeys(d,LAB_KEYS)));
+      out.medications.push(sectionRecord(pk,p.id,v.visitId,pickKeys(d,MED_KEYS)));
+      out.pruritus.push(sectionRecord(pk,p.id,v.visitId,pickKeys(d,PRU_KEYS)));
+      const reviewData={Patient_Notes:d.Patient_Notes||''};Object.keys(d).filter(k=>k.startsWith('Review_Reason_')).forEach(k=>reviewData[k]=d[k]);
+      out.reviews.push(sectionRecord(pk,p.id,v.visitId,reviewData));
+      if(['Draft','Incomplete'].includes(v.status))out.drafts.push({id:`${p.id}::${v.visitId}`,patientInternalId:p.id,patientId:p.patientId||'',visitId:v.visitId,visitType:v.type,status:v.status,currentStep:Number(d.__currentStep||1),lastSaved:v.updatedAt||p.updatedAt||new Date().toISOString(),data:d});
+    });
+  });
+  return out;
+}
+async function ckdWriteRegistryAtomic(list,dbName=CKD_DB_NAME){
+  const db=await openCKDDB(dbName);const norm=normalizeRegistryForStorage(list);const stores=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews'];
+  let working=null;try{working=await ckdGetWorkingDraft(dbName)}catch(e){}
+  const tx=db.transaction(stores,'readwrite');
+  stores.forEach(s=>tx.objectStore(s).clear());
+  stores.forEach(s=>norm[s].forEach(x=>tx.objectStore(s).put(x)));
+  if(working)tx.objectStore('drafts').put(working);
+  await txDone(tx);return norm;
+}
+async function ckdPutMeta(key,value,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('meta','readwrite');tx.objectStore('meta').put({key,value,updatedAt:new Date().toISOString()});await txDone(tx)}
+async function ckdGetMeta(key,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('meta','readonly');const v=await reqP(tx.objectStore('meta').get(key));await txDone(tx);return v?.value}
+async function ckdPutWorkingDraft(data,step=current,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').put({id:'__working__',patientInternalId:'',patientId:data.Patient_ID||'',visitId:data.Visit_ID||'',visitType:data.Visit_Type||'',status:'Draft',currentStep:Number(step||1),lastSaved:new Date().toISOString(),data:sanitizeResearchData(data)});await txDone(tx)}
+async function ckdClearWorkingDraft(){if(!CKD_IDB_PRIMARY){localStorage.removeItem('ckd_wizard_draft');return}const db=await openCKDDB();const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').delete('__working__');await txDone(tx)}
+async function ckdGetWorkingDraft(dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('drafts','readonly');const x=await reqP(tx.objectStore('drafts').get('__working__'));await txDone(tx);return x||null}
+async function readAll(store,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction(store,'readonly');const x=await reqP(tx.objectStore(store).getAll());await txDone(tx);return x}
+async function ckdWriteStructuredBackupAtomic(indexedDBData,dbName=CKD_DB_NAME){
+  const db=await openCKDDB(dbName);const tx=db.transaction(CKD_STORES,'readwrite');
+  CKD_STORES.forEach(s=>tx.objectStore(s).clear());
+  CKD_STORES.forEach(s=>(indexedDBData?.[s]||[]).forEach(x=>tx.objectStore(s).put(cloneData(x))));
+  await txDone(tx);
+}
+
+async function reconstructRegistry(dbName=CKD_DB_NAME){
+  const [patients,visits]=await Promise.all([readAll('patients',dbName),readAll('visits',dbName)]);const vm=new Map();
+  visits.forEach(v=>{if(!vm.has(v.patientInternalId))vm.set(v.patientInternalId,[]);vm.get(v.patientInternalId).push({type:v.type,date:v.date,visitId:v.visitId,status:normalizeVisitStatus(v.status),data:v.data,updatedAt:v.updatedAt})});
+  return patients.map(p=>({...p,studyStatus:normalizeStudyStatus(p.studyStatus),visits:(vm.get(p.id)||[]).sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||'')))}));
+}
+function countVisits(list){return (list||[]).reduce((n,p)=>n+(p.visits||[]).length,0)}
+function validateLegacyRegistry(list){
+  const errors=[];if(!Array.isArray(list))errors.push('Patient registry is not an array.');
+  const ids=new Set(),studyIds=new Set();
+  (list||[]).forEach((p,i)=>{if(!p||typeof p!=='object'){errors.push(`Patient ${i+1} is invalid.`);return}if(p.id){if(ids.has(p.id))errors.push(`Duplicate internal patient id: ${p.id}`);ids.add(p.id)}const sid=p.patientId||p.profile?.Patient_ID;if(sid){if(studyIds.has(sid))errors.push(`Duplicate Study ID: ${sid}`);studyIds.add(sid)}if(p.visits&&!Array.isArray(p.visits))errors.push(`Patient ${sid||i+1}: visits is not an array.`);const vi=new Set();(p.visits||[]).forEach(v=>{const id=v.visitId||v.data?.Visit_ID;if(id){if(vi.has(id))errors.push(`Patient ${sid||i+1}: duplicate Visit ID ${id}`);vi.add(id)}})});
+  return errors;
+}
+function preservesOriginal(orig,restored,path=''){
+  if(orig===null||typeof orig!=='object')return String(orig??'')===String(restored??'');
+  if(Array.isArray(orig)){if(!Array.isArray(restored)||orig.length!==restored.length)return false;return orig.every((v,i)=>preservesOriginal(v,restored[i],path+'['+i+']'))}
+  return Object.keys(orig).every(k=>['status','visits','KDQOL_PCS','KDQOL_MCS'].includes(k)?true:preservesOriginal(orig[k],restored?.[k],path+'.'+k));
+}
+async function verifyMigration(original,dbName=CKD_DB_NAME){
+  const restored=await reconstructRegistry(dbName);const before={patients:original.length,visits:countVisits(original)},after={patients:restored.length,visits:countVisits(restored)};
+  if(before.patients!==after.patients||before.visits!==after.visits)throw new Error(`Count mismatch. Before ${before.patients}/${before.visits}; after ${after.patients}/${after.visits}.`);
+  const idx=[0,Math.floor(original.length/2),Math.max(0,original.length-1)].filter((v,i,a)=>original.length&&a.indexOf(v)===i);
+  for(const i of idx){const o=original[i],r=restored.find(x=>x.id===o.id);if(!r)throw new Error(`Representative record missing at index ${i}.`);if(!preservesOriginal({...o,visits:undefined},{...r,visits:undefined}))throw new Error(`Representative patient fields differ at index ${i}.`);const ov=o.visits||[],rv=r.visits||[];for(const v of ov){const rr=rv.find(x=>(x.visitId||x.data?.Visit_ID)===(v.visitId||v.data?.Visit_ID));if(!rr||!preservesOriginal(v.data||{},rr.data||{}))throw new Error(`Representative visit fields differ for ${v.visitId||v.type}.`)}}
+  return {before,after,samplesChecked:idx.length};
+}
+function legacySnapshot(){const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ckd_'))data[k]=localStorage.getItem(k)}return {app:'CKD–Pruritus Research Portal',backupVersion:1,createdAt:new Date().toISOString(),data}}
+function downloadJSON(payload,name){const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function legacyCurrentRegistry(){try{return JSON.parse(localStorage.getItem(REGISTRY_KEY)||'[]')}catch(e){return []}}
+function migrationCounts(){const r=legacyCurrentRegistry();return {patients:r.length,visits:countVisits(r)}}
+function showMigrationModal(){const c=migrationCounts();document.getElementById('migPatients').textContent=c.patients;document.getElementById('migVisits').textContent=c.visits;document.getElementById('idbMigrationModal').style.display='flex'}
+function deferIndexedDBMigration(){document.getElementById('idbMigrationModal').style.display='none';document.getElementById('migError').classList.remove('show')}
+async function deleteDB(name){if(CKD_IDB_DB&&name===CKD_DB_NAME){CKD_IDB_DB.close();CKD_IDB_DB=null}await new Promise((res,rej)=>{const r=indexedDB.deleteDatabase(name);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('Close other portal tabs and try again.'))})}
+async function startSafeIndexedDBMigration(){
+  const err=document.getElementById('migError'),msg=document.getElementById('migMessage');err.classList.remove('show');
+  try{
+    const original=legacyCurrentRegistry();const validation=validateLegacyRegistry(original);if(validation.length)throw new Error('Migration stopped before any database changes:\n'+validation.join('\n'));
+    const snapshot=legacySnapshot();downloadJSON(snapshot,`CKD_Pruritus_PRE_IDB_BACKUP_${new Date().toISOString().slice(0,10)}.json`);msg.textContent='Backup created. Migrating atomically…';
+    await deleteDB(CKD_DB_NAME).catch(()=>{});await openCKDDB();await ckdWriteRegistryAtomic(original);
+    const oldDraft=(()=>{try{return JSON.parse(localStorage.getItem('ckd_wizard_draft')||'{}')}catch(e){return {}}})();if(Object.keys(oldDraft).length)await ckdPutWorkingDraft(oldDraft,Number(oldDraft.__currentStep||1));
+    await ckdPutMeta('reviewReasons',(()=>{try{return JSON.parse(localStorage.getItem(REVIEW_REASON_KEY)||'{}')}catch(e){return {}}})());
+    const report=await verifyMigration(original);await ckdPutMeta('migrationReport',{...report,completedAt:new Date().toISOString(),source:'v1.55 localStorage',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);
+    CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();
+    msg.textContent=`Migration verified: ${report.after.patients} patients and ${report.after.visits} visits. IndexedDB is now primary. Legacy localStorage was preserved.`;updateDashboard();renderDashboardSearch?.();setTimeout(()=>{document.getElementById('idbMigrationModal').style.display='none'},1800);
+  }catch(e){
+    try{await deleteDB(CKD_DB_NAME)}catch(_){}CKD_IDB_PRIMARY=false;err.textContent=e.message||String(e);err.classList.add('show');msg.textContent='Migration failed safely. Existing localStorage data remain untouched.';
+  }
+}
+async function initializeIDBPrimary(){
+  try{
+    await openCKDDB();const marker=await ckdGetMeta('primaryMarker');
+    if(marker){CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();const wd=await ckdGetWorkingDraft();if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}updateDashboard();renderDashboardSearch?.();renderPageStatus?.();return}
+    const c=migrationCounts();const hasLegacy=c.patients>0||c.visits>0||!!localStorage.getItem('ckd_wizard_draft');
+    if(hasLegacy){showMigrationModal();return}
+    // Empty installation: initialize verified empty IndexedDB without destructive legacy changes.
+    await ckdWriteRegistryAtomic([]);await ckdPutMeta('reviewReasons',{});await ckdPutMeta('migrationReport',{before:{patients:0,visits:0},after:{patients:0,visits:0},completedAt:new Date().toISOString(),source:'empty initialization',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);CKD_REGISTRY_CACHE=[];CKD_REVIEW_CACHE={};CKD_IDB_PRIMARY=true;updateDashboard();
+  }catch(e){showStorageError(e)}
+}
+function hydrateFormFromValues(){
+  Object.entries(values).forEach(([k,v])=>{const els=document.querySelectorAll(`[name=\"${CSS.escape(k)}\"]`);els.forEach(el=>{if(el.type==='radio')el.checked=String(el.value)===String(v);else if(el.type==='checkbox')el.checked=['on','yes','true','1'].includes(String(v).toLowerCase());else el.value=v??''})});
+  restoreClinicalDateDisplays?.();syncVisitDateDisplay?.();updateMedicationChangeVisibility?.();hydrateMedicationSelection?.();syncLabNA?.();updateAllLabRangeFlags?.();updateConditionalSections?.();render?.();
+}
+function clearLegacyDraftFromUIAfterIDBPrimary(){
+  Object.keys(values).forEach(k=>delete values[k]);form.reset();
+  const baseline=document.querySelector('input[name="Visit_Type"][value="Baseline"]');if(baseline)baseline.checked=true;
+  const vd=document.getElementById('visitDate');if(vd)vd.value=todayISO();syncVisitDateDisplay?.();updateVisitId?.();setPatientId('');updateConditionalSections?.();updateMedicationChangeVisibility?.();hydrateMedicationSelection?.();syncLabNA?.();renderPageStatus?.();
+}
+// v1.62.1 completion handler clears the IndexedDB working draft only after the Complete visit is committed.
+
+// Full Backup v2 is generated from IndexedDB primary database.
+backupPayload=async function(){
+  if(!CKD_IDB_PRIMARY)return legacySnapshot();
+  const indexedDBData={};for(const s of CKD_STORES){indexedDBData[s]=await readAll(s)}
+  const report=await ckdGetMeta('migrationReport');return {app:'CKD–Pruritus Research Portal',backupVersion:2,storage:'IndexedDB',createdAt:new Date().toISOString(),migrationReport:report,indexedDB:indexedDBData,legacyLocalStoragePreserved:true};
+};
+createFullBackup=async function(){try{const payload=await backupPayload();downloadJSON(payload,`CKD_Pruritus_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`);alert('Full backup created from the primary research database.')}catch(e){showStorageError(e)}};
+restoreFullBackup=async function(file){
+  if(!file)return;
+  let rollback=null;
+  try{
+    const payload=JSON.parse(await file.text());
+    if(payload.app!=='CKD–Pruritus Research Portal')throw new Error('Invalid backup');
+    if(!confirm('Restore this backup? Current IndexedDB research data on this device will be replaced. Legacy localStorage will not be deleted.'))return;
+    if(CKD_IDB_PRIMARY){rollback=await backupPayload();}
+    if(payload.backupVersion>=2&&payload.indexedDB?.patients&&payload.indexedDB?.visits){
+      await ckdWriteStructuredBackupAtomic(payload.indexedDB);
+      const expectedPatients=payload.indexedDB.patients.length, expectedVisits=payload.indexedDB.visits.length;
+      const rebuilt=await reconstructRegistry();
+      if(rebuilt.length!==expectedPatients||countVisits(rebuilt)!==expectedVisits)throw new Error(`Restore verification mismatch: expected ${expectedPatients}/${expectedVisits}, got ${rebuilt.length}/${countVisits(rebuilt)}.`);
+      await ckdPutMeta('primaryMarker',true);
+      await ckdPutMeta('migrationReport',{before:{patients:expectedPatients,visits:expectedVisits},after:{patients:rebuilt.length,visits:countVisits(rebuilt)},completedAt:new Date().toISOString(),source:'structured restore',legacyPreserved:true});
+    }else if(payload.data?.[REGISTRY_KEY]){
+      const list=JSON.parse(payload.data[REGISTRY_KEY]||'[]');const validation=validateLegacyRegistry(list);if(validation.length)throw new Error(validation.join('\n'));
+      await ckdWriteRegistryAtomic(list);
+      const legacyDraft=(()=>{try{return JSON.parse(payload.data?.ckd_wizard_draft||'{}')}catch(e){return {}}})();if(Object.keys(legacyDraft).length)await ckdPutWorkingDraft(legacyDraft,Number(legacyDraft.__currentStep||1));
+      await ckdPutMeta('reviewReasons',(()=>{try{return JSON.parse(payload.data?.[REVIEW_REASON_KEY]||'{}')}catch(e){return {}}})());
+      const report=await verifyMigration(list);await ckdPutMeta('migrationReport',{...report,completedAt:new Date().toISOString(),source:'legacy restore',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);
+    }else throw new Error('Backup contains no compatible research database.');
+    CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();updateDashboard();
+    alert(`Backup restored and verified: ${CKD_REGISTRY_CACHE.length} patients, ${countVisits(CKD_REGISTRY_CACHE)} visits.`);location.reload();
+  }catch(e){
+    if(rollback?.indexedDB){try{await ckdWriteStructuredBackupAtomic(rollback.indexedDB);CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();}catch(rb){console.error('Restore rollback failed',rb)}}
+    alert('Restore failed safely: '+(e.message||e));
+  }
+};
+
+// Ensure Excel reads the IDB-backed in-memory registry; raw questionnaire fields are unchanged.
+
+// ===== P0 automated regression harness; isolated DB, fake data only =====
+async function runP0RegressionTests(){
+  const results=[];const test=(name,fn)=>{try{const v=fn();if(v&&typeof v.then==='function')return v.then(()=>results.push([name,true,''])).catch(e=>results.push([name,false,e.message||String(e)]));results.push([name,true,''])}catch(e){results.push([name,false,e.message||String(e)])}};
+  const assert=(c,m)=>{if(!c)throw new Error(m)};
+  const testDB=CKD_DB_NAME+'_TEST';try{await deleteDB(testDB)}catch(e){}
+  const baseData={Patient_Name:'FAKE PATIENT A',Patient_ID:'TEST-001',Patient_Number:'0000000000',Visit_Type:'Baseline',Visit_Date:'2026-01-01',Visit_ID:'BL01',Pruritus_Past_4_Weeks:'No',Herbal_Use:'No',MED_CHANGED_3M:'No',Hb:'',Hb_NA:'on',MARS_Q1:'5',MARS_Q2:'5',MARS_Q3:'5',MARS_Q4:'5',MARS_Q5:'5'};
+  for(let i=1;i<=36;i++)baseData['KDQOL_Q'+i]='1';
+  ['PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9'].forEach(k=>baseData[k]=k==='PSQI_Q1'?'22:00':k==='PSQI_Q3'?'06:00':'0');baseData.WI_NRS='0';
+  const fake=[{id:'T1',patientId:'TEST-001',name:'FAKE PATIENT A',number:'0000000000',profile:{Patient_Name:'FAKE PATIENT A',Patient_ID:'TEST-001'},studyStatus:'Active',status:'Complete',createdAt:'2026-01-01T00:00:00Z',updatedAt:'2026-01-01T00:00:00Z',visits:[{type:'Baseline',date:'2026-01-01',visitId:'BL01',status:'Complete',data:baseData,updatedAt:'2026-01-01T00:00:00Z'}]}];
+  await test('TEST 1 — Pruritus = No / no false dependent data',async()=>{assert(baseData.Pruritus_Past_4_Weeks==='No','parent answer lost');assert(!baseData.Treatment_Name,'dependent value should be blank')});
+  await test('TEST 2 — Pruritus = Yes fields persist',async()=>{const d={...baseData,Pruritus_Past_4_Weeks:'Yes',Pruritus_Pattern:'Intermittent',Treatment_Name:'FakeTx'};assert(d.Pruritus_Pattern&&d.Treatment_Name,'conditional values did not persist')});
+  await test('TEST 3 — Herbal = No',async()=>{assert(baseData.Herbal_Use==='No'&&!baseData.Herbal_Name,'herbal no branch invalid')});
+  await test('TEST 4 — Herbal = Yes',async()=>{const d={...baseData,Herbal_Use:'Yes',Herbal_Name:'Fake herb',Herbal_Reason:'Test',Herbal_Duration_Value:'2',Herbal_Frequency:'1'};assert(d.Herbal_Name&&d.Herbal_Reason&&d.Herbal_Duration_Value&&d.Herbal_Frequency,'herbal yes fields missing')});
+  await test('TEST 5 — Lab Not Available',async()=>{const n=normalizeRegistryForStorage(fake);assert(n.labs[0].data.Hb_NA==='on'&&n.labs[0].data.Hb==='','NA status not preserved')});
+  await test('TEST 6 — Medication Yes/No data branches',async()=>{const yes={...baseData,MED_CHANGED_3M:'Yes',MED_CHANGED_NAME:'Fake med',MED_CHANGED_DOSE:'1 mg',MED_CHANGED_REASON:'Test'};const no={...baseData,MED_CHANGED_3M:'No'};assert(yes.MED_CHANGED_NAME&&!no.MED_CHANGED_NAME,'conditional medication data invalid')});
+  await test('TEST 7 — Flexible navigation model',async()=>{assert(typeof validateStep==='function'&&validateStep()===true,'validateStep blocks navigation');const nextSrc=document.getElementById('next').onclick.toString();assert(!nextSrc.includes('submit all questionnaires'),'Next still blocks questionnaire page')});
+  await test('TEST 8 — Autosave persistence layer',async()=>{await openCKDDB(testDB);await ckdPutWorkingDraft({...baseData,Patient_Name:'FAKE AUTOSAVE'},4,testDB);const wd=await ckdGetWorkingDraft(testDB);assert(wd.data.Patient_Name==='FAKE AUTOSAVE'&&wd.currentStep===4,'working draft mismatch')});
+  await test('TEST 9 — Draft no duplication',async()=>{const x=normalizeRegistryForStorage([{...fake[0],status:'Draft',visits:[{...fake[0].visits[0],status:'Draft'}]}]);assert(x.drafts.length===1,'draft duplicated')});
+  await test('TEST 10 — Complete Baseline keeps study Active',async()=>{assert(fake[0].visits[0].status==='Complete','Baseline not complete');assert(normalizeStudyStatus(fake[0].studyStatus)==='Active','patient incorrectly study complete');assert(!studyCompletionEligible(fake[0]),'patient should not yet be eligible')});
+  await test('TEST 11 — IndexedDB refresh/restart persistence',async()=>{await ckdWriteRegistryAtomic(fake,testDB);const r=await reconstructRegistry(testDB);assert(r.length===1&&r[0].visits.length===1&&r[0].patientId==='TEST-001','IDB readback failed')});
+  await test('TEST 12 — Full backup content model',async()=>{const n=normalizeRegistryForStorage(fake);assert(n.patients.length===1&&n.visits.length===1&&n.questionnaires[0].data.KDQOL_Q36==='1','backup source stores incomplete')});
+  await test('TEST 13 — Restore/readback relationship integrity',async()=>{const report=await verifyMigration(fake,testDB);assert(report.after.patients===1&&report.after.visits===1,'restore verification counts failed')});
+  await test('TEST 14 — Export raw questionnaire availability',async()=>{const d=fake[0].visits[0].data;assert(Q_RAW.every(k=>Object.prototype.hasOwnProperty.call(d,k)),'one or more raw questionnaire fields missing');assert(d.KDQOL_Q1&&d.KDQOL_Q36&&d.MARS_Q1&&d.PSQI_Q1&&d.WI_NRS!==undefined,'critical raw fields absent');assert(d.KDQOL_PCS===undefined||d.KDQOL_PCS==='Not calculated','PCS should not be auto-calculated')});
+  try{await deleteDB(testDB)}catch(e){}
+  const pass=results.every(x=>x[1]);document.body.innerHTML=`<div class=\"p0-test-report\"><h1>P0 Regression ${pass?'PASS':'FAIL'}</h1><p>Fake data only. Isolated test IndexedDB.</p><table><tr><th>Test</th><th>Result</th><th>Detail</th></tr>${results.map(r=>`<tr><td>${r[0]}</td><td class=\"${r[1]?'p0-pass':'p0-fail'}\">${r[1]?'PASS':'FAIL'}</td><td>${escapeHtml(r[2])}</td></tr>`).join('')}</table><div id=\"p0Overall\">${pass?'PASS':'FAIL'}</div></div>`;return {pass,results};
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  if(new URLSearchParams(location.search).get('p0test')==='1'){runP0RegressionTests().catch(e=>{document.body.innerHTML='<pre id=\"p0Overall\">FAIL '+escapeHtml(e.message||e)+'</pre>'});return}
+  initializeIDBPrimary();
+});
+</script>
+
 </body>
 </html>

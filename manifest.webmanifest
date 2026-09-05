@@ -1,12 +1,14 @@
 {
   "name": "CKD–Pruritus Research Portal",
-  "short_name": "CKD Portal",
-  "description": "Mobile research portal for CKD–Pruritus patient data collection.",
+  "short_name": "CKD Pruritus",
+  "description": "Offline-first portal for CKD-associated pruritus research visits.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f2ea",
-  "theme_color": "#7d3c98",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f4fa",
+  "theme_color": "#7b3f98",
   "icons": [
     {
       "src": "icon-192.png",
@@ -20,6 +22,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "id": "./"
+  ]
 }
