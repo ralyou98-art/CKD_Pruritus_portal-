@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.63 — Excel Summary Fix</title>
+<title>CKD–Pruritus Research Portal v1.63.2 — Legacy Follow-up Fix</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.63" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.63.2" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -1439,6 +1439,7 @@ function restore(){
     if(el)el.value=todayISO();
   }
   setTimeout(()=>{
+    syncVisitMode?.();
     restoreClinicalDateDisplays?.();
     syncVisitDateDisplay?.();
     updateMedicationChangeVisibility?.();
@@ -1467,8 +1468,20 @@ function reviewFieldLabel(el){
   const label=field?.querySelector('label');
   return (label?.textContent||el.name||'Field').replace(/\s*\*+\s*$/,'').trim();
 }
+function currentVisitType(){
+  return document.querySelector('input[name="Visit_Type"]:checked')?.value || values.Visit_Type || '';
+}
+function isFollowUpVisit(){
+  return /^Follow-up\s+[12]$/.test(currentVisitType());
+}
+function syncVisitMode(){
+  document.body.classList.toggle('followup-mode',isFollowUpVisit());
+}
 function controlIsApplicable(el){
   if(!el||el.disabled||el.type==='hidden'||el.dataset.statusIgnore==='true')return false;
+  // Baseline-fixed data are external for Legacy Baseline patients and must not
+  // block completion of a Follow-up visit when those historical values are blank.
+  if(isFollowUpVisit()&&el.closest('.baseline-fixed'))return false;
   const conditional=el.closest('#pruritusDetails,#herbalDetails,#pruritusTreatmentDetails,#medChangeFields');
   if(conditional&&getComputedStyle(conditional).display==='none')return false;
   if(el.closest('[hidden]'))return false;
@@ -2455,6 +2468,7 @@ async function startFollowUp(id,type){
 
   const radio=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===type);
   if(radio)radio.checked=true;
+  syncVisitMode();
   const vd=document.getElementById('visitDate'); if(vd)vd.value=todayISO();
   updateVisitId(); syncVisitDateDisplay(); restoreClinicalDateDisplays(); calculateClinicalDurations();
   values.Visit_Type=type; values.Visit_Date=vd?.value||todayISO(); values.Visit_ID=document.getElementById('visitId')?.value||'';
@@ -2600,6 +2614,7 @@ updateVisitId();
 
 document.querySelectorAll('input[name="Visit_Type"]').forEach(r=>{
   r.addEventListener('change',()=>{
+    syncVisitMode();
     updateVisitId();
     updateFollowupDashboard();
     ensurePatientId();
@@ -2757,6 +2772,7 @@ async function resumeDraft(id){
     if(document.getElementById('visitId')&&latest.visitId)document.getElementById('visitId').value=latest.visitId;
     syncVisitDateDisplay();
   }
+  syncVisitMode();
 
   try{hydrateMedicationSelection();}catch(e){}
   try{updateConditionalSections();}catch(e){}
@@ -2816,7 +2832,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.63.1';
+  const appVersion='1.63.2';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -3848,7 +3864,7 @@ async function initializeIDBPrimary(){
 }
 function hydrateFormFromValues(){
   Object.entries(values).forEach(([k,v])=>{const els=document.querySelectorAll(`[name=\"${CSS.escape(k)}\"]`);els.forEach(el=>{if(el.type==='radio')el.checked=String(el.value)===String(v);else if(el.type==='checkbox')el.checked=['on','yes','true','1'].includes(String(v).toLowerCase());else el.value=v??''})});
-  restoreClinicalDateDisplays?.();syncVisitDateDisplay?.();updateMedicationChangeVisibility?.();hydrateMedicationSelection?.();syncLabNA?.();updateAllLabRangeFlags?.();updateConditionalSections?.();render?.();
+  syncVisitMode?.();restoreClinicalDateDisplays?.();syncVisitDateDisplay?.();updateMedicationChangeVisibility?.();hydrateMedicationSelection?.();syncLabNA?.();updateAllLabRangeFlags?.();updateConditionalSections?.();render?.();
 }
 function clearLegacyDraftFromUIAfterIDBPrimary(){
   Object.keys(values).forEach(k=>delete values[k]);form.reset();
