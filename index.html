@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.64.2 — Resume Existing Visit Fix</title>
+<title>CKD–Pruritus Research Portal v1.64.3 — Direct IndexedDB Visit Load Fix</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.2" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.3" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -623,7 +623,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.2</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.3</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -2473,70 +2473,126 @@ function inferQuestionnaireCompletionFromLoadedRecord(){
   });
   if(typeof renderQuestionnaireCards==='function') renderQuestionnaireCards();
 }
-function openPatient(id){
+async function openPatient(id){
   const p=getRegistry().find(x=>x.id===id); if(!p)return;
   autosaveSuspended=true;
   clearTimeout(autosaveTimer);
-  resetVisitForm();
-  showFormView();
 
-  values.__patientInternalId=p.id;
-  values.__newPatientSession=false;
+  try{
+    resetVisitForm();
+    showFormView();
 
-  // Open the patient's existing Baseline record, not only the profile.
-  // If no Baseline exists (e.g. legacy/external baseline), fall back to the latest stored visit.
-  const visits=(p.visits||[]).slice();
-  const existingBaseline=visits.find(v=>v.type==='Baseline') || null;
-  const latestVisit=visits.slice().sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')))[0] || null;
+    values.__patientInternalId=p.id;
+    values.__newPatientSession=false;
 
-  // If Baseline is complete, open it as the canonical patient record.
-  // If Baseline is still Draft/Incomplete and a newer visit exists, resume the newest saved visit instead.
-  const baselineComplete=!!existingBaseline && normalizeVisitStatus(existingBaseline.status)==='Complete';
-  const targetVisit=baselineComplete ? existingBaseline : (latestVisit || existingBaseline);
+    // v1.64.3: load the visit directly from IndexedDB instead of relying only on
+    // the in-memory patient cache. Then merge all visit-specific stores by PK.
+    let directVisits=[];
+    if(CKD_IDB_PRIMARY){
+      try{
+        directVisits=(await readAll('visits')).filter(v=>String(v.patientInternalId||'')===String(p.id));
+      }catch(e){console.warn('Direct visit read failed; using registry cache',e)}
+    }
+    if(!directVisits.length){
+      directVisits=(p.visits||[]).map(v=>({
+        pk:`${p.id}::${v.visitId||v.data?.Visit_ID||''}`,
+        patientInternalId:p.id,
+        patientId:p.patientId||p.profile?.Patient_ID||'',
+        visitId:v.visitId||v.data?.Visit_ID||'',
+        type:v.type||v.data?.Visit_Type||'Baseline',
+        date:v.date||v.data?.Visit_Date||'',
+        status:normalizeVisitStatus(v.status),
+        data:v.data||{},
+        updatedAt:v.updatedAt||''
+      }));
+    }
 
-  const recordData={
-    ...(p.profile||{}),
-    ...(targetVisit?.data||{}),
-    Patient_ID:p.patientId||targetVisit?.data?.Patient_ID||p.profile?.Patient_ID||''
-  };
+    const baseline=directVisits.find(v=>v.type==='Baseline')||null;
+    const latest=directVisits.slice().sort((a,b)=>
+      String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''))
+    )[0]||null;
+    const baselineComplete=!!baseline && normalizeVisitStatus(baseline.status)==='Complete';
+    const targetVisit=baselineComplete ? baseline : (latest||baseline);
 
-  applyDataToForm(recordData);
-  values.__patientInternalId=p.id;
-  values.__newPatientSession=false;
+    let visitData={...(targetVisit?.data||{})};
 
-  if(targetVisit){
-    values.Visit_Type=targetVisit.type||recordData.Visit_Type||'';
-    values.Visit_Date=targetVisit.date||recordData.Visit_Date||'';
-    values.Visit_ID=targetVisit.visitId||recordData.Visit_ID||'';
+    if(targetVisit && CKD_IDB_PRIMARY){
+      const pk=targetVisit.pk || `${p.id}::${targetVisit.visitId||targetVisit.data?.Visit_ID||''}`;
+      const visitId=targetVisit.visitId||targetVisit.data?.Visit_ID||'';
+      const stores=['questionnaires','scores','labs','medications','pruritus','reviews'];
+      try{
+        const rows=await Promise.all(stores.map(s=>readAll(s)));
+        rows.forEach(arr=>{
+          const rec=arr.find(x=>String(x.pk||'')===String(pk)) ||
+                    arr.find(x=>String(x.patientId||'')===String(p.id) && String(x.visitId||'')===String(visitId));
+          if(rec?.data) visitData={...visitData,...rec.data};
+        });
 
-    const r=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===values.Visit_Type);
-    if(r)r.checked=true;
-    const vd=document.getElementById('visitDate'); if(vd&&values.Visit_Date)vd.value=values.Visit_Date;
-    const vi=document.getElementById('visitId'); if(vi&&values.Visit_ID)vi.value=values.Visit_ID;
+        // For an unfinished visit, the dedicated draft can contain the newest edits.
+        if(normalizeVisitStatus(targetVisit.status)!=='Complete'){
+          const drafts=await readAll('drafts');
+          const dr=drafts.find(x=>String(x.id||'')===String(pk)) ||
+                   drafts.find(x=>String(x.patientInternalId||'')===String(p.id) && String(x.visitId||'')===String(visitId) && x.id!=='__working__');
+          if(dr?.data) visitData={...visitData,...dr.data};
+        }
+      }catch(e){console.warn('Visit bundle merge skipped',e)}
+    }
+
+    const recordData={
+      ...(p.profile||{}),
+      ...visitData,
+      Patient_ID:p.patientId||visitData.Patient_ID||p.profile?.Patient_ID||''
+    };
+
+    applyDataToForm(recordData);
+    values.__patientInternalId=p.id;
+    values.__newPatientSession=false;
+
+    if(targetVisit){
+      values.Visit_Type=targetVisit.type||recordData.Visit_Type||'';
+      values.Visit_Date=targetVisit.date||recordData.Visit_Date||'';
+      values.Visit_ID=targetVisit.visitId||recordData.Visit_ID||'';
+
+      const r=[...document.querySelectorAll('input[name="Visit_Type"]')].find(x=>x.value===values.Visit_Type);
+      if(r)r.checked=true;
+      const vd=document.getElementById('visitDate'); if(vd&&values.Visit_Date)vd.value=values.Visit_Date;
+      const vi=document.getElementById('visitId'); if(vi&&values.Visit_ID)vi.value=values.Visit_ID;
+    }
+
+    setPatientId(p.patientId||recordData.Patient_ID||'');
+    syncVisitMode();
+    syncVisitDateDisplay?.();
+
+    try{hydrateMedicationSelection();}catch(e){}
+    try{updateConditionalSections();}catch(e){}
+    try{updateMedicationChangeVisibility();}catch(e){}
+    try{restoreClinicalDateDisplays();calculateClinicalDurations();}catch(e){}
+    try{syncLabNA?.();updateAllLabRangeFlags?.();}catch(e){}
+
+    closeRegistry();
+    current=1;
+    values.__currentStep=1;
+
+    // Reflect actually answered questionnaire items on restored/legacy records.
+    try{
+      Object.keys(questionnaireState||{}).forEach(key=>{
+        questionnaireState[key]=(qProgress(key).missing.length===0);
+      });
+      renderQuestionnaireCards?.();
+    }catch(e){}
+
+    updateFollowupDashboard();
+    render();
+    renderPageStatus?.();
+    checkDuplicatePatient?.();
+
+    // Autosave may resume only after the full stored visit bundle is loaded.
+    autosaveSuspended=!targetVisit;
+  }catch(e){
+    autosaveSuspended=true;
+    console.error('Open Patient failed safely',e);
+    alert('Could not safely load the full stored visit. No patient data were changed. Please close this record and try again.');
   }
-
-  setPatientId(p.patientId||recordData.Patient_ID||'');
-  syncVisitMode();
-  syncVisitDateDisplay?.();
-
-  try{hydrateMedicationSelection();}catch(e){}
-  try{updateConditionalSections();}catch(e){}
-  try{updateMedicationChangeVisibility();}catch(e){}
-  try{restoreClinicalDateDisplays();calculateClinicalDurations();}catch(e){}
-  try{syncLabNA?.();updateAllLabRangeFlags?.();}catch(e){}
-
-  closeRegistry();
-  current=1;
-  values.__currentStep=1;
-  inferQuestionnaireCompletionFromLoadedRecord?.();
-  updateFollowupDashboard();
-  render();
-  renderPageStatus?.();
-  checkDuplicatePatient?.();
-
-  // Existing full visits are safe to autosave because the complete stored record was loaded.
-  // Profile-only legacy records remain protected from accidental blank visit creation.
-  autosaveSuspended=!targetVisit;
 }
 
 async function startFollowUp(id,type){

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'ckd-pruritus-v1.64.2';
+const CACHE_VERSION = 'ckd-pruritus-v1.64.3';
 const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 const APP_SHELL = [
   './',
