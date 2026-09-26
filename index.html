@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.63.2 — Legacy Follow-up Fix</title>
+<title>CKD–Pruritus Research Portal v1.64 — Patient Identity Safety Fix</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.63.2" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -623,7 +623,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.49</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -1951,7 +1951,7 @@ function render(){
 
 document.querySelectorAll('input,select,textarea').forEach(el=>{
   el.addEventListener('input',()=>{
-    if(el.name==='Patient_Name'||el.name==='Patient_Number') ensurePatientId();
+    if(el.name==='Patient_Name'||el.name==='Patient_Number'){ ensurePatientId(); checkDuplicatePatient?.(); }
     if(el.id==='otherCkdCause') values.CKD_Cause_Other=el.value;
     if(el.name && Object.values(questionnaireRequired).some(a=>a.includes(el.name))){ const key=Object.keys(questionnaireRequired).find(k=>questionnaireRequired[k].includes(el.name)); if(key) questionnaireState[key]=qProgress(key).missing.length===0; if(key==='mars')calculateMarsTotal(); if(key==='kdqol')renderKDQOLPager(); renderQuestionnaireCards(); }
     persist();calculateClinicalDurations();renderPageStatus();
@@ -2010,7 +2010,7 @@ document.getElementById('deleteInterviewBtn').onclick=async()=>{
   if(!confirm('Delete this unfinished interview and its autosaved draft? Completed visits for the same patient will not be deleted.')) return;
   autosaveSuspended=true;clearTimeout(autosaveTimer);
   const data=currentPatientSnapshot();const pid=(data.Patient_ID||values.Patient_ID||'').trim();const visitId=document.getElementById('visitId')?.value||values.Visit_ID||'';const type=document.querySelector('input[name="Visit_Type"]:checked')?.value||values.Visit_Type||'';
-  const list=getRegistry();const p=list.find(x=>(pid&&(x.patientId===pid||x.profile?.Patient_ID===pid))||x.id===values.__patientInternalId);
+  const list=getRegistry();const p=list.find(x=>x.id===values.__patientInternalId||(pid&&(x.patientId===pid||x.profile?.Patient_ID===pid)));
   if(p){p.visits=(p.visits||[]).filter(v=>!(v.visitId===visitId&&v.type===type&&normalizeVisitStatus(v.status)!=='Complete'));if(!p.visits.length){const i=list.findIndex(x=>x.id===p.id);if(i>=0)list.splice(i,1)}else{p.status=p.visits.some(v=>['Draft','Incomplete'].includes(normalizeVisitStatus(v.status)))?'Draft':'Complete';p.updatedAt=new Date().toISOString()}setRegistry(list)}
   if(CKD_IDB_PRIMARY){await ckdClearWorkingDraft().catch(showStorageError);setReviewReasons({})}else{localStorage.removeItem('ckd_wizard_draft');localStorage.removeItem(REVIEW_REASON_KEY)}
   Object.keys(values).forEach(k=>delete values[k]);form.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{if(el.type==='radio'||el.type==='checkbox')el.checked=false;else if(el.name!=='Visit_Date')el.value=''});setPatientId('');updateDashboard();showDashboardHome();
@@ -2077,16 +2077,34 @@ function setRegistry(list){
   }
 }
 function patientKey(name,number){const n=normalizeText(name),p=(number||'').trim();return p?'num:'+p:(n?'name:'+n:'');}
+// v1.64 — Patient identity must never depend on a partially typed name/number.
+// The key remains useful for duplicate warnings/search, but internal identity is immutable.
+function uniquePatientInternalId(){
+  const used=new Set(getRegistry().map(p=>String(p.id||'')));
+  for(let i=0;i<20;i++){
+    let token='';
+    try{ if(globalThis.crypto?.randomUUID) token=crypto.randomUUID().replace(/-/g,'').slice(0,16); }catch(e){}
+    if(!token) token=Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+    const id='P_'+token.toUpperCase();
+    if(!used.has(id)) return id;
+  }
+  return 'P_'+Date.now().toString(36).toUpperCase()+'_'+Math.random().toString(36).slice(2,12).toUpperCase();
+}
+function currentIdentityPatient(){
+  const iid=String(values.__patientInternalId||'').trim();
+  return iid?getRegistry().find(p=>String(p.id)===iid)||null:null;
+}
 
 updateDashboard();
 render();
 showDashboardHome();
 
 function nextPatientId(){
-  const list=getRegistry();
-  const used=list.map(p=>String(p.patientId||'')).filter(Boolean);
-  let n=1;
-  while(used.includes(`CKD PT ${String(n).padStart(2,'0')}`)) n++;
+  // Never recycle an older portal Study ID. Continue after the highest number ever present.
+  const nums=getRegistry().map(p=>String(p.patientId||p.profile?.Patient_ID||'').trim())
+    .map(id=>id.match(/^CKD\s*PT\s*(\d+)$/i))
+    .filter(Boolean).map(m=>Number(m[1])).filter(Number.isFinite);
+  const n=(nums.length?Math.max(...nums):0)+1;
   return `CKD PT ${String(n).padStart(2,'0')}`;
 }
 function setPatientId(id){
@@ -2097,12 +2115,29 @@ function setPatientId(id){
 function ensurePatientId(){
   const name=(document.querySelector('[name="Patient_Name"]')?.value||'').trim();
   const number=(document.querySelector('[name="Patient_Number"]')?.value||'').trim();
-  if(!name && !number){ setPatientId(''); return; }
   const existingId=(document.querySelector('[name="Patient_ID"]')?.value||values.Patient_ID||'').trim();
-  if(existingId){ setPatientId(existingId); return; }
-  const key=patientKey(name,number);
-  const existing=getRegistry().find(p=>p.key===key);
-  setPatientId(existing?.patientId || nextPatientId());
+  const iid=String(values.__patientInternalId||'').trim();
+
+  // Existing/opened patient: internal ID is authoritative.
+  if(iid){
+    const p=getRegistry().find(x=>String(x.id)===iid);
+    if(p?.patientId){setPatientId(p.patientId);return;}
+    if(existingId){setPatientId(existingId);return;}
+    setPatientId(nextPatientId());return;
+  }
+
+  // Recovery of an old working draft: only an exact Study ID may reattach it.
+  if(existingId){
+    const p=getRegistry().find(x=>String(x.patientId||x.profile?.Patient_ID||'')===existingId);
+    if(p) values.__patientInternalId=p.id;
+    setPatientId(existingId);return;
+  }
+
+  if(!name&&!number){setPatientId('');return;}
+
+  // Brand-new interview: create an immutable identity. Never look up by a partial name.
+  values.__patientInternalId=uniquePatientInternalId();
+  setPatientId(nextPatientId());
 }
 function isLegacyPatient(p){
   return !!p && (p.legacyBaseline===true || /^LEGACY_/i.test(String(p.id||'')) || String(p.profile?.Legacy_Baseline||'').toLowerCase()==='yes');
@@ -2243,28 +2278,48 @@ function registerCurrentPatient(statusOverride){
   const data=currentPatientSnapshot();
   const name=(data.Patient_Name||'').trim(), number=(data.Patient_Number||'').trim();
   if(!name&&!number)return null;
-  const key=patientKey(name,number), list=getRegistry();
-  let p=list.find(x=>x.key===key || (data.Patient_ID && x.patientId===data.Patient_ID));
+  const list=getRegistry();
+  let iid=String(values.__patientInternalId||'').trim();
+  if(!iid){iid=uniquePatientInternalId();values.__patientInternalId=iid;}
+  let p=list.find(x=>String(x.id)===iid)||null;
+
+  // Old-draft compatibility only: attach by exact Study ID when no internal record exists.
+  if(!p && data.Patient_ID){
+    const byStudyId=list.find(x=>String(x.patientId||x.profile?.Patient_ID||'')===String(data.Patient_ID));
+    if(byStudyId && !values.__newPatientSession){p=byStudyId;iid=byStudyId.id;values.__patientInternalId=iid;}
+  }
+
+  let studyId=String(data.Patient_ID||'').trim()||nextPatientId();
+  const collision=list.find(x=>String(x.patientId||x.profile?.Patient_ID||'')===studyId && String(x.id)!==iid);
+  if(collision){
+    // Safety guard: a new/different internal patient can never overwrite an existing Study ID.
+    studyId=nextPatientId();
+    setPatientId(studyId);
+    data.Patient_ID=studyId;
+  }
+
+  const key=patientKey(name,number);
   if(!p){
     p={
-      key,
-      id:'P'+String(Date.now()).slice(-6),
-      patientId:data.Patient_ID||nextPatientId(),
-      name,number,profile:stablePatientProfile(data),visits:[],
-      status:statusOverride||'Draft',
-      studyStatus:'Active',
+      key,id:iid,patientId:studyId,
+      name,number,profile:{...stablePatientProfile(data),Patient_ID:studyId},visits:[],
+      status:statusOverride||'Draft',studyStatus:'Active',
       createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
     };
+    list.unshift(p);
   }else{
-    p.patientId=p.patientId||data.Patient_ID||nextPatientId();
+    p.key=key; // Keep the duplicate/search key current; never use it as identity.
+    p.patientId=p.patientId||studyId;
     p.studyStatus=normalizeStudyStatus(p.studyStatus);
     p.profile={...stablePatientProfile(p.profile||{}),...stablePatientProfile(data),Patient_ID:p.patientId};
     p.name=name||p.name;p.number=number||p.number;
     if(statusOverride)p.status=statusOverride;
     p.updatedAt=new Date().toISOString();
   }
+  values.__patientInternalId=p.id;
+  values.__newPatientSession=false;
   setPatientId(p.patientId);
-  setRegistry(list.includes(p)?list:[p,...list]);
+  setRegistry(list);
   updateDashboard();
   return p;
 }
@@ -2420,14 +2475,12 @@ function inferQuestionnaireCompletionFromLoadedRecord(){
 }
 function openPatient(id){
   const p=getRegistry().find(x=>x.id===id); if(!p)return;
+  autosaveSuspended=true;clearTimeout(autosaveTimer);
+  resetVisitForm();
   showFormView();
-  Object.entries(p.profile||{}).forEach(([name,value])=>{
-    const els=document.querySelectorAll(`[name="${CSS.escape(name)}"]`);
-    els.forEach(el=>{
-      if(el.type==='radio') el.checked=(el.value===value);
-      else el.value=value;
-    });
-  });
+  values.__patientInternalId=p.id;
+  values.__newPatientSession=false;
+  applyDataToForm({...p.profile,Patient_ID:p.patientId||p.profile?.Patient_ID||''});
   setPatientId(p.patientId||p.profile?.Patient_ID||'');
   closeRegistry();
   current=1;
@@ -2435,6 +2488,7 @@ function openPatient(id){
   render();
   inferQuestionnaireCompletionFromLoadedRecord();
   checkDuplicatePatient?.();
+  autosaveSuspended=false;
 }
 
 async function startFollowUp(id,type){
@@ -2461,6 +2515,8 @@ async function startFollowUp(id,type){
   document.body.classList.add('followup-mode');
   closeRegistry();
 
+  values.__patientInternalId=p.id;
+  values.__newPatientSession=false;
   const baseline=completedBaselineData(p) || p.profile || {};
   const carry={...pickFields(baseline,FOLLOWUP_CARRY_FIELDS),Patient_ID:p.patientId||baseline.Patient_ID||''};
   applyDataToForm(carry);
@@ -2631,24 +2687,49 @@ setDefaultVisitDate();
 updateVisitId();
 
 function newPatient(){
-  autosaveSuspended=false;
+  // Freeze autosave while the previous interview is being cleared.
+  autosaveSuspended=true;
   clearTimeout(autosaveTimer);
   if(CKD_IDB_PRIMARY){ckdClearWorkingDraft().catch(showStorageError)}else{localStorage.removeItem('ckd_wizard_draft')}
-  Object.keys(values).forEach(k=>delete values[k]);
+  resetVisitForm();
   showFormView();
   document.body.classList.remove('followup-mode');
   registryFilter='all';
-  document.querySelectorAll('input[name],select[name],textarea[name]').forEach(el=>{
-    if(el.type==='radio'||el.type==='checkbox')el.checked=false;else if(el.name!=='Visit_Date')el.value='';
-  });
+
+  // Allocate a fresh immutable internal identity before the researcher types a name.
+  values.__patientInternalId=uniquePatientInternalId();
+  values.__newPatientSession=true;
+  setPatientId(nextPatientId());
+
   const baseline=document.querySelector('input[name="Visit_Type"][value="Baseline"]');
   if(baseline)baseline.checked=true;
-  if(document.getElementById('visitDate')){document.getElementById('visitDate').value=todayISO();syncVisitDateDisplay();}
+  values.Visit_Type='Baseline';
+  if(document.getElementById('visitDate')){document.getElementById('visitDate').value=todayISO();values.Visit_Date=todayISO();syncVisitDateDisplay();}
   updateVisitId();
-  setPatientId('');
+  values.Visit_ID=document.getElementById('visitId')?.value||'BL01';
   updateFollowupDashboard();
   closeRegistry();current=1;render();checkDuplicatePatient?.();
+  autosaveSuspended=false;
 }
+function checkDuplicatePatient(){
+  const box=document.getElementById('duplicateWarning');
+  const text=document.getElementById('duplicateWarningText');
+  const btn=document.getElementById('openExistingPatient');
+  if(!box||!text||!btn)return;
+  const name=normalizeText(document.querySelector('[name="Patient_Name"]')?.value||'');
+  const number=String(document.querySelector('[name="Patient_Number"]')?.value||'').trim();
+  const iid=String(values.__patientInternalId||'');
+  const match=getRegistry().find(p=>String(p.id)!==iid && (
+    (number && String(p.number||p.profile?.Patient_Number||'').trim()===number) ||
+    (name.length>=2 && normalizeText(p.name||p.profile?.Patient_Name||'')===name)
+  ));
+  if(!match){box.style.display='none';btn.style.display='none';btn.onclick=null;return;}
+  text.textContent=`Existing patient detected: ${match.name||match.profile?.Patient_Name||match.patientId||'patient'} (${match.patientId||match.profile?.Patient_ID||''}). This new interview will NOT overwrite that patient.`;
+  btn.style.display='inline-block';
+  btn.onclick=()=>openPatient(match.id);
+  box.style.display='flex';
+}
+
 const smoking=document.getElementById('smokingStatus');
 const packs=document.getElementById('packsPerDay');
 const packsLabel=document.getElementById('packsLabel');
@@ -2729,10 +2810,11 @@ function renderDrafts(){
   }).join('');
 }
 async function resumeDraft(id){
-  autosaveSuspended=false;
-  clearTimeout(autosaveTimer);
   const p=getRegistry().find(x=>x.id===id);if(!p)return;
+  autosaveSuspended=true;
+  clearTimeout(autosaveTimer);
   closeDraftPanel();showFormView();
+  resetVisitForm();
 
   const latest=effectiveDraftVisits(p)
     .slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0];
@@ -2744,8 +2826,9 @@ async function resumeDraft(id){
     try{
       const wd=await ckdGetWorkingDraft();
       const wdData=wd?.data||{};
-      const samePatient=(wdData.Patient_ID&&String(wdData.Patient_ID)===String(p.patientId||restoredData.Patient_ID||''))
-        || (!!p.key && patientKey(wdData.Patient_Name||'',wdData.Patient_Number||'')===p.key);
+      const samePatient=(wd?.patientInternalId&&String(wd.patientInternalId)===String(p.id))
+        || (wdData.__patientInternalId&&String(wdData.__patientInternalId)===String(p.id))
+        || (wdData.Patient_ID&&String(wdData.Patient_ID)===String(p.patientId||restoredData.Patient_ID||''));
       const sameVisit=!latest || !wdData.Visit_ID || String(wdData.Visit_ID)===String(latest.visitId||'');
       if(samePatient&&sameVisit){
         restoredData={...restoredData,...wdData};
@@ -2756,6 +2839,8 @@ async function resumeDraft(id){
 
   Object.keys(values).forEach(k=>delete values[k]);
   Object.assign(values,restoredData);
+  values.__patientInternalId=p.id;
+  values.__newPatientSession=false;
 
   Object.entries(restoredData).forEach(([name,value])=>{
     document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
@@ -2786,6 +2871,7 @@ async function resumeDraft(id){
 
   if(CKD_IDB_PRIMARY) ckdPutWorkingDraft(values,current).catch(showStorageError);
   else localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+  autosaveSuspended=false;
 }
 async function deleteDraft(id){
   const list=getRegistry();const p=list.find(x=>x.id===id);if(!p)return;
@@ -2832,7 +2918,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.63.2';
+  const appVersion='1.64';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -3795,7 +3881,7 @@ async function ckdWriteRegistryAtomic(list,dbName=CKD_DB_NAME){
 }
 async function ckdPutMeta(key,value,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('meta','readwrite');tx.objectStore('meta').put({key,value,updatedAt:new Date().toISOString()});await txDone(tx)}
 async function ckdGetMeta(key,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('meta','readonly');const v=await reqP(tx.objectStore('meta').get(key));await txDone(tx);return v?.value}
-async function ckdPutWorkingDraft(data,step=current,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').put({id:'__working__',patientInternalId:'',patientId:data.Patient_ID||'',visitId:data.Visit_ID||'',visitType:data.Visit_Type||'',status:'Draft',currentStep:Number(step||1),lastSaved:new Date().toISOString(),data:sanitizeResearchData(data)});await txDone(tx)}
+async function ckdPutWorkingDraft(data,step=current,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').put({id:'__working__',patientInternalId:data.__patientInternalId||values.__patientInternalId||'',patientId:data.Patient_ID||'',visitId:data.Visit_ID||'',visitType:data.Visit_Type||'',status:'Draft',currentStep:Number(step||1),lastSaved:new Date().toISOString(),data:sanitizeResearchData({...data,__patientInternalId:data.__patientInternalId||values.__patientInternalId||''})});await txDone(tx)}
 async function ckdClearWorkingDraft(){if(!CKD_IDB_PRIMARY){localStorage.removeItem('ckd_wizard_draft');return}const db=await openCKDDB();const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').delete('__working__');await txDone(tx)}
 async function ckdGetWorkingDraft(dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('drafts','readonly');const x=await reqP(tx.objectStore('drafts').get('__working__'));await txDone(tx);return x||null}
 async function readAll(store,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction(store,'readonly');const x=await reqP(tx.objectStore(store).getAll());await txDone(tx);return x}
@@ -3809,9 +3895,40 @@ async function ckdWriteStructuredBackupAtomic(indexedDBData,dbName=CKD_DB_NAME){
 async function reconstructRegistry(dbName=CKD_DB_NAME){
   const [patients,visits]=await Promise.all([readAll('patients',dbName),readAll('visits',dbName)]);const vm=new Map();
   visits.forEach(v=>{if(!vm.has(v.patientInternalId))vm.set(v.patientInternalId,[]);vm.get(v.patientInternalId).push({type:v.type,date:v.date,visitId:v.visitId,status:normalizeVisitStatus(v.status),data:v.data,updatedAt:v.updatedAt})});
-  return patients.map(p=>({...p,studyStatus:normalizeStudyStatus(p.studyStatus),visits:(vm.get(p.id)||[]).sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||'')))}));
+  const list=patients.map(p=>({...p,studyStatus:normalizeStudyStatus(p.studyStatus),visits:(vm.get(p.id)||[]).sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||'')))}));
+  repairMutablePatientKeys(list);
+  return list;
 }
 function countVisits(list){return (list||[]).reduce((n,p)=>n+(p.visits||[]).length,0)}
+function repairMutablePatientKeys(list){
+  let changed=false;
+  (list||[]).forEach(p=>{
+    const desired=patientKey(p.name||p.profile?.Patient_Name||'',p.number||p.profile?.Patient_Number||'');
+    if(desired&&p.key!==desired){p.key=desired;changed=true;}
+  });
+  return changed;
+}
+function validateStructuredIdentity(indexedDBData){
+  const errors=[];
+  const patients=Array.isArray(indexedDBData?.patients)?indexedDBData.patients:[];
+  const visits=Array.isArray(indexedDBData?.visits)?indexedDBData.visits:[];
+  const ids=new Set(),studyIds=new Set(),visitPks=new Set();
+  patients.forEach((p,i)=>{
+    const iid=String(p?.id||'').trim();
+    const sid=String(p?.patientId||p?.profile?.Patient_ID||'').trim();
+    if(!iid)errors.push(`Patient ${i+1}: missing internal ID.`);
+    else if(ids.has(iid))errors.push(`Duplicate internal patient ID: ${iid}`);
+    else ids.add(iid);
+    if(sid){if(studyIds.has(sid))errors.push(`Duplicate Study ID: ${sid}`);else studyIds.add(sid);}
+  });
+  visits.forEach((v,i)=>{
+    const iid=String(v?.patientInternalId||'').trim();
+    const pk=String(v?.pk||'').trim();
+    if(!iid||!ids.has(iid))errors.push(`Visit ${i+1}: orphan patientInternalId ${iid||'(blank)'}.`);
+    if(pk){if(visitPks.has(pk))errors.push(`Duplicate visit PK: ${pk}`);else visitPks.add(pk);}
+  });
+  return errors;
+}
 function validateLegacyRegistry(list){
   const errors=[];if(!Array.isArray(list))errors.push('Patient registry is not an array.');
   const ids=new Set(),studyIds=new Set();
@@ -3889,10 +4006,14 @@ restoreFullBackup=async function(file){
     if(!confirm('Restore this backup? Current IndexedDB research data on this device will be replaced. Legacy localStorage will not be deleted.'))return;
     if(CKD_IDB_PRIMARY){rollback=await backupPayload();}
     if(payload.backupVersion>=2&&payload.indexedDB?.patients&&payload.indexedDB?.visits){
+      const identityErrors=validateStructuredIdentity(payload.indexedDB);
+      if(identityErrors.length)throw new Error('Backup identity validation failed before restore:\n'+identityErrors.join('\n'));
       await ckdWriteStructuredBackupAtomic(payload.indexedDB);
       const expectedPatients=payload.indexedDB.patients.length, expectedVisits=payload.indexedDB.visits.length;
       const rebuilt=await reconstructRegistry();
       if(rebuilt.length!==expectedPatients||countVisits(rebuilt)!==expectedVisits)throw new Error(`Restore verification mismatch: expected ${expectedPatients}/${expectedVisits}, got ${rebuilt.length}/${countVisits(rebuilt)}.`);
+      const rebuiltIdentityErrors=validateLegacyRegistry(rebuilt);
+      if(rebuiltIdentityErrors.length)throw new Error('Restored identity verification failed:\n'+rebuiltIdentityErrors.join('\n'));
       await ckdPutMeta('primaryMarker',true);
       await ckdPutMeta('migrationReport',{before:{patients:expectedPatients,visits:expectedVisits},after:{patients:rebuilt.length,visits:countVisits(rebuilt)},completedAt:new Date().toISOString(),source:'structured restore',legacyPreserved:true});
     }else if(payload.data?.[REGISTRY_KEY]){
