@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.64.4 — Safe Existing Record Open Fix</title>
+<title>CKD–Pruritus Research Portal v1.64.6 — Safe Completed Record View</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.4" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.6" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -623,7 +623,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.4</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.6</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -1404,10 +1404,15 @@ function persist(){
     if(!form.querySelector(`input[type="radio"][name="${CSS.escape(name)}"]:checked`)) delete values[name];
   });
   calculateClinicalDurations();
-  if(CKD_IDB_PRIMARY){
-    ckdPutWorkingDraft(values,current).catch(showStorageError);
-  }else{
-    localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+
+  // v1.64.6 — opening a completed record is view-only.
+  // While autosave is suspended, do not create a working draft or touch stored patient data.
+  if(!autosaveSuspended){
+    if(CKD_IDB_PRIMARY){
+      ckdPutWorkingDraft(values,current).catch(showStorageError);
+    }else{
+      localStorage.setItem('ckd_wizard_draft',JSON.stringify(values));
+    }
   }
 
   // Once the patient has an identity, keep the registry draft synchronized with ALL pages.
@@ -2002,6 +2007,7 @@ document.getElementById('next').onclick=()=>{
 document.getElementById('back').onclick=()=>{persist();if(current>1){current--;render();}};
 document.getElementById('reviewBack').onclick=()=>{persist();if(current>1){current--;render();}};
 document.getElementById('saveDraftBtn').onclick=()=>{
+  autosaveSuspended=false;
   persist();
   savePatientRecord('Draft');
   alert('Draft saved successfully.');
@@ -2022,6 +2028,7 @@ document.getElementById('saveReviewBtn').onclick=()=>{
   savePatientRecord(status);
 };
 document.getElementById('completeBtn').onclick=async()=>{
+  autosaveSuspended=false;
   persist();
   const missing=reviewMissingFields();
   if(missing.length){
@@ -2524,35 +2531,51 @@ async function openPatient(id){
     });
     const targetVisit=rankedVisits[0]||null;
 
-    let visitData={...(targetVisit?.data||{})};
+    // v1.64.5: Follow-up records inherit fixed values from Baseline.
+    const baselineVisit=rankedVisits.find(v=>v.type==='Baseline') || null;
+    let visitData={};
+
+    const mergeNonBlank=(src)=>{
+      Object.entries(src||{}).forEach(([k,val])=>{
+        if(nonBlankValue(val)) visitData[k]=val;
+      });
+    };
+
+    // Baseline is the foundation for demographics + fixed CKD/HD fields.
+    if(baselineVisit) mergeNonBlank(baselineVisit.data||{});
+    // The selected visit overlays Baseline, but blank Follow-up fields never erase it.
+    if(targetVisit) mergeNonBlank(targetVisit.data||{});
 
     if(targetVisit && CKD_IDB_PRIMARY){
-      const pk=targetVisit.pk || `${p.id}::${targetVisit.visitId||targetVisit.data?.Visit_ID||''}`;
-      const visitId=targetVisit.visitId||targetVisit.data?.Visit_ID||'';
       const stores=['questionnaires','scores','labs','medications','pruritus','reviews'];
       try{
         const rows=await Promise.all(stores.map(s=>readAll(s)));
-        rows.forEach(arr=>{
-          const rec=arr.find(x=>String(x.pk||'')===String(pk)) ||
-                    arr.find(x=>String(x.patientId||'')===String(p.id) && String(x.visitId||'')===String(visitId));
-          if(rec?.data){
-            // Blank auxiliary values must never erase populated visit data.
-            Object.entries(rec.data).forEach(([k,val])=>{
-              if(nonBlankValue(val)) visitData[k]=val;
-            });
-          }
-        });
 
-        // For an unfinished visit, the dedicated draft can contain the newest edits.
+        const mergeStoreBundle=(visit)=>{
+          if(!visit) return;
+          const pk=visit.pk || `${p.id}::${visit.visitId||visit.data?.Visit_ID||''}`;
+          const visitId=visit.visitId||visit.data?.Visit_ID||'';
+          rows.forEach(arr=>{
+            const rec=arr.find(x=>String(x.pk||'')===String(pk)) ||
+                      arr.find(x=>String(x.patientId||'')===String(p.id) && String(x.visitId||'')===String(visitId));
+            if(rec?.data) mergeNonBlank(rec.data);
+          });
+        };
+
+        // Merge Baseline auxiliary data first, then the selected visit.
+        if(baselineVisit) mergeStoreBundle(baselineVisit);
+        if(targetVisit && (!baselineVisit || targetVisit.pk!==baselineVisit.pk)){
+          mergeStoreBundle(targetVisit);
+        }
+
+        // Draft data are used only for an unfinished selected visit.
         if(normalizeVisitStatus(targetVisit.status)!=='Complete'){
+          const pk=targetVisit.pk || `${p.id}::${targetVisit.visitId||targetVisit.data?.Visit_ID||''}`;
+          const visitId=targetVisit.visitId||targetVisit.data?.Visit_ID||'';
           const drafts=await readAll('drafts');
           const dr=drafts.find(x=>String(x.id||'')===String(pk)) ||
                    drafts.find(x=>String(x.patientInternalId||'')===String(p.id) && String(x.visitId||'')===String(visitId) && x.id!=='__working__');
-          if(dr?.data){
-            Object.entries(dr.data).forEach(([k,val])=>{
-              if(nonBlankValue(val)) visitData[k]=val;
-            });
-          }
+          if(dr?.data) mergeNonBlank(dr.data);
         }
       }catch(e){console.warn('Visit bundle merge skipped',e)}
     }
@@ -2605,8 +2628,9 @@ async function openPatient(id){
     renderPageStatus?.();
     checkDuplicatePatient?.();
 
-    // Autosave may resume only after the full stored visit bundle is loaded.
-    autosaveSuspended=!targetVisit;
+    // Completed records open in safe view mode and must never create a Draft merely by being opened.
+    // Draft/Incomplete records remain resumable with normal autosave.
+    autosaveSuspended = !targetVisit || normalizeVisitStatus(targetVisit.status)==='Complete';
   }catch(e){
     autosaveSuspended=true;
     console.error('Open Patient failed safely',e);
