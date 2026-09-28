@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.64.3 — Direct IndexedDB Visit Load Fix</title>
+<title>CKD–Pruritus Research Portal v1.64.4 — Safe Existing Record Open Fix</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.3" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.4" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -623,7 +623,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.3</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.4</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -2507,12 +2507,22 @@ async function openPatient(id){
       }));
     }
 
-    const baseline=directVisits.find(v=>v.type==='Baseline')||null;
-    const latest=directVisits.slice().sort((a,b)=>
-      String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''))
-    )[0]||null;
-    const baselineComplete=!!baseline && normalizeVisitStatus(baseline.status)==='Complete';
-    const targetVisit=baselineComplete ? baseline : (latest||baseline);
+    const nonBlankValue=v=>!(v===undefined||v===null||v===''||(Array.isArray(v)&&v.length===0));
+    const visitRichness=v=>Object.entries(v?.data||{}).reduce((n,[k,val])=>{
+      if(k.startsWith('__')||['Patient_ID','Visit_ID','Visit_Type','Visit_Date'].includes(k)) return n;
+      return n+(nonBlankValue(val)?1:0);
+    },0);
+    const rankedVisits=directVisits.slice().sort((a,b)=>{
+      const ac=normalizeVisitStatus(a.status)==='Complete'?1:0;
+      const bc=normalizeVisitStatus(b.status)==='Complete'?1:0;
+      if(ac!==bc) return bc-ac;                         // Complete always beats Draft
+      const ar=visitRichness(a), br=visitRichness(b);
+      if(ar!==br) return br-ar;                         // richer record beats sparse record
+      const abase=a.type==='Baseline'?1:0, bbase=b.type==='Baseline'?1:0;
+      if(abase!==bbase) return bbase-abase;             // tie: prefer Baseline
+      return String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''));
+    });
+    const targetVisit=rankedVisits[0]||null;
 
     let visitData={...(targetVisit?.data||{})};
 
@@ -2525,7 +2535,12 @@ async function openPatient(id){
         rows.forEach(arr=>{
           const rec=arr.find(x=>String(x.pk||'')===String(pk)) ||
                     arr.find(x=>String(x.patientId||'')===String(p.id) && String(x.visitId||'')===String(visitId));
-          if(rec?.data) visitData={...visitData,...rec.data};
+          if(rec?.data){
+            // Blank auxiliary values must never erase populated visit data.
+            Object.entries(rec.data).forEach(([k,val])=>{
+              if(nonBlankValue(val)) visitData[k]=val;
+            });
+          }
         });
 
         // For an unfinished visit, the dedicated draft can contain the newest edits.
@@ -2533,7 +2548,11 @@ async function openPatient(id){
           const drafts=await readAll('drafts');
           const dr=drafts.find(x=>String(x.id||'')===String(pk)) ||
                    drafts.find(x=>String(x.patientInternalId||'')===String(p.id) && String(x.visitId||'')===String(visitId) && x.id!=='__working__');
-          if(dr?.data) visitData={...visitData,...dr.data};
+          if(dr?.data){
+            Object.entries(dr.data).forEach(([k,val])=>{
+              if(nonBlankValue(val)) visitData[k]=val;
+            });
+          }
         }
       }catch(e){console.warn('Visit bundle merge skipped',e)}
     }
