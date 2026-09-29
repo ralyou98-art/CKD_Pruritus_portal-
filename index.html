@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.64.6 — Safe Completed Record View</title>
+<title>CKD–Pruritus Research Portal v1.64.7 — Legacy Display Compatibility</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.6" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.7" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -623,7 +623,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.6</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.7</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -2269,9 +2269,56 @@ function resetVisitForm(){
   try{updateMedicationChangeVisibility()}catch(e){}
   try{updateConditionalSections()}catch(e){}
 }
+function normalizeLegacyFormData(data){
+  const out={...(data||{})};
+  const map={
+    Center:{
+      'مركز مدينة الطب للكلية الاصطناعية - مستشفى بغداد':'مركز مستشفى بغداد لغسل الكلى'
+    },
+    Employment_Status:{
+      'Unemployed':'Not employed',
+      'Homemaker':'Not employed'
+    },
+    CKD_Cause:{
+      'Diabetic nephropathy':'Diabetes Mellitus',
+      'Hypertensive nephropathy':'Hypertension',
+      'Polycystic kidney disease':'Polycystic Kidney Disease (PKD)'
+    },
+    Pruritus_Duration_Unit:{Days:'Day',Months:'Month',Years:'Year'},
+    Pruritus_Treatment_Duration_Unit:{Days:'Day',Months:'Month',Years:'Year'},
+    Herbal_Duration_Unit:{Days:'Day',Months:'Month',Years:'Year'}
+  };
+  Object.entries(map).forEach(([field,m])=>{
+    if(Object.prototype.hasOwnProperty.call(m,String(out[field]??''))) out[field]=m[String(out[field])];
+  });
+
+  // Preserve legacy causes that no longer have a dedicated dropdown option.
+  if(out.CKD_Cause==='Congenital disease' || out.CKD_Cause==='Unknown'){
+    const old=out.CKD_Cause;
+    out.CKD_Cause='Other';
+    if(!String(out.CKD_Cause_Other||'').trim()) out.CKD_Cause_Other=old;
+  }
+
+  // Older questionnaire builds stored the visible answer text.
+  // Current builds store numeric radio codes. Convert by the CURRENT visible label
+  // so the meaning is preserved without hard-coding the questionnaire wording.
+  const normText=s=>String(s??'').trim().replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase();
+  Object.keys(out).forEach(name=>{
+    const radios=[...document.querySelectorAll(`input[type="radio"][name="${CSS.escape(name)}"]`)];
+    if(!radios.length) return;
+    const value=String(out[name]??'');
+    if(radios.some(r=>String(r.value)===value)) return;
+    const wanted=normText(value);
+    const match=radios.find(r=>normText(r.closest('label')?.innerText||r.parentElement?.innerText||'')===wanted);
+    if(match) out[name]=match.value;
+  });
+  return out;
+}
+
 function applyDataToForm(data){
-  Object.assign(values,data||{});
-  Object.entries(data||{}).forEach(([name,value])=>{
+  const normalized=normalizeLegacyFormData(data||{});
+  Object.assign(values,normalized);
+  Object.entries(normalized).forEach(([name,value])=>{
     document.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(el=>{
       if(el.type==='radio')el.checked=(String(el.value)===String(value));
       else if(el.type==='checkbox')el.checked=['on','yes','true','1'].includes(String(value).toLowerCase());
@@ -2580,10 +2627,12 @@ async function openPatient(id){
       }catch(e){console.warn('Visit bundle merge skipped',e)}
     }
 
+    // Patient profile is the authoritative source for stable identity/demographic fields.
+    // This prevents older visit snapshots from re-introducing obsolete Center/Employment labels.
     const recordData={
-      ...(p.profile||{}),
       ...visitData,
-      Patient_ID:p.patientId||visitData.Patient_ID||p.profile?.Patient_ID||''
+      ...(p.profile||{}),
+      Patient_ID:p.patientId||p.profile?.Patient_ID||visitData.Patient_ID||''
     };
 
     applyDataToForm(recordData);
@@ -2606,6 +2655,7 @@ async function openPatient(id){
     syncVisitDateDisplay?.();
 
     try{hydrateMedicationSelection();}catch(e){}
+    try{updateSmoking?.();}catch(e){}
     try{updateConditionalSections();}catch(e){}
     try{updateMedicationChangeVisibility();}catch(e){}
     try{restoreClinicalDateDisplays();calculateClinicalDurations();}catch(e){}
