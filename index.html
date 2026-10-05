@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.64.7 — Legacy Display Compatibility</title>
+<title>CKD–Pruritus Research Portal v1.64.8 — IndexedDB Rescue Safety</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.7" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.8" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -623,7 +623,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.7</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.8</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -4068,12 +4068,15 @@ function normalizeRegistryForStorage(list){
   return out;
 }
 async function ckdWriteRegistryAtomic(list,dbName=CKD_DB_NAME){
-  const db=await openCKDDB(dbName);const norm=normalizeRegistryForStorage(list);const stores=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews'];
+  const db=await openCKDDB(dbName);const norm=normalizeRegistryForStorage(list);const dataStores=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews'];
   let working=null;try{working=await ckdGetWorkingDraft(dbName)}catch(e){}
-  const tx=db.transaction(stores,'readwrite');
-  stores.forEach(s=>tx.objectStore(s).clear());
-  stores.forEach(s=>norm[s].forEach(x=>tx.objectStore(s).put(x)));
+  // v1.64.8 safety: persist the primary marker in the SAME transaction as research data.
+  // Never clear the meta store during an ordinary registry rewrite.
+  const tx=db.transaction([...dataStores,'meta'],'readwrite');
+  dataStores.forEach(s=>tx.objectStore(s).clear());
+  dataStores.forEach(s=>norm[s].forEach(x=>tx.objectStore(s).put(x)));
   if(working)tx.objectStore('drafts').put(working);
+  tx.objectStore('meta').put({key:'primaryMarker',value:true,updatedAt:new Date().toISOString()});
   await txDone(tx);return norm;
 }
 async function ckdPutMeta(key,value,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('meta','readwrite');tx.objectStore('meta').put({key,value,updatedAt:new Date().toISOString()});await txDone(tx)}
@@ -4086,6 +4089,8 @@ async function ckdWriteStructuredBackupAtomic(indexedDBData,dbName=CKD_DB_NAME){
   const db=await openCKDDB(dbName);const tx=db.transaction(CKD_STORES,'readwrite');
   CKD_STORES.forEach(s=>tx.objectStore(s).clear());
   CKD_STORES.forEach(s=>(indexedDBData?.[s]||[]).forEach(x=>tx.objectStore(s).put(cloneData(x))));
+  // v1.64.8 safety: marker is committed atomically with the restored database.
+  tx.objectStore('meta').put({key:'primaryMarker',value:true,updatedAt:new Date().toISOString()});
   await txDone(tx);
 }
 
@@ -4170,10 +4175,39 @@ async function initializeIDBPrimary(){
   try{
     await openCKDDB();const marker=await ckdGetMeta('primaryMarker');
     if(marker){CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();const wd=await ckdGetWorkingDraft();if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}updateDashboard();renderDashboardSearch?.();renderPageStatus?.();return}
+
+    // v1.64.8 rescue guard: a missing marker does NOT mean IndexedDB is empty.
+    // Inspect the database before any initialization write. Existing research rows are
+    // preserved and reattached to primary mode instead of being cleared.
+    const existing={};
+    for(const s of CKD_STORES){existing[s]=await readAll(s)}
+    const patientCount=existing.patients.length;
+    const visitCount=existing.visits.length;
+    const nonMetaRows=CKD_STORES.filter(s=>s!=='meta').reduce((n,s)=>n+existing[s].length,0);
+    if(nonMetaRows>0){
+      if(patientCount===0 && visitCount>0){
+        throw new Error(`Recovery safeguard stopped automatic initialization: ${visitCount} visit rows exist but the patient store is empty. No research store was cleared. Export/rescue is required before continuing.`);
+      }
+      if(patientCount>0){
+        CKD_REGISTRY_CACHE=await reconstructRegistry();
+        CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};
+        await ckdPutMeta('primaryMarker',true);
+        await ckdPutMeta('recoveryReport',{recoveredAt:new Date().toISOString(),reason:'primaryMarker missing while IndexedDB contained research rows',patients:patientCount,visits:visitCount,nonMetaRows});
+        CKD_IDB_PRIMARY=true;
+        reconcileSupersededDraftsInRegistry();
+        const wd=await ckdGetWorkingDraft();
+        if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}
+        updateDashboard();renderDashboardSearch?.();renderPageStatus?.();
+        alert(`Recovery safeguard restored access to the existing local database: ${patientCount} patients and ${visitCount} visits. Please create a Full Backup now.`);
+        return;
+      }
+      throw new Error('Recovery safeguard found IndexedDB research rows without patient records. No data were cleared.');
+    }
+
     const c=migrationCounts();const hasLegacy=c.patients>0||c.visits>0||!!localStorage.getItem('ckd_wizard_draft');
     if(hasLegacy){showMigrationModal();return}
-    // Empty installation: initialize verified empty IndexedDB without destructive legacy changes.
-    await ckdWriteRegistryAtomic([]);await ckdPutMeta('reviewReasons',{});await ckdPutMeta('migrationReport',{before:{patients:0,visits:0},after:{patients:0,visits:0},completedAt:new Date().toISOString(),source:'empty initialization',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);CKD_REGISTRY_CACHE=[];CKD_REVIEW_CACHE={};CKD_IDB_PRIMARY=true;updateDashboard();
+    // Truly empty installation only. At this point all research stores were verified empty.
+    await ckdWriteRegistryAtomic([]);await ckdPutMeta('reviewReasons',{});await ckdPutMeta('migrationReport',{before:{patients:0,visits:0},after:{patients:0,visits:0},completedAt:new Date().toISOString(),source:'verified empty initialization',legacyPreserved:true});CKD_REGISTRY_CACHE=[];CKD_REVIEW_CACHE={};CKD_IDB_PRIMARY=true;updateDashboard();
   }catch(e){showStorageError(e)}
 }
 function hydrateFormFromValues(){
