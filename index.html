@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.64.8 — IndexedDB Rescue Safety</title>
+<title>CKD–Pruritus Research Portal v1.65.0 — External Backup Guard</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.64.8" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.65.0" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -611,6 +611,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
     <button class="menu-item" type="button" onclick="createFullBackup();closeSideMenu()"><span class="menu-icon">⤓</span><span>Backup Data</span></button>
     <button class="menu-item" type="button" onclick="document.getElementById('restoreBackupInput').click();closeSideMenu()"><span class="menu-icon">⤒</span><span>Restore Backup</span></button>
     <input id="restoreBackupInput" type="file" accept="application/json,.json" style="display:none" onchange="restoreFullBackup(this.files[0]);this.value=''">
+    <button class="menu-item" type="button" onclick="showSafetyVaultStatus();closeSideMenu()"><span class="menu-icon">🛡</span><span>Data Safety Vault</span></button>
 
     <div class="menu-spacer"></div>
     <div class="menu-section-label">App</div>
@@ -623,7 +624,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.64.8</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.65.0</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -2006,11 +2007,16 @@ document.getElementById('next').onclick=()=>{
 };
 document.getElementById('back').onclick=()=>{persist();if(current>1){current--;render();}};
 document.getElementById('reviewBack').onclick=()=>{persist();if(current>1){current--;render();}};
-document.getElementById('saveDraftBtn').onclick=()=>{
+document.getElementById('saveDraftBtn').onclick=async()=>{
   autosaveSuspended=false;
   persist();
   savePatientRecord('Draft');
-  alert('Draft saved successfully.');
+  const externalCopy=downloadCacheSafetyBackup('draft');
+  try{
+    await ckdFlushRegistryNow();
+    await ckdVaultSaveSnapshotFromData(await ckdRawPrimaryData(),'explicit Save Draft');
+    alert(externalCopy?'Draft saved and verified. An external safety backup was downloaded.':'Draft saved and verified, but the external safety download was blocked. Please use Full Backup now.');
+  }catch(e){showStorageError(e)}
 };
 document.getElementById('deleteInterviewBtn').onclick=async()=>{
   if(!confirm('Delete this unfinished interview and its autosaved draft? Completed visits for the same patient will not be deleted.')) return;
@@ -2041,13 +2047,18 @@ document.getElementById('completeBtn').onclick=async()=>{
   values.Completed_At=new Date().toISOString();
   persist();
   savePatientRecord('Complete',true);
-  if(CKD_IDB_PRIMARY){await ckdClearWorkingDraft().catch(showStorageError)}else{localStorage.removeItem('ckd_wizard_draft')}
-  updateDashboard();
-  alert('Visit completed and moved out of Draft.');
-  Object.keys(values).forEach(k=>delete values[k]);
-  form.reset();
-  autosaveSuspended=false;
-  showDashboardHome();
+  const externalCopy=downloadCacheSafetyBackup('complete');
+  try{
+    await ckdFlushRegistryNow();
+    await ckdVaultSaveSnapshotFromData(await ckdRawPrimaryData(),'visit completed');
+    if(CKD_IDB_PRIMARY){await ckdClearWorkingDraft()}else{localStorage.removeItem('ckd_wizard_draft')}
+    updateDashboard();
+    alert(externalCopy?'Visit completed, verified, and an external safety backup was downloaded.':'Visit completed and verified, but the external safety download was blocked. Please create a Full Backup now.');
+    Object.keys(values).forEach(k=>delete values[k]);
+    form.reset();
+    autosaveSuspended=false;
+    showDashboardHome();
+  }catch(e){autosaveSuspended=false;showStorageError(e)}
 };
 function goHome(){if(confirm('Leave this form? Your draft remains saved in this browser.'))location.reload();}
 restore();
@@ -3115,7 +3126,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.64';
+  const appVersion='1.65.0';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -4022,6 +4033,83 @@ document.addEventListener('change',function(e){
 const CKD_DB_NAME='CKD_Pruritus_Research_DB';
 const CKD_DB_VERSION=1;
 const CKD_STORES=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews','meta'];
+
+/* ===== v1.65.0 Safety Vault + external backup guard =====
+   A second, append-only IndexedDB database keeps rotating snapshots of the
+   primary research database. Ordinary portal writes never clear the vault.
+   This protects against accidental application-level rewrites of the primary DB.
+   It does NOT replace an external Full Backup: clearing browser/site storage or
+   losing the device can remove both local databases. */
+const CKD_VAULT_DB_NAME='CKD_Pruritus_Recovery_Vault';
+const CKD_VAULT_DB_VERSION=1;
+const CKD_VAULT_KEEP=18;
+let CKD_VAULT_DB=null;
+let CKD_VAULT_BUSY=false;
+
+async function openCKDVaultDB(){
+  if(CKD_VAULT_DB)return CKD_VAULT_DB;
+  CKD_VAULT_DB=await new Promise((res,rej)=>{
+    const r=indexedDB.open(CKD_VAULT_DB_NAME,CKD_VAULT_DB_VERSION);
+    r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('snapshots'))d.createObjectStore('snapshots',{keyPath:'id'});if(!d.objectStoreNames.contains('meta'))d.createObjectStore('meta',{keyPath:'key'})};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('Safety Vault database is blocked by another open tab.'));
+  });
+  return CKD_VAULT_DB;
+}
+async function ckdRawPrimaryData(dbName=CKD_DB_NAME){
+  const data={};for(const store of CKD_STORES)data[store]=await readAll(store,dbName);return data;
+}
+function ckdRawCounts(data){return {patients:(data?.patients||[]).length,visits:(data?.visits||[]).length,drafts:(data?.drafts||[]).filter(x=>x?.id!=='__working__').length}}
+async function ckdVaultSaveSnapshotFromData(data,reason='automatic safety snapshot'){
+  if(CKD_VAULT_BUSY)return null;
+  const counts=ckdRawCounts(data);if(!counts.patients&&!counts.visits)return null;
+  CKD_VAULT_BUSY=true;
+  try{
+    const db=await openCKDVaultDB();const now=new Date().toISOString();
+    const id=now+'-'+Math.random().toString(36).slice(2,8);
+    const tx=db.transaction(['snapshots','meta'],'readwrite');
+    tx.objectStore('snapshots').put({id,createdAt:now,reason,counts,indexedDB:cloneData(data)});
+    tx.objectStore('meta').put({key:'everHadResearchData',value:true,updatedAt:now});
+    await txDone(tx);
+    const rtx=db.transaction('snapshots','readonly');const rows=await reqP(rtx.objectStore('snapshots').getAll());await txDone(rtx);
+    rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+    const stale=rows.slice(CKD_VAULT_KEEP);
+    if(stale.length){const dtx=db.transaction('snapshots','readwrite');for(const old of stale)dtx.objectStore('snapshots').delete(old.id);await txDone(dtx)}
+    return id;
+  }finally{CKD_VAULT_BUSY=false}
+}
+async function ckdVaultSnapshotPrimary(reason='before primary database rewrite'){
+  try{return await ckdVaultSaveSnapshotFromData(await ckdRawPrimaryData(),reason)}catch(e){console.error('Safety Vault snapshot failed',e);throw new Error('Safety Vault could not create a protective snapshot. The database write was stopped. '+(e.message||e))}
+}
+async function ckdVaultLatestSnapshot(){
+  const db=await openCKDVaultDB();const tx=db.transaction('snapshots','readonly');const rows=await reqP(tx.objectStore('snapshots').getAll());await txDone(tx);
+  rows.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));return rows[0]||null;
+}
+async function ckdVaultSnapshotCount(){const db=await openCKDVaultDB();const tx=db.transaction('snapshots','readonly');const n=await reqP(tx.objectStore('snapshots').count());await txDone(tx);return n}
+async function requestPersistentStorage(){
+  try{if(!navigator.storage?.persist)return false;let yes=await navigator.storage.persisted();if(!yes)yes=await navigator.storage.persist();return !!yes}catch(e){return false}
+}
+async function showSafetyVaultStatus(){
+  try{
+    const latest=await ckdVaultLatestSnapshot();const n=await ckdVaultSnapshotCount();const persistent=await requestPersistentStorage();
+    const live=ckdRawCounts(await ckdRawPrimaryData());
+    if(!latest){alert(`Data Safety Vault is active.\nCurrent database: ${live.patients} patients, ${live.visits} visits.\nNo recovery snapshot exists yet; one will be created before the next database rewrite.\nPersistent storage: ${persistent?'enabled':'not guaranteed by this browser'}.\n\nKeep making external Full Backups after every collection day.`);return}
+    const when=new Date(latest.createdAt).toLocaleString();
+    if(confirm(`Data Safety Vault is active.\n\nCurrent database: ${live.patients} patients, ${live.visits} visits.\nLocal recovery snapshots: ${n}.\nLatest snapshot: ${latest.counts.patients} patients, ${latest.counts.visits} visits (${when}).\nPersistent storage: ${persistent?'enabled':'not guaranteed by this browser'}.\n\nPress OK only if you want to RECOVER the latest local safety snapshot. Press Cancel to leave everything unchanged.`)){
+      await recoverLatestSafetySnapshot(latest);
+    }
+  }catch(e){showStorageError(e)}
+}
+async function recoverLatestSafetySnapshot(snapshot=null){
+  const snap=snapshot||await ckdVaultLatestSnapshot();if(!snap){alert('No Safety Vault snapshot is available.');return}
+  const current=await ckdRawPrimaryData();await ckdVaultSaveSnapshotFromData(current,'before manual Safety Vault recovery');
+  await ckdWriteStructuredBackupAtomic(snap.indexedDB,CKD_DB_NAME,true);
+  const rebuilt=await reconstructRegistry();
+  const got={patients:rebuilt.length,visits:countVisits(rebuilt)};
+  if(got.patients!==snap.counts.patients||got.visits!==snap.counts.visits)throw new Error(`Safety Vault verification mismatch: expected ${snap.counts.patients}/${snap.counts.visits}, got ${got.patients}/${got.visits}.`);
+  await ckdPutMeta('primaryMarker',true);await ckdPutMeta('vaultRecoveryReport',{recoveredAt:new Date().toISOString(),snapshotAt:snap.createdAt,counts:got});
+  alert(`Safety snapshot recovered and verified: ${got.patients} patients, ${got.visits} visits.`);location.reload();
+}
+
 const Q_RAW=['WI_NRS','MARS_Q1','MARS_Q2','MARS_Q3','MARS_Q4','MARS_Q5',...Array.from({length:36},(_,i)=>`KDQOL_Q${i+1}`),'PSQI_Q1','PSQI_Q2','PSQI_Q3','PSQI_Q4','PSQI_Q5a','PSQI_Q5b','PSQI_Q5c','PSQI_Q5d','PSQI_Q5e','PSQI_Q5f','PSQI_Q5g','PSQI_Q5h','PSQI_Q5i','PSQI_Q5j','PSQI_Q5j_text','PSQI_Q6','PSQI_Q7','PSQI_Q8','PSQI_Q9'];
 const SCORE_KEYS=['WI_NRS_Category','Severe_Pruritus','MARS_Total','PSQI_C1','PSQI_C2','PSQI_C3','PSQI_C4','PSQI_C5','PSQI_C6','PSQI_C7','PSQI_Global','PSQI_Sleep_Category','KDQOL_Burden','KDQOL_Symptoms','KDQOL_Effects','KDQOL_PCS','KDQOL_MCS','KDQOL_KSS'];
 const LAB_KEYS=['Last_Lab_Date','Hb','Hb_NA','Albumin','Albumin_NA','Urea','Urea_NA','Post_Urea','Post_Urea_NA','Serum_Creatinine','Serum_Creatinine_NA','Sodium','Sodium_NA','Potassium','Potassium_NA','Phosphate','Phosphate_NA','Calcium','Calcium_NA','PTH','PTH_NA','Vit_D3','Vit_D3_NA','Ferritin','Ferritin_NA','Iron','Iron_NA'];
@@ -4070,8 +4158,14 @@ function normalizeRegistryForStorage(list){
 async function ckdWriteRegistryAtomic(list,dbName=CKD_DB_NAME){
   const db=await openCKDDB(dbName);const norm=normalizeRegistryForStorage(list);const dataStores=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews'];
   let working=null;try{working=await ckdGetWorkingDraft(dbName)}catch(e){}
-  // v1.64.8 safety: persist the primary marker in the SAME transaction as research data.
-  // Never clear the meta store during an ordinary registry rewrite.
+  if(dbName===CKD_DB_NAME){
+    const before=ckdRawCounts(await ckdRawPrimaryData(dbName));
+    const after={patients:norm.patients.length,visits:norm.visits.length,drafts:norm.drafts.length};
+    // Never allow an ordinary UI rewrite to turn a populated research database into an empty one.
+    if((before.patients>0&&after.patients===0)||(before.visits>10&&after.visits===0))throw new Error(`Safety lock blocked a destructive rewrite (${before.patients}/${before.visits} -> ${after.patients}/${after.visits}). No research data were changed.`);
+    await ckdVaultSnapshotPrimary('before ordinary registry rewrite');
+  }
+  // Persist marker in the SAME transaction as research data. Never clear meta during ordinary rewrites.
   const tx=db.transaction([...dataStores,'meta'],'readwrite');
   dataStores.forEach(s=>tx.objectStore(s).clear());
   dataStores.forEach(s=>norm[s].forEach(x=>tx.objectStore(s).put(x)));
@@ -4085,11 +4179,16 @@ async function ckdPutWorkingDraft(data,step=current,dbName=CKD_DB_NAME){const db
 async function ckdClearWorkingDraft(){if(!CKD_IDB_PRIMARY){localStorage.removeItem('ckd_wizard_draft');return}const db=await openCKDDB();const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').delete('__working__');await txDone(tx)}
 async function ckdGetWorkingDraft(dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction('drafts','readonly');const x=await reqP(tx.objectStore('drafts').get('__working__'));await txDone(tx);return x||null}
 async function readAll(store,dbName=CKD_DB_NAME){const db=await openCKDDB(dbName);const tx=db.transaction(store,'readonly');const x=await reqP(tx.objectStore(store).getAll());await txDone(tx);return x}
-async function ckdWriteStructuredBackupAtomic(indexedDBData,dbName=CKD_DB_NAME){
+async function ckdWriteStructuredBackupAtomic(indexedDBData,dbName=CKD_DB_NAME,skipVault=false){
+  if(dbName===CKD_DB_NAME){
+    const before=ckdRawCounts(await ckdRawPrimaryData(dbName));
+    const after=ckdRawCounts(indexedDBData||{});
+    if((before.patients>0&&after.patients===0)||(before.visits>10&&after.visits===0))throw new Error(`Safety lock blocked an empty structured replacement (${before.patients}/${before.visits} -> ${after.patients}/${after.visits}). No research data were changed.`);
+    if(!skipVault)await ckdVaultSnapshotPrimary('before structured restore/replacement');
+  }
   const db=await openCKDDB(dbName);const tx=db.transaction(CKD_STORES,'readwrite');
   CKD_STORES.forEach(s=>tx.objectStore(s).clear());
   CKD_STORES.forEach(s=>(indexedDBData?.[s]||[]).forEach(x=>tx.objectStore(s).put(cloneData(x))));
-  // v1.64.8 safety: marker is committed atomically with the restored database.
   tx.objectStore('meta').put({key:'primaryMarker',value:true,updatedAt:new Date().toISOString()});
   await txDone(tx);
 }
@@ -4151,32 +4250,86 @@ async function verifyMigration(original,dbName=CKD_DB_NAME){
 }
 function legacySnapshot(){const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('ckd_'))data[k]=localStorage.getItem(k)}return {app:'CKD–Pruritus Research Portal',backupVersion:1,createdAt:new Date().toISOString(),data}}
 function downloadJSON(payload,name){const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function ckdSafetyFileStamp(){return new Date().toISOString().replace(/[:.]/g,'-').replace('T','_').replace('Z','')}
+function downloadCacheSafetyBackup(reason='manual'){
+  try{
+    const data={};
+    data[REGISTRY_KEY]=JSON.stringify(CKD_REGISTRY_CACHE||[]);
+    data[REVIEW_REASON_KEY]=JSON.stringify(CKD_REVIEW_CACHE||{});
+    if(reason==='draft')data.ckd_wizard_draft=JSON.stringify({...values,__currentStep:Number(current||1)});
+    const payload={app:'CKD–Pruritus Research Portal',backupVersion:1,createdAt:new Date().toISOString(),data,safetyCopy:true,reason};
+    downloadJSON(payload,`CKD_Pruritus_AUTO_${String(reason).toUpperCase()}_${ckdSafetyFileStamp()}.json`);
+    return true;
+  }catch(e){console.error('External safety backup failed',e);return false}
+}
+async function ckdFlushRegistryNow(){
+  if(!CKD_IDB_PRIMARY){localStorage.setItem(REGISTRY_KEY,JSON.stringify(CKD_REGISTRY_CACHE||[]));return}
+  clearTimeout(CKD_IDB_WRITE_TIMER);CKD_IDB_WRITE_TIMER=null;
+  await ckdWriteRegistryAtomic(CKD_REGISTRY_CACHE||[]);
+}
 function legacyCurrentRegistry(){try{return JSON.parse(localStorage.getItem(REGISTRY_KEY)||'[]')}catch(e){return []}}
 function migrationCounts(){const r=legacyCurrentRegistry();return {patients:r.length,visits:countVisits(r)}}
-function showMigrationModal(){const c=migrationCounts();document.getElementById('migPatients').textContent=c.patients;document.getElementById('migVisits').textContent=c.visits;document.getElementById('idbMigrationModal').style.display='flex'}
+function showMigrationModal(){
+  const c=migrationCounts();
+  document.getElementById('migPatients').textContent=c.patients;
+  document.getElementById('migVisits').textContent=c.visits;
+  const btn=document.querySelector('#idbMigrationModal .migration-primary');
+  const msg=document.getElementById('migMessage');
+  const safeSource=c.patients>0;
+  if(btn){btn.disabled=!safeSource;btn.style.opacity=safeSource?'1':'.45';btn.style.cursor=safeSource?'pointer':'not-allowed'}
+  if(!safeSource&&msg)msg.textContent='Migration is locked because the legacy source contains 0 patients. Choose Not now, then restore a verified Full Backup JSON.';
+  document.getElementById('idbMigrationModal').style.display='flex';
+}
 function deferIndexedDBMigration(){document.getElementById('idbMigrationModal').style.display='none';document.getElementById('migError').classList.remove('show')}
 async function deleteDB(name){if(CKD_IDB_DB&&name===CKD_DB_NAME){CKD_IDB_DB.close();CKD_IDB_DB=null}await new Promise((res,rej)=>{const r=indexedDB.deleteDatabase(name);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('Close other portal tabs and try again.'))})}
 async function startSafeIndexedDBMigration(){
   const err=document.getElementById('migError'),msg=document.getElementById('migMessage');err.classList.remove('show');
   try{
-    const original=legacyCurrentRegistry();const validation=validateLegacyRegistry(original);if(validation.length)throw new Error('Migration stopped before any database changes:\n'+validation.join('\n'));
+    const existing=await ckdRawPrimaryData();
+    const live=ckdRawCounts(existing);
+    if(live.patients>0||live.visits>0){
+      if(live.patients===0)throw new Error(`Migration blocked: IndexedDB contains ${live.visits} visits but 0 patients. No data were changed.`);
+      await ckdPutMeta('primaryMarker',true);
+      CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();
+      await ckdVaultSaveSnapshotFromData(existing,'marker recovery before migration');
+      msg.textContent=`Existing IndexedDB recovered safely: ${live.patients} patients and ${live.visits} visits. No database was deleted.`;updateDashboard();renderDashboardSearch?.();setTimeout(()=>{document.getElementById('idbMigrationModal').style.display='none'},1800);return;
+    }
+    const original=legacyCurrentRegistry();
+    if(!original.length)throw new Error('Migration blocked: the legacy source contains 0 patients. Restore a verified Full Backup JSON instead.');
+    const validation=validateLegacyRegistry(original);if(validation.length)throw new Error('Migration stopped before any database changes:\n'+validation.join('\n'));
     const snapshot=legacySnapshot();downloadJSON(snapshot,`CKD_Pruritus_PRE_IDB_BACKUP_${new Date().toISOString().slice(0,10)}.json`);msg.textContent='Backup created. Migrating atomically…';
-    await deleteDB(CKD_DB_NAME).catch(()=>{});await openCKDDB();await ckdWriteRegistryAtomic(original);
+    await ckdWriteRegistryAtomic(original);
     const oldDraft=(()=>{try{return JSON.parse(localStorage.getItem('ckd_wizard_draft')||'{}')}catch(e){return {}}})();if(Object.keys(oldDraft).length)await ckdPutWorkingDraft(oldDraft,Number(oldDraft.__currentStep||1));
     await ckdPutMeta('reviewReasons',(()=>{try{return JSON.parse(localStorage.getItem(REVIEW_REASON_KEY)||'{}')}catch(e){return {}}})());
-    const report=await verifyMigration(original);await ckdPutMeta('migrationReport',{...report,completedAt:new Date().toISOString(),source:'v1.55 localStorage',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);
+    const report=await verifyMigration(original);await ckdPutMeta('migrationReport',{...report,completedAt:new Date().toISOString(),source:'legacy localStorage',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);
     CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();
+    await ckdVaultSaveSnapshotFromData(await ckdRawPrimaryData(),'post-migration checkpoint');
     msg.textContent=`Migration verified: ${report.after.patients} patients and ${report.after.visits} visits. IndexedDB is now primary. Legacy localStorage was preserved.`;updateDashboard();renderDashboardSearch?.();setTimeout(()=>{document.getElementById('idbMigrationModal').style.display='none'},1800);
   }catch(e){
-    try{await deleteDB(CKD_DB_NAME)}catch(_){}CKD_IDB_PRIMARY=false;err.textContent=e.message||String(e);err.classList.add('show');msg.textContent='Migration failed safely. Existing localStorage data remain untouched.';
+    CKD_IDB_PRIMARY=false;err.textContent=e.message||String(e);err.classList.add('show');msg.textContent='Migration stopped without deleting the primary database or legacy data.';
   }
 }
 async function initializeIDBPrimary(){
   try{
     await openCKDDB();const marker=await ckdGetMeta('primaryMarker');
-    if(marker){CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();const wd=await ckdGetWorkingDraft();if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}updateDashboard();renderDashboardSearch?.();renderPageStatus?.();return}
+    // Emergency cross-database check: if the primary DB is unexpectedly empty but
+    // the independent Safety Vault has a populated snapshot, never initialize or
+    // continue silently. Offer recovery first.
+    const liveCounts=ckdRawCounts(await ckdRawPrimaryData());
+    const latestVault=await ckdVaultLatestSnapshot().catch(()=>null);
+    if(liveCounts.patients===0&&liveCounts.visits===0&&latestVault?.counts?.patients>0){
+      if(confirm(`Safety Vault detected an empty primary database, but a protected snapshot contains ${latestVault.counts.patients} patients and ${latestVault.counts.visits} visits.\n\nRestore that protected snapshot now?`)){await recoverLatestSafetySnapshot(latestVault);return}
+      throw new Error('Safety lock stopped startup because the primary database is empty while a populated recovery snapshot exists. No data were changed.');
+    }
+    if(marker){
+      // Ensure the restored/current good database is protected immediately after upgrade.
+      const latestAge=latestVault?.createdAt?(Date.now()-new Date(latestVault.createdAt).getTime()):Infinity;
+      if(liveCounts.patients>0&&(!latestVault||latestVault.counts?.patients!==liveCounts.patients||latestVault.counts?.visits!==liveCounts.visits||latestAge>6*60*60*1000)){
+        await ckdVaultSaveSnapshotFromData(await ckdRawPrimaryData(),'startup safety checkpoint');
+      }
+      CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;reconcileSupersededDraftsInRegistry();const wd=await ckdGetWorkingDraft();if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}updateDashboard();renderDashboardSearch?.();renderPageStatus?.();requestPersistentStorage().catch(()=>{});return}
 
-    // v1.64.8 rescue guard: a missing marker does NOT mean IndexedDB is empty.
+    // v1.65.0 rescue guard: a missing marker does NOT mean IndexedDB is empty.
     // Inspect the database before any initialization write. Existing research rows are
     // preserved and reattached to primary mode instead of being cleared.
     const existing={};
@@ -4207,7 +4360,7 @@ async function initializeIDBPrimary(){
     const c=migrationCounts();const hasLegacy=c.patients>0||c.visits>0||!!localStorage.getItem('ckd_wizard_draft');
     if(hasLegacy){showMigrationModal();return}
     // Truly empty installation only. At this point all research stores were verified empty.
-    await ckdWriteRegistryAtomic([]);await ckdPutMeta('reviewReasons',{});await ckdPutMeta('migrationReport',{before:{patients:0,visits:0},after:{patients:0,visits:0},completedAt:new Date().toISOString(),source:'verified empty initialization',legacyPreserved:true});CKD_REGISTRY_CACHE=[];CKD_REVIEW_CACHE={};CKD_IDB_PRIMARY=true;updateDashboard();
+    await ckdWriteRegistryAtomic([]);await ckdPutMeta('reviewReasons',{});await ckdPutMeta('migrationReport',{before:{patients:0,visits:0},after:{patients:0,visits:0},completedAt:new Date().toISOString(),source:'verified empty initialization',legacyPreserved:true});await ckdPutMeta('primaryMarker',true);CKD_REGISTRY_CACHE=[];CKD_REVIEW_CACHE={};CKD_IDB_PRIMARY=true;updateDashboard();
   }catch(e){showStorageError(e)}
 }
 function hydrateFormFromValues(){
@@ -4227,7 +4380,7 @@ backupPayload=async function(){
   const indexedDBData={};for(const s of CKD_STORES){indexedDBData[s]=await readAll(s)}
   const report=await ckdGetMeta('migrationReport');return {app:'CKD–Pruritus Research Portal',backupVersion:2,storage:'IndexedDB',createdAt:new Date().toISOString(),migrationReport:report,indexedDB:indexedDBData,legacyLocalStoragePreserved:true};
 };
-createFullBackup=async function(){try{const payload=await backupPayload();downloadJSON(payload,`CKD_Pruritus_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`);alert('Full backup created from the primary research database.')}catch(e){showStorageError(e)}};
+createFullBackup=async function(){try{const payload=await backupPayload();downloadJSON(payload,`CKD_Pruritus_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`);await ckdPutMeta('lastExternalBackupAt',new Date().toISOString());await ckdVaultSaveSnapshotFromData(payload.indexedDB,'external Full Backup created');alert('Full backup created from the primary research database and a local Safety Vault checkpoint was recorded.')}catch(e){showStorageError(e)}};
 restoreFullBackup=async function(file){
   if(!file)return;
   let rollback=null;
