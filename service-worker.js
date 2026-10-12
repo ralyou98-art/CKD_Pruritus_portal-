@@ -1,8 +1,10 @@
-const CACHE_VERSION = 'ckd-pruritus-v1.65.0-external-backup-guard';
+const CACHE_VERSION = 'ckd-pruritus-v1.66.0-private-cloud-snapshots';
 const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 const APP_SHELL = [
   './',
   './index.html',
+  './cloud-backup.js',
+  './cloud-config.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'
