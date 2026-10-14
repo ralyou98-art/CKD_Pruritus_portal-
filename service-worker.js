@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'ckd-pruritus-v1.66.0-private-cloud-snapshots';
+const CACHE_VERSION = 'ckd-pruritus-v1.66.1-email-signin';
 const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 const APP_SHELL = [
   './',

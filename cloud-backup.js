@@ -105,13 +105,18 @@ function createClient(config,adapter){
   if(x.access_token){storeSession({...x,expires_at:x.expires_at||Math.floor(Date.now()/1000)+x.expires_in});return {signedIn:true}}
   return {needsConfirmation:true};
  }
+ async function signInWithEmail(email){
+  if(!configured)throw new Error('Cloud backup has not been configured yet.');
+  const r=await adapter.fetch(url+'/auth/v1/otp',{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify({email,create_user:false})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.msg||e.message||'تعذر إرسال رابط الدخول. جرّبي لاحقًا.')}return true;
+ }
  async function confirmEmail(email,value){
   let body;
   if(/^https:\/\//i.test(value.trim())){
    const link=new URL(value.trim());if(link.origin!==url||link.pathname!=='/auth/v1/verify')throw new Error('استخدمي رابط التفعيل الأصلي الموجود في رسالة Supabase.');
-   const type=link.searchParams.get('type');if(!['signup','email'].includes(type))throw new Error('هذا الرابط ليس لتفعيل حساب الحفظ.');
+   const type=link.searchParams.get('type');if(!['signup','email','magiclink'].includes(type))throw new Error('هذا الرابط ليس لتفعيل حساب الحفظ.');
    const token_hash=link.searchParams.get('token_hash')||link.searchParams.get('token');if(!token_hash)throw new Error('رابط التفعيل غير مكتمل.');body={token_hash,type};
-  }else{if(!/^\d{6,10}$/.test(value.trim()))throw new Error('الصقي رابط التفعيل أو أدخلي رمز التحقق المرسل إلى بريدك.');body={email,token:value.trim(),type:'signup'}}
+  }else{if(!/^\d{6,10}$/.test(value.trim()))throw new Error('الصقي رابط التفعيل أو أدخلي رمز التحقق المرسل إلى بريدك.');body={email,token:value.trim(),type:'email'}}
   const r=await adapter.fetch(url+'/auth/v1/verify',{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(!r.ok)throw new Error('لم ينجح التحقق. قد يكون الرابط مستخدمًا أو منتهي الصلاحية. إذا فعّلتِ الحساب بالفعل اختاري تسجيل الدخول.');
   const x=await r.json();if(!x.access_token)throw new Error('لم تكتمل جلسة الدخول.');storeSession({...x,expires_at:x.expires_at||Math.floor(Date.now()/1000)+x.expires_in});return true;
@@ -124,7 +129,7 @@ function createClient(config,adapter){
   try{const row=await latest();if(!row)return {configured:true};const payload=await unpack(row);lastSaved=new Date(row.created_at).toLocaleString('ar-IQ');return {configured:true,payload,row}}
   catch(e){status(e.message,'error');return {configured:true,error:e.message}}
  }
- loadSession();return {configured,changed,flush,signIn,signUp,confirmEmail,checkStartup,latest,unpack};
+ loadSession();return {configured,changed,flush,signIn,signUp,signInWithEmail,confirmEmail,checkStartup,latest,unpack};
 }
 root.CKDCloud={createClient,pack,unpack,validate};
 })(typeof window!=='undefined'?window:globalThis);

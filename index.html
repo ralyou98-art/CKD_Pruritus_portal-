@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.66.0 — External Backup Guard</title>
+<title>CKD–Pruritus Research Portal v1.66.1 — External Backup Guard</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -586,7 +586,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.66.0" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.66.1" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -624,7 +624,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.66.0</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.66.1</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button data-cloud-control type="button" class="account-action" onclick="openCloudSignIn()">الحفظ الخارجي — تسجيل الدخول</button><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -3147,7 +3147,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.66.0';
+  const appVersion='1.66.1';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -4057,7 +4057,7 @@ const CKD_DB_NAME='CKD_Pruritus_Research_DB';
 const CKD_DB_VERSION=1;
 const CKD_STORES=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews','meta'];
 
-/* ===== v1.66.0 Safety Vault + external backup guard =====
+/* ===== v1.66.1 Safety Vault + external backup guard =====
    A second, append-only IndexedDB database keeps rotating snapshots of the
    primary research database. Ordinary portal writes never clear the vault.
    This protects against accidental application-level rewrites of the primary DB.
@@ -4398,7 +4398,7 @@ async function initializeIDBPrimary(){
       }
       CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;CKD_STORAGE_READY=true;reconcileSupersededDraftsInRegistry();const wd=await ckdGetWorkingDraft();if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}updateDashboard();renderDashboardSearch?.();renderPageStatus?.();requestPersistentStorage().catch(()=>{});return}
 
-    // v1.66.0 rescue guard: a missing marker does NOT mean IndexedDB is empty.
+    // v1.66.1 rescue guard: a missing marker does NOT mean IndexedDB is empty.
     // Inspect the database before any initialization write. Existing research rows are
     // preserved and reattached to primary mode instead of being cleared.
     const existing={};
@@ -4531,15 +4531,16 @@ function openCloudSignIn(){
    <label>البريد الإلكتروني<input id="cloudEmail" type="email" required autocomplete="username" style="width:100%;margin:8px 0"></label>
    <label>كلمة المرور<input id="cloudPassword" type="password" autocomplete="current-password" style="width:100%;margin:8px 0"></label>
    <p id="cloudLoginError" role="alert"></p>
-   <button type="submit">تسجيل الدخول</button><button type="button" id="cloudRegister">إنشاء حساب الحفظ</button>
-   <div id="cloudConfirm" hidden><p>افتحي رسالة Supabase في بريدك. اضغطي مطولًا على رابط التفعيل وانسخيه، ثم الصقيه هنا. لا ترسليه في المحادثة. يمكنك أيضًا فتح الرابط لتفعيل الحساب ثم العودة وتسجيل الدخول.</p><label>رابط التفعيل أو رمز التحقق<input id="cloudCode" type="text" autocomplete="one-time-code" style="width:100%;margin:8px 0"></label><button type="button" id="cloudVerify">تفعيل الحساب</button></div>
+   <button type="submit">تسجيل الدخول</button><button type="button" id="cloudEmailLogin">نسيت كلمة المرور — الدخول بالبريد</button><button type="button" id="cloudRegister">إنشاء حساب الحفظ</button>
+   <div id="cloudConfirm" hidden><p>افتحي رسالة Supabase في بريدك. اضغطي مطولًا على رابط التفعيل وانسخيه، ثم الصقيه هنا. لا ترسليه في المحادثة. للتحقق هنا، انسخي رابط البريد والصقيه في الحقل أدناه.</p><label>رابط التفعيل أو رمز التحقق<input id="cloudCode" type="text" autocomplete="one-time-code" style="width:100%;margin:8px 0"></label><button type="button" id="cloudVerify">تأكيد الدخول</button></div>
    <button type="button" id="cloudClose">إغلاق</button></form>`;
   document.body.appendChild(dialog);dialog.querySelector('#cloudClose').onclick=()=>dialog.close();
   const error=dialog.querySelector('#cloudLoginError');
   const credentials=()=>({email:dialog.querySelector('#cloudEmail').value.trim(),password:dialog.querySelector('#cloudPassword').value});
   const busy=value=>dialog.querySelectorAll('button').forEach(b=>b.disabled=value);
   dialog.querySelector('form').onsubmit=async e=>{e.preventDefault();const {email,password}=credentials();dialog.querySelector('#cloudPassword').value='';busy(true);try{await CKD_CLOUD_CLIENT.signIn(email,password);location.reload()}catch(err){error.textContent=err.message}finally{busy(false)}};
-  dialog.querySelector('#cloudRegister').onclick=async()=>{const {email,password}=credentials();if(!dialog.querySelector('#cloudEmail').checkValidity()){error.textContent='أدخلي بريدًا إلكترونيًا صحيحًا.';return}busy(true);try{const r=await CKD_CLOUD_CLIENT.signUp(email,password);dialog.querySelector('#cloudPassword').value='';if(r.signedIn){location.reload();return}dialog.querySelector('#cloudConfirm').hidden=false;error.textContent='أُرسلت رسالة التفعيل. إذا لم تصلك فافحصي البريد غير المرغوب فيه.'}catch(err){error.textContent=err.message}finally{busy(false)}};
+  dialog.querySelector('#cloudRegister').onclick=async()=>{const {email,password}=credentials();if(!dialog.querySelector('#cloudEmail').checkValidity()){error.textContent='أدخلي بريدًا إلكترونيًا صحيحًا.';return}busy(true);try{const r=await CKD_CLOUD_CLIENT.signUp(email,password);dialog.querySelector('#cloudPassword').value='';if(r.signedIn){location.reload();return}dialog.querySelector('#cloudConfirm').hidden=false;error.textContent='طلب إنشاء الحساب قُبل. إذا كان لديك حساب مفعّل بالفعل، استخدمي تسجيل الدخول أو الدخول بالبريد. وإلا فافحصي رسالة التفعيل.'}catch(err){error.textContent=err.message}finally{busy(false)}};
+  dialog.querySelector('#cloudEmailLogin').onclick=async()=>{const email=dialog.querySelector('#cloudEmail').value.trim();if(!dialog.querySelector('#cloudEmail').checkValidity()){error.textContent='أدخلي بريدًا إلكترونيًا صحيحًا.';return}busy(true);try{await CKD_CLOUD_CLIENT.signInWithEmail(email);dialog.querySelector('#cloudConfirm').hidden=false;error.textContent='طلب رابط الدخول قُبل. افحصي رسالة Supabase في البريد أو البريد غير المرغوب فيه وانسخي رابطها إلى الحقل أدناه.'}catch(err){error.textContent=err.message}finally{busy(false)}};
   dialog.querySelector('#cloudVerify').onclick=async()=>{busy(true);try{await CKD_CLOUD_CLIENT.confirmEmail(dialog.querySelector('#cloudEmail').value.trim(),dialog.querySelector('#cloudCode').value);dialog.querySelector('#cloudCode').value='';location.reload()}catch(err){error.textContent=err.message}finally{busy(false)}};
  }
  dialog.showModal();
