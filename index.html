@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CKD–Pruritus Research Portal v1.66.1 — External Backup Guard</title>
+<title>CKD–Pruritus Research Portal v1.66.2 — External Backup Guard</title>
 <link rel="icon" type="image/png" href="icon-512.png">
 <meta name="theme-color" content="#7b3f98">
 <style>
@@ -578,7 +578,13 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
 <link rel="apple-touch-icon" href="icon-192.png">
 
 
-<style>body.dashboard-home-mode .hero{display:none!important} body.form-entry-mode .dashboard-intro{display:none!important}</style>
+<style>body.dashboard-home-mode .hero{display:none!important} body.form-entry-mode .dashboard-intro{display:none!important}
+/* Status bars reserve space below navigation instead of covering its buttons. */
+#ckdStatusTray{position:fixed;bottom:0;left:0;right:0;z-index:35;display:flex;flex-direction:column;background:#eee;padding-bottom:env(safe-area-inset-bottom,0px)}
+#ckdStatusTray #ckdCommitStatus,#ckdStatusTray #ckdCloudStatus{position:static!important;inset:auto!important;width:100%;margin:0;line-height:1.4;white-space:normal;overflow-wrap:anywhere;border-radius:0;box-sizing:border-box}
+.navbar{bottom:var(--ckd-save-status-height,0px)!important;z-index:36}
+main{padding-bottom:calc(100px + var(--ckd-save-status-height,0px))!important}
+</style>
 </head>
 <body>
 
@@ -586,7 +592,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="head">
     <button class="menu-trigger" type="button" aria-label="Open menu" onclick="toggleSideMenu()"><span>☰</span></button>
     <div class="brand"><h1>CKD–Pruritus Research Portal</h1><p>Clinical Research • Local-first</p></div>
-    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.66.1" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
+    <button class="account-trigger" type="button" aria-label="Researcher account" title="CKD Portal v1.66.2" onclick="openAccountSheet()"><span class="avatar-mini">R</span></button>
   </div>
 </header>
 
@@ -624,7 +630,7 @@ header{position:sticky;top:0;background:#fff!important;border-bottom:1px solid #
   <div class="sheet-handle"></div>
   <div class="account-title-row"><div><small>RESEARCHER</small><h2 style="margin:4px 0 0">My Portal</h2></div><button class="account-close" type="button" onclick="closeAccountSheet()">×</button></div>
   <div class="account-profile"><div class="account-avatar">R</div><div><h3>Researcher</h3><p>CKD–Pruritus Research Portal</p></div></div>
-  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.66.1</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
+  <div class="account-details"><div class="account-detail"><span>Storage</span><strong>Saved locally</strong></div><div class="account-detail"><span>Portal version</span><strong>v1.66.2</strong></div><div class="account-detail"><span>Backup</span><strong>JSON portable backup</strong></div><div class="account-detail"><span>Analysis</span><strong>Excel multi-sheet export</strong></div></div>
   <div class="account-actions"><button data-cloud-control type="button" class="account-action" onclick="openCloudSignIn()">الحفظ الخارجي — تسجيل الدخول</button><button type="button" class="account-action primary" onclick="triggerInstallFromAccount()">⇩ Install App</button><button type="button" class="account-action" onclick="createFullBackup()">Create Backup</button></div>
 </section>
 
@@ -2086,10 +2092,20 @@ let CKD_STORAGE_INITIALIZING=true;
 let CKD_CLOUD_CLIENT=null;
 let CKD_STORAGE_CONFLICT=false;
 const CKD_ALLOWED_DRAFT_DELETIONS=new Set();
+function ckdStatusTray(){
+ let tray=document.getElementById('ckdStatusTray');
+ if(!tray){
+  tray=document.createElement('div');tray.id='ckdStatusTray';document.body.appendChild(tray);
+  const resize=()=>document.documentElement.style.setProperty('--ckd-save-status-height',Math.ceil(tray.getBoundingClientRect().height)+'px');
+  if(typeof ResizeObserver==='function'){const observer=new ResizeObserver(resize);observer.observe(tray);tray._sizeObserver=observer;}
+  window.addEventListener('resize',resize);tray._resizeStatus=resize;
+ }
+ return tray;
+}
 function ckdStorageStatus(message,failed=false){
   let el=document.getElementById('ckdCommitStatus');
-  if(!el){el=document.createElement('div');el.id='ckdCommitStatus';el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:25000;padding:8px;text-align:center;font:13px sans-serif;background:#eee';document.body.appendChild(el)}
-  el.textContent=message;el.style.background=failed?'#ffe1df':'#eee';
+  if(!el){el=document.createElement('div');el.id='ckdCommitStatus';el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:25000;padding:8px;text-align:center;font:13px sans-serif;background:#eee';ckdStatusTray().appendChild(el)}
+  el.textContent=message;el.style.background=failed?'#ffe1df':'#eee';ckdStatusTray()._resizeStatus();
 }
 function ckdQueueWrite(task){
   const result=CKD_WRITE_QUEUE.then(task);
@@ -3147,7 +3163,7 @@ async function exportPatients(){
   if(typeof ExcelJS==='undefined'){alert('Excel export needs an internet connection to load the Excel library. Connect once, reopen the portal, then try again. Patient data remain stored locally.');return;}
 
   const exportDate=new Date().toISOString();
-  const appVersion='1.66.1';
+  const appVersion='1.66.2';
   const patientFields=['Patient_ID','Patient_Name','Patient_Number','Age','Center','Researcher_Interviewer_Name','Sex','Marital_Status','Education_Level','Employment_Status','Smoking_Status','Packs_Per_Day'];
   const visitFields=['Visit_ID','Visit_Type','Visit_Date','Record_Status'];
   const ckdFields=['CKD_Diagnosis_Date','CKD_Duration_Months','CKD_Cause','CKD_Cause_Other','Hemodialysis_First_Session_Date','Hemodialysis_Duration_Months','Kt_V','Hemodialysis_Sessions_Per_Week','Dry_Weight','Current_Weight','Missed_Hemodialysis_Session','Session_Shift'];
@@ -4057,7 +4073,7 @@ const CKD_DB_NAME='CKD_Pruritus_Research_DB';
 const CKD_DB_VERSION=1;
 const CKD_STORES=['patients','visits','drafts','questionnaires','scores','labs','medications','pruritus','reviews','meta'];
 
-/* ===== v1.66.1 Safety Vault + external backup guard =====
+/* ===== v1.66.2 Safety Vault + external backup guard =====
    A second, append-only IndexedDB database keeps rotating snapshots of the
    primary research database. Ordinary portal writes never clear the vault.
    This protects against accidental application-level rewrites of the primary DB.
@@ -4398,7 +4414,7 @@ async function initializeIDBPrimary(){
       }
       CKD_REGISTRY_CACHE=await reconstructRegistry();CKD_REVIEW_CACHE=(await ckdGetMeta('reviewReasons'))||{};CKD_IDB_PRIMARY=true;CKD_STORAGE_READY=true;reconcileSupersededDraftsInRegistry();const wd=await ckdGetWorkingDraft();if(wd?.data&&Object.keys(wd.data).length){Object.keys(values).forEach(k=>delete values[k]);Object.assign(values,wd.data);current=Math.min(TOTAL,Math.max(1,Number(wd.currentStep||1)));hydrateFormFromValues?.();}else{clearLegacyDraftFromUIAfterIDBPrimary();}updateDashboard();renderDashboardSearch?.();renderPageStatus?.();requestPersistentStorage().catch(()=>{});return}
 
-    // v1.66.1 rescue guard: a missing marker does NOT mean IndexedDB is empty.
+    // v1.66.2 rescue guard: a missing marker does NOT mean IndexedDB is empty.
     // Inspect the database before any initialization write. Existing research rows are
     // preserved and reattached to primary mode instead of being cleared.
     const existing={};
@@ -4517,8 +4533,8 @@ async function runP0RegressionTests(){
 
 function cloudStatus(message,kind){
  let el=document.getElementById('ckdCloudStatus');
- if(!el){el=document.createElement('button');el.type='button';el.id='ckdCloudStatus';el.setAttribute('data-cloud-control','true');el.style.cssText='position:fixed;bottom:34px;left:0;right:0;z-index:25001;padding:9px;font:13px sans-serif;border:0;background:#fff3cd;color:#333';el.onclick=openCloudSignIn;document.body.appendChild(el)}
- el.textContent=message;el.style.background=kind==='saved'?'#d9f4e3':kind==='error'?'#ffe1df':'#fff3cd';
+ if(!el){el=document.createElement('button');el.type='button';el.id='ckdCloudStatus';el.setAttribute('data-cloud-control','true');el.style.cssText='position:fixed;bottom:34px;left:0;right:0;z-index:25001;padding:9px;font:13px sans-serif;border:0;background:#fff3cd;color:#333';el.onclick=openCloudSignIn;ckdStatusTray().prepend(el)}
+ el.textContent=message;el.style.background=kind==='saved'?'#d9f4e3':kind==='error'?'#ffe1df':'#fff3cd';ckdStatusTray()._resizeStatus();
 }
 function openCloudSignIn(){
  if(!CKD_CLOUD_CLIENT?.configured){alert('الحفظ الخارجي لم يُفعّل بعد.');return}
